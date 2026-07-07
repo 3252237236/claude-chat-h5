@@ -83,6 +83,65 @@ canvas { display: block; }
   transition: background 0.2s;
 }
 #backBtn:hover { background: rgba(255,255,255,0.15); }
+
+/* 手机触控 */
+#mobileControls { display: none; }
+@media (max-width: 768px) {
+  #hint { display: none; }
+  #backBtn { top: 8px; left: 8px; font-size: 11px; padding: 5px 10px; }
+  #topBar { top: 8px; gap: 8px; }
+  #topBar span { font-size: 11px; padding: 4px 10px; }
+  #hotbar { bottom: 20px; gap: 2px; }
+  .hotbar-slot { width: 40px; height: 40px; font-size: 18px; border-width: 2px; }
+  .hotbar-slot.active { transform: translateY(-4px); }
+  #crosshair { width: 18px; height: 18px; }
+  #crosshair::before { top: 8px; width: 18px; }
+  #crosshair::after { left: 8px; height: 18px; }
+  #lockHint .msg { font-size: 18px; padding: 24px 32px; }
+
+  #mobileControls {
+    display: flex; position: fixed; inset: 0; z-index: 15; pointer-events: none;
+  }
+  /* 虚拟摇杆 */
+  #joystickZone {
+    position: absolute; bottom: 120px; left: 24px;
+    width: 130px; height: 130px; pointer-events: all;
+  }
+  #joystickBase {
+    width: 130px; height: 130px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #joystickThumb {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); transition: none;
+  }
+  /* 动作按钮 */
+  #actionBtns {
+    position: absolute; bottom: 130px; right: 16px; pointer-events: all;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+  }
+  .act-btn {
+    width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.4); color: #fff; font-size: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; user-select: none; -webkit-user-select: none;
+    backdrop-filter: blur(4px);
+  }
+  .act-btn:active { background: rgba(255,255,255,0.2); }
+  #btnJump { width: 70px; height: 70px; font-size: 18px; font-weight: 700; }
+}
+
+/* 超小屏 */
+@media (max-width: 400px) {
+  #joystickZone { bottom: 100px; left: 8px; width: 110px; height: 110px; }
+  #joystickBase { width: 110px; height: 110px; }
+  #joystickThumb { width: 48px; height: 48px; }
+  #actionBtns { bottom: 110px; right: 8px; gap: 8px; }
+  .act-btn { width: 50px; height: 50px; font-size: 22px; }
+  #btnJump { width: 60px; height: 60px; font-size: 16px; }
+  .hotbar-slot { width: 34px; height: 34px; font-size: 16px; }
+}
 </style>
 </head>
 <body>
@@ -98,6 +157,18 @@ canvas { display: block; }
   <span>🖱️ 左键挖 · 右键放 · WASD 移动 · 空格跳 · 1-6 选方块 · ESC 释放鼠标</span>
 </div>
 <div id="hotbar"></div>
+
+<!-- 手机控制 -->
+<div id="mobileControls">
+  <div id="joystickZone">
+    <div id="joystickBase"><div id="joystickThumb"></div></div>
+  </div>
+  <div id="actionBtns">
+    <button class="act-btn" id="btnBreak" style="font-size:16px;font-weight:700;">⛏</button>
+    <button class="act-btn" id="btnJump">⬆</button>
+    <button class="act-btn" id="btnPlace" style="font-size:16px;font-weight:700;">🧱</button>
+  </div>
+</div>
 
 <div id="lockHint" onclick="lock()">
   <div class="msg">🎮 点击开始游戏<div><p>鼠标锁定 + 全屏体验</p></div></div>
@@ -536,7 +607,129 @@ function lock() {
 }
 window.lock = lock;
 
-// ==================== 主循环 ====================
+// ==================== 手机触控 ====================
+const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) ||
+  ('ontouchstart' in window && window.innerWidth < 1024);
+
+if (isMobile) {
+  // 锁定提示文案
+  document.querySelector("#lockHint .msg").innerHTML = '🎮 点击开始游戏<div><p>触屏操控：摇杆移动 · 拖动视角 · 按钮操作</p></div>';
+
+  // 虚拟摇杆
+  let joystickActive = false;
+  let joystickId = null;
+  let joystickX = 0, joystickY = 0;
+  const joystickZone = document.getElementById("joystickZone");
+  const thumb = document.getElementById("joystickThumb");
+  const baseRadius = 65;
+  const thumbRadius = 28;
+
+  joystickZone.addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (joystickActive) return;
+    joystickActive = true;
+    joystickId = e.changedTouches[0].identifier;
+    updateJoystick(e.changedTouches[0]);
+  });
+  joystickZone.addEventListener("touchmove", e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (t.identifier === joystickId) updateJoystick(t);
+    }
+  });
+  joystickZone.addEventListener("touchend", e => {
+    for (const t of e.changedTouches) {
+      if (t.identifier === joystickId) {
+        joystickActive = false;
+        joystickId = null;
+        joystickX = 0; joystickY = 0;
+        thumb.style.transform = "translate(0,0)";
+        keys["KeyW"] = keys["KeyS"] = keys["KeyA"] = keys["KeyD"] = false;
+      }
+    }
+  });
+  joystickZone.addEventListener("touchcancel", () => {
+    joystickActive = false; joystickId = null;
+    joystickX = 0; joystickY = 0;
+    thumb.style.transform = "translate(0,0)";
+    keys["KeyW"] = keys["KeyS"] = keys["KeyA"] = keys["KeyD"] = false;
+  });
+
+  function updateJoystick(touch) {
+    const rect = joystickZone.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    let dx = touch.clientX - cx;
+    let dy = touch.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const maxDist = baseRadius - thumbRadius;
+    if (dist > maxDist) {
+      dx = dx / dist * maxDist;
+      dy = dy / dist * maxDist;
+    }
+    joystickX = dx / maxDist;
+    joystickY = dy / maxDist;
+    thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+
+    // 映射到 WASD
+    const threshold = 0.3;
+    keys["KeyW"] = joystickY < -threshold;
+    keys["KeyS"] = joystickY > threshold;
+    keys["KeyA"] = joystickX < -threshold;
+    keys["KeyD"] = joystickX > threshold;
+  }
+
+  // 触摸转动视角
+  renderer.domElement.addEventListener("touchstart", e => {
+    if (e.touches.length === 1 && !joystickActive && locked) {
+      e.preventDefault();
+    }
+  });
+  renderer.domElement.addEventListener("touchmove", e => {
+    if (e.touches.length === 1 && locked && !joystickActive) {
+      e.preventDefault();
+      const t = e.touches[0];
+      if (t._lastX !== undefined) {
+        player.yaw -= (t.clientX - t._lastX) * 0.005;
+        player.pitch -= (t.clientY - t._lastY) * 0.005;
+        player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
+      }
+      t._lastX = t.clientX;
+      t._lastY = t.clientY;
+    }
+  });
+  renderer.domElement.addEventListener("touchend", e => {
+    if (e.touches.length === 0 && e.changedTouches.length === 1) {
+      e.changedTouches[0]._lastX = undefined;
+    }
+  });
+
+  // 动作按钮
+  document.getElementById("btnJump").addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (player.onGround) player.vy = JUMP_VEL;
+  });
+  document.getElementById("btnBreak").addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (locked) {
+      const hit = raycastBlocks();
+      if (hit.hit) breakBlock(hit.block.x, hit.block.y, hit.block.z);
+    }
+  });
+  document.getElementById("btnPlace").addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (locked) {
+      const hit = raycastBlocks();
+      if (hit.hit) placeBlock(hit.prev.x, hit.prev.y, hit.prev.z, selectedBlock);
+    }
+  });
+
+  // 移动端点击锁定
+  document.getElementById("lockHint").addEventListener("touchend", e => {
+    e.preventDefault();
+    lock();
+  });
+}
 let lastTime = performance.now();
 
 function gameLoop(now) {
