@@ -770,6 +770,8 @@ function renderToolCall(name, args) {
 }
 
 function renderToolResult(result) {
+  // 隐藏浏览器环境不支持的无用提示
+  if ((result || "").startsWith("⚠️ 浏览器环境无法")) return;
   const div = document.createElement("div");
   div.className = "tool-card";
   div.innerHTML = `<div class="tool-header">📋 工具结果</div><div class="tool-result">${escapeHtml((result || "").substring(0, 500))}</div>`;
