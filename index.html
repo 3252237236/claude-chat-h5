@@ -302,8 +302,7 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
     <div class="main-header">
       <button class="btn-menu" onclick="toggleSidebar()">☰</button>
       <span class="agent-badge agent-off" id="agentBadge">📝 纯聊天</span>
-      <span class="model-name" id="modelName">deepseek-chat</span>
-    </div>
+          </div>
     <div class="chat-area" id="chatArea">
       <div class="chat-empty">
         <div class="empty-icon">💬</div>
@@ -329,8 +328,6 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
     <div class="preset-tags" id="presetTags"></div>
     <label>API URL</label>
     <input type="text" id="setApiUrl" placeholder="https://api.deepseek.com/v1/chat/completions">
-    <label>模型名称</label>
-    <input type="text" id="setModel" placeholder="deepseek-chat">
     <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 8px; margin-top: 14px; font-size: 12px; color: #2e7d32;">
       🔐 管理员在服务端配置好 Key，用户直接选平台用。<br>
       支持的平台：<span id="availablePlatforms">加载中…</span>
@@ -607,7 +604,7 @@ function createFreshData() {
     },
     topicOrder: [tid],
     currentTopicId: tid,
-    settings: { apiUrl: "https://api.deepseek.com/v1/chat/completions", model: "deepseek-chat" },
+    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions", model: "mimo-v2.5" },
   };
 }
 
@@ -633,7 +630,6 @@ const topicList = $("#topicList");
 const chatArea = $("#chatArea");
 const btnSend = $("#btnSend");
 const agentBadge = $("#agentBadge");
-const modelName = $("#modelName");
 const inputHint = $("#inputHint");
 
 // ==================== 初始化 ====================
@@ -903,9 +899,7 @@ function updateStatusBar() {
   const agentOn = topic.agentEnabled;
   agentBadge.textContent = agentOn ? "🤖 Agent ON" : "📝 纯聊天";
   agentBadge.className = `agent-badge ${agentOn ? "agent-on" : "agent-off"}`;
-  const mdl = appData.settings.model || "未设置";
-  modelName.textContent = `模型: ${mdl}`;
-  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent ON" : "📝 纯聊天"} | 模型: ${mdl}`;
+  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent ON" : "📝 纯聊天"}`;
 }
 
 // ==================== API 调用 ====================
@@ -1191,7 +1185,6 @@ function closeSidebar() {
 function openSettings() {
   const s = appData.settings;
   $("#setApiUrl").value = s.apiUrl || "";
-  $("#setModel").value = s.model || "";
 
   // 从服务端获取可用平台列表
   const providers = appData.availableProviders || [];
@@ -1232,9 +1225,8 @@ function closeSettings() {
 
 function saveSettings() {
   const apiUrl = $("#setApiUrl").value.trim();
-  const model = $("#setModel").value.trim();
   if (!apiUrl) { showToast("请输入 API URL"); return; }
-  appData.settings = { apiUrl, model };
+  appData.settings.apiUrl = apiUrl;
   saveAll();
   updateStatusBar();
   closeSettings();
@@ -1252,7 +1244,7 @@ document.addEventListener("click", e => {
     const url = tag.dataset.url || "";
     const model = tag.dataset.model || "";
     if (url) $("#setApiUrl").value = url;
-    if (model) $("#setModel").value = model;
+    if (model) appData.settings.model = model;
   }
   if (e.target === $("#settingsModal")) closeSettings();
   if (e.target === $("#topicSettingsModal")) closeTopicSettings();
