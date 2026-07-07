@@ -31,6 +31,10 @@ for p in ALL_PROVIDERS:
 def index():
     return send_file("index.html")
 
+@app.route("/chat")
+def chat():
+    return send_file("chat.html")
+
 @app.route("/<path:path>")
 def static_files(path):
     if os.path.exists(path):
