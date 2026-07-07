@@ -516,23 +516,34 @@ async function executeTool(name, args) {
   }
 }
 
+function isImageFile(file) {
+  return file.type.startsWith("image/") || /\.(png|jpg|jpeg|gif|webp|bmp|svg)$/i.test(file.name);
+}
+
 function toolReadFile(args) {
   // 浏览器环境：触发文件选择器，返回 Promise
   return new Promise((resolve) => {
     const input = document.getElementById("fileInput");
     const oldChange = input.onchange;
     input.onchange = function(e) {
-      // 恢复旧的 onchange（如果有的话）
       input.onchange = oldChange;
       const file = e.target.files[0];
       if (!file) { resolve("用户取消了文件选择"); return; }
       const reader = new FileReader();
-      reader.onload = () => resolve(`文件: ${file.name} (${file.size} 字节)\n\n${reader.result}`);
-      reader.onerror = () => resolve(`读取文件失败: ${reader.error}`);
-      reader.readAsText(file);
+      if (isImageFile(file)) {
+        reader.onload = () => {
+          // 在聊天区显示图片
+          renderImageMessage(file.name, reader.result);
+          resolve(`用户选择了一张图片: ${file.name} (${(file.size/1024).toFixed(1)}KB)\n[图片已显示在聊天中]`);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        reader.onload = () => resolve(`文件: ${file.name} (${file.size} 字节)\n\n${reader.result}`);
+        reader.onerror = () => resolve(`读取文件失败: ${reader.error}`);
+        reader.readAsText(file);
+      }
     };
     input.click();
-    // 超时 60 秒
     setTimeout(() => { input.onchange = oldChange; resolve("文件选择超时"); }, 60000);
   });
 }
@@ -543,13 +554,36 @@ function onFileSelected(e) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    const content = `[上传文件: ${file.name}]\n\n${reader.result}`;
-    inputBox.value = inputBox.value ? inputBox.value + "\n\n" + content : content;
-    inputBox.focus();
-    inputBox.dispatchEvent(new Event("input"));
+    if (isImageFile(file)) {
+      // 图片直接渲染到聊天区
+      renderImageMessage(file.name, reader.result);
+    } else {
+      const content = `[上传文件: ${file.name}]\n\n${reader.result}`;
+      inputBox.value = inputBox.value ? inputBox.value + "\n\n" + content : content;
+      inputBox.focus();
+      inputBox.dispatchEvent(new Event("input"));
+    }
   };
-  reader.readAsText(file);
+  if (isImageFile(file)) {
+    reader.readAsDataURL(file);
+  } else {
+    reader.readAsText(file);
+  }
   e.target.value = "";
+}
+
+// 在聊天区渲染图片消息
+function renderImageMessage(filename, dataUrl) {
+  const empty = chatArea.querySelector(".chat-empty");
+  if (empty) empty.remove();
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.innerHTML = `<div class="avatar">👤</div><div class="bubble">
+    <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:6px;">📷 ${escapeHtml(filename)}</div>
+    <img src="${dataUrl}" style="max-width:100%;max-height:400px;border-radius:8px;" alt="${escapeHtml(filename)}">
+  </div>`;
+  chatArea.appendChild(div);
+  scrollToBottom();
 }
 
 function toolWriteFile(args) {
