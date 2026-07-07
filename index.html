@@ -993,7 +993,7 @@ async function callOpenAIAgent(topic, apiUrl, apiKey, model) {
 
   for (let round = 0; round < MAX_AGENT_ROUNDS; round++) {
     const data = await apiFetch(apiUrl, apiKey, {
-      model, max_tokens: MAX_TOKENS, messages: fullMessages, tools: TOOLS, tool_choice: "auto", stream: false,
+      model, max_tokens: MAX_TOKENS, messages: fullMessages, tools: TOOLS, stream: false,
     });
     const choice = data.choices[0];
     const msg = choice.message;
