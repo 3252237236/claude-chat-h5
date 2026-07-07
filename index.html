@@ -553,10 +553,12 @@ function onFileSelected(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
+  const isImg = isImageFile(file);
   reader.onload = () => {
-    if (isImageFile(file)) {
-      // 图片直接渲染到聊天区
+    if (isImg) {
       renderImageMessage(file.name, reader.result);
+      // 图片上传后自动发送
+      setTimeout(() => sendMessage(), 100);
     } else {
       const content = `[上传文件: ${file.name}]\n\n${reader.result}`;
       inputBox.value = inputBox.value ? inputBox.value + "\n\n" + content : content;
@@ -564,7 +566,7 @@ function onFileSelected(e) {
       inputBox.dispatchEvent(new Event("input"));
     }
   };
-  if (isImageFile(file)) {
+  if (isImg) {
     reader.readAsDataURL(file);
   } else {
     reader.readAsText(file);
