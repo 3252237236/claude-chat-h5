@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Claude 聊天</title>
+<style>
+/* ========== 全局重置 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --sidebar-bg: #1e1e2e;
+  --sidebar-text: #cdd6f4;
+  --sidebar-active: #313244;
+  --sidebar-hover: #262637;
+  --text: #1e1e2e;
+  --text-secondary: #6c6c80;
+  --border: #e2e2e8;
+  --primary: #4675f0;
+  --primary-hover: #3565e0;
+  --primary-light: #eef1fd;
+  --user-bubble: #4675f0;
+  --user-text: #ffffff;
+  --ai-bubble: #f0f0f5;
+  --ai-text: #1e1e2e;
+  --error: #d32f2f;
+  --error-bg: #fce4e4;
+  --tool-bg: #fff8e1;
+  --tool-border: #ffc107;
+  --tool-text: #795548;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a2e;
+    --surface: #222236;
+    --text: #e0e0e8;
+    --text-secondary: #a0a0b8;
+    --border: #333350;
+    --ai-bubble: #2a2a40;
+    --ai-text: #e0e0e8;
+    --primary-light: #1e1e3a;
+  }
+}
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+/* ========== 布局 ========== */
+.app { display: flex; height: 100vh; }
+.sidebar {
+  width: 280px; min-width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text);
+  display: flex; flex-direction: column; transition: transform var(--transition); z-index: 100;
+}
+.sidebar-header { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sidebar-header h1 { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+.sidebar-header .subtitle { font-size: 11px; color: #8888a0; margin-top: 2px; }
+.topic-list { flex: 1; overflow-y: auto; padding: 8px; }
+.topic-item {
+  display: flex; align-items: center; padding: 10px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; margin-bottom: 2px; transition: background var(--transition); gap: 8px;
+}
+.topic-item:hover { background: var(--sidebar-hover); }
+.topic-item.active { background: var(--sidebar-active); }
+.topic-item .topic-icon { font-size: 14px; flex-shrink: 0; }
+.topic-item .topic-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topic-item .topic-actions { display: none; gap: 4px; }
+.topic-item:hover .topic-actions { display: flex; }
+.topic-item .btn-icon {
+  width: 24px; height: 24px; border: none; background: transparent; color: #8888a0;
+  border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.topic-item .btn-icon:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; }
+.sidebar-footer button {
+  flex: 1; padding: 8px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 12px; font-weight: 600; transition: all var(--transition);
+}
+.btn-new { background: var(--primary); color: #fff; }
+.btn-new:hover { background: var(--primary-hover); }
+.btn-settings { background: rgba(255,255,255,0.1); color: var(--sidebar-text); }
+.btn-settings:hover { background: rgba(255,255,255,0.2); }
+
+/* ========== 主区域 ========== */
+.main {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+.main-header {
+  padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+  display: flex; align-items: center; gap: 12px;
+}
+.btn-menu { display: none; width: 36px; height: 36px; border: none; background: transparent; font-size: 20px; cursor: pointer; border-radius: var(--radius-sm); }
+.btn-menu:hover { background: var(--ai-bubble); }
+.main-header .agent-badge {
+  font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600;
+}
+.agent-on { background: #fff3e0; color: #e65100; }
+.agent-off { background: var(--ai-bubble); color: var(--text-secondary); }
+.main-header .model-name { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+.chat-area {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.chat-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--text-secondary); text-align: center; padding: 40px;
+}
+.chat-empty .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
+.chat-empty h3 { font-weight: 600; margin-bottom: 8px; }
+.chat-empty p { font-size: 13px; line-height: 1.6; }
+
+/* ========== 消息气泡 ========== */
+.msg { display: flex; gap: 10px; max-width: 85%; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.msg.assistant { align-self: flex-start; }
+.msg.error { align-self: center; max-width: 90%; }
+.msg .avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.msg.user .avatar { background: var(--primary); }
+.msg.assistant .avatar { background: #e8e8f0; }
+.msg .bubble {
+  padding: 10px 14px; border-radius: var(--radius); line-height: 1.6; font-size: 14px;
+  word-break: break-word;
+}
+.msg.user .bubble { background: var(--user-bubble); color: var(--user-text); border-bottom-right-radius: 4px; }
+.msg.assistant .bubble { background: var(--ai-bubble); color: var(--ai-text); border-bottom-left-radius: 4px; }
+.msg.error .bubble { background: var(--error-bg); color: var(--error); font-size: 13px; }
+.msg .bubble p { margin: 4px 0; }
+.msg .bubble p:first-child { margin-top: 0; }
+.msg .bubble p:last-child { margin-bottom: 0; }
+.msg .bubble ul, .msg .bubble ol { padding-left: 20px; margin: 6px 0; }
+.msg .bubble li { margin: 2px 0; }
+.msg .bubble code {
+  background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 13px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+}
+.msg .bubble pre {
+  background: #1e1e2e; color: #cdd6f4; padding: 14px; border-radius: var(--radius-sm);
+  overflow-x: auto; margin: 8px 0; font-size: 13px; line-height: 1.5;
+}
+.msg .bubble pre code { background: none; padding: 0; color: inherit; }
+.msg .bubble strong { font-weight: 600; }
+.msg .bubble em { font-style: italic; }
+.msg .bubble h1, .msg .bubble h2, .msg .bubble h3, .msg .bubble h4 { margin: 8px 0 4px; font-weight: 600; }
+.msg .bubble h1 { font-size: 1.3em; } .msg .bubble h2 { font-size: 1.15em; } .msg .bubble h3 { font-size: 1.05em; }
+.msg .bubble a { color: var(--primary); text-decoration: underline; }
+.msg .bubble blockquote {
+  border-left: 3px solid var(--primary); padding-left: 12px; margin: 8px 0;
+  color: var(--text-secondary); font-style: italic;
+}
+.msg .bubble table { border-collapse: collapse; margin: 8px 0; width: 100%; }
+.msg .bubble th, .msg .bubble td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; font-size: 13px; }
+.msg .bubble th { background: rgba(0,0,0,0.04); font-weight: 600; }
+
+/* ========== 工具调用卡片 ========== */
+.tool-card {
+  align-self: flex-start; max-width: 85%; background: var(--tool-bg); border: 1px solid var(--tool-border);
+  border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; animation: fadeIn 0.3s ease;
+}
+.tool-card .tool-header { font-weight: 600; color: var(--tool-text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.tool-card .tool-args { font-size: 12px; color: #8d6e63; font-family: monospace; white-space: pre-wrap; max-height: 80px; overflow-y: auto; }
+.tool-card .tool-result { font-size: 12px; color: #6d4c41; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.08); white-space: pre-wrap; max-height: 120px; overflow-y: auto; }
+
+/* ========== 输入区 ========== */
+.input-area {
+  padding: 12px 20px 16px; border-top: 1px solid var(--border); background: var(--surface);
+}
+.input-row { display: flex; gap: 10px; align-items: flex-end; }
+.input-row textarea {
+  flex: 1; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px;
+  font-size: 14px; font-family: inherit; resize: none; outline: none; background: var(--bg);
+  color: var(--text); line-height: 1.5; min-height: 44px; max-height: 120px;
+  transition: border-color var(--transition);
+}
+.input-row textarea:focus { border-color: var(--primary); }
+.btn-send {
+  width: 44px; height: 44px; border: none; background: var(--primary); color: #fff;
+  border-radius: 50%; cursor: pointer; font-size: 18px; flex-shrink: 0;
+  transition: all var(--transition); display: flex; align-items: center; justify-content: center;
+}
+.btn-send:hover { background: var(--primary-hover); transform: scale(1.05); }
+.btn-send:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.input-hint { font-size: 11px; color: var(--text-secondary); margin-top: 6px; text-align: center; }
+
+/* ========== 遮罩层（移动端） ========== */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+.overlay.show { display: block; }
+
+/* ========== 模态框 ========== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius); padding: 24px;
+  width: 90%; max-width: 520px; max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.modal h3 { font-size: 18px; margin-bottom: 16px; }
+.modal label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; color: var(--text-secondary); }
+.modal input, .modal textarea, .modal select {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; font-family: inherit; outline: none; background: var(--bg); color: var(--text);
+}
+.modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--primary); }
+.modal textarea { resize: vertical; min-height: 80px; }
+.modal .btn-row { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.modal .btn-row button {
+  padding: 10px 20px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 14px; font-weight: 600; transition: all var(--transition);
+}
+.modal .btn-primary { background: var(--primary); color: #fff; }
+.modal .btn-primary:hover { background: var(--primary-hover); }
+.modal .btn-secondary { background: var(--border); color: var(--text); }
+.modal .btn-secondary:hover { background: #d0d0d8; }
+.modal .btn-danger { background: var(--error); color: #fff; }
+.modal .btn-danger:hover { opacity: 0.9; }
+.modal .preset-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.modal .preset-tag {
+  padding: 4px 12px; border-radius: 14px; font-size: 12px; cursor: pointer; border: 1px solid var(--border);
+  background: var(--bg); transition: all var(--transition);
+}
+.modal .preset-tag:hover { border-color: var(--primary); color: var(--primary); }
+.modal .preset-tag.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ========== Toast ========== */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 300;
+  background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2s forwards; pointer-events: none;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%);
+    width: 280px; box-shadow: 4px 0 16px rgba(0,0,0,0.2);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .btn-menu { display: flex; align-items: center; justify-content: center; }
+  .msg { max-width: 92%; }
+  .tool-card { max-width: 92%; }
+  .main-header { padding: 10px 14px; }
+  .chat-area { padding: 12px; }
+  .input-area { padding: 8px 12px 12px; }
+  .modal { width: 94%; padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ===== 侧边栏 ===== -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1>💬 Claude 聊天</h1>
+      <div class="subtitle">多话题 · Agent · 跨平台</div>
+    </div>
+    <div class="topic-list" id="topicList"></div>
+    <div class="sidebar-footer">
+      <button class="btn-new" onclick="newTopic()">＋ 新建话题</button>
+      <button class="btn-settings" onclick="openSettings()">⚙️ 设置</button>
+    </div>
+  </div>
+
+  <!-- ===== 遮罩 ===== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ===== 主区域 ===== -->
+  <div class="main">
+    <div class="main-header">
+      <button class="btn-menu" onclick="toggleSidebar()">☰</button>
+      <span class="agent-badge agent-off" id="agentBadge">📝 纯聊天</span>
+      <span class="model-name" id="modelName">deepseek-chat</span>
+    </div>
+    <div class="chat-area" id="chatArea">
+      <div class="chat-empty">
+        <div class="empty-icon">💬</div>
+        <h3>开始对话</h3>
+        <p>在下方输入消息，按 Enter 发送<br>Shift + Enter 换行</p>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="inputBox" rows="1" placeholder="输入消息… (Enter 发送, Shift+Enter 换行)" onkeydown="onInputKeydown(event)"></textarea>
+        <button class="btn-send" id="btnSend" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="input-hint" id="inputHint">就绪 | 📝 纯聊天 | 模型: deepseek-chat</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 设置模态框 ===== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>⚙️ API 设置</h3>
+    <label>可用平台（由服务端配置）</label>
+    <div class="preset-tags" id="presetTags"></div>
+    <label>API URL</label>
+    <input type="text" id="setApiUrl" placeholder="https://api.deepseek.com/v1/chat/completions">
+    <label>模型名称</label>
+    <input type="text" id="setModel" placeholder="deepseek-chat">
+    <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 8px; margin-top: 14px; font-size: 12px; color: #2e7d32;">
+      🔐 管理员在服务端配置好 Key，用户直接选平台用。<br>
+      支持的平台：<span id="availablePlatforms">加载中…</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeSettings()">取消</button>
+      <button class="btn-primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 话题设置模态框 ===== -->
+<div class="modal-overlay" id="topicSettingsModal">
+  <div class="modal">
+    <h3>🔧 话题设置</h3>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <input type="checkbox" id="topicAgentEnabled" onchange="onAgentToggle()"> 🤖 启用 Agent 模式
+    </label>
+    <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;" id="agentHint">
+      开启后 AI 可以调用工具。浏览器环境下部分工具受限（无法读写本地文件、执行命令等）。
+    </p>
+    <label>系统提示词（System Prompt）</label>
+    <textarea id="topicSystemPrompt" rows="4" placeholder="可选：自定义 AI 的行为指令…"></textarea>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeTopicSettings()">取消</button>
+      <button class="btn-primary" onclick="saveTopicSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toast 容器 ===== -->
+<div id="toastContainer"></div>
+
+<script>
+// ==================== 常量 ====================
+const MAX_TOKENS = 4096;
+const MAX_AGENT_ROUNDS = 15;
+
+const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "read_file",
+      description: "读取文件内容。可以指定行偏移和行数限制来只读取部分内容。",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "文件的绝对路径" },
+          offset: { type: "integer", description: "从第几行开始读（从0开始），可选" },
+          limit: { type: "integer", description: "最多读多少行，可选" },
+        },
+        required: ["path"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "write_file",
+      description: "创建或覆盖写入文件。⚠️ 会覆盖已存在的文件。在浏览器环境下将触发下载。",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "文件路径（用于生成下载文件名）" },
+          content: { type: "string", description: "要写入的完整内容" },
+        },
+        required: ["path", "content"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "edit_file",
+      description: "在文件中查找并替换指定文本（精确匹配）。浏览器环境下受限。",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "文件路径" },
+          old_str: { type: "string", description: "要被替换的原始文本（必须精确匹配）" },
+          new_str: { type: "string", description: "替换后的新文本" },
+          replace_all: { type: "boolean", description: "是否替换所有匹配项，默认 false" },
+        },
+        required: ["path", "old_str", "new_str"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_directory",
+      description: "列出目录内容。浏览器环境下受限。",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "目录路径" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_files",
+      description: "搜索文件。浏览器环境下受限。",
+      parameters: {
+        type: "object",
+        properties: {
+          pattern: { type: "string", description: "glob 模式" },
+          path: { type: "string", description: "搜索目录" },
+        },
+        required: ["pattern"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_content",
+      description: "在内容中搜索匹配文本。浏览器环境下受限。",
+      parameters: {
+        type: "object",
+        properties: {
+          pattern: { type: "string", description: "搜索模式" },
+          path: { type: "string", description: "搜索目录" },
+          glob: { type: "string", description: "文件筛选模式" },
+        },
+        required: ["pattern"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_command",
+      description: "执行命令。⚠️ 浏览器环境下不可用。",
+      parameters: {
+        type: "object",
+        properties: {
+          command: { type: "string", description: "要执行的 shell 命令" },
+          cwd: { type: "string", description: "工作目录" },
+        },
+        required: ["command"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "open_url",
+      description: "用浏览器打开一个 URL。",
+      parameters: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "要打开的完整 URL（含 http/https）" },
+        },
+        required: ["url"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "open_app",
+      description: "打开应用程序。浏览器环境下受限。",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "应用名称或路径" },
+        },
+        required: ["name"],
+      },
+    },
+  },
+];
+
+const DANGEROUS_TOOLS = new Set(["write_file", "edit_file", "run_command"]);
+
+// ==================== 工具执行 ====================
+function executeTool(name, args) {
+  try {
+    switch (name) {
+      case "read_file":       return toolReadFile(args);
+      case "write_file":      return toolWriteFile(args);
+      case "edit_file":       return toolEditFile(args);
+      case "list_directory":  return toolListDirectory(args);
+      case "search_files":    return toolSearchFiles(args);
+      case "search_content":  return toolSearchContent(args);
+      case "run_command":     return toolRunCommand(args);
+      case "open_url":        return toolOpenUrl(args);
+      case "open_app":        return toolOpenApp(args);
+      default:                return `未知工具: ${name}`;
+    }
+  } catch (e) {
+    return `工具执行出错: ${e.message}`;
+  }
+}
+
+function toolReadFile(args) {
+  return "⚠️ 浏览器环境无法读取本地文件。请使用文件上传功能或将文件内容粘贴到对话中。";
+}
+
+function toolWriteFile(args) {
+  const path = args.path || "output.txt";
+  const content = args.content || "";
+  const filename = path.split("/").pop().split("\\").pop() || "output.txt";
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  return `✅ 已触发文件下载: ${filename} (${content.length} 字符)`;
+}
+
+function toolEditFile(args) {
+  return "⚠️ 浏览器环境无法编辑本地文件。请手动复制内容进行修改。";
+}
+
+function toolListDirectory(args) {
+  return "⚠️ 浏览器环境无法列出目录。请使用文件选择器手动选择文件。";
+}
+
+function toolSearchFiles(args) {
+  return "⚠️ 浏览器环境无法搜索本地文件。";
+}
+
+function toolSearchContent(args) {
+  return "⚠️ 浏览器环境无法搜索本地文件内容。";
+}
+
+function toolRunCommand(args) {
+  return "⚠️ 浏览器环境无法执行系统命令。请在桌面版 Claude 聊天中使用此功能。";
+}
+
+function toolOpenUrl(args) {
+  const url = args.url;
+  if (!url) return "未提供 URL";
+  window.open(url, "_blank");
+  return `已在浏览器中打开: ${url}`;
+}
+
+function toolOpenApp(args) {
+  return "⚠️ 浏览器环境无法启动本地应用。请在桌面版 Claude 聊天中使用此功能。";
+}
+
+// ==================== 数据存储 ====================
+const STORAGE_KEY = "claude_chat_h5";
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data.topics && data.topicOrder) return data;
+    }
+  } catch (e) {}
+  return createFreshData();
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    showToast("⚠️ 存储空间不足，请清理旧对话");
+  }
+}
+
+function createFreshData() {
+  const tid = generateId();
+  return {
+    topics: {
+      [tid]: { name: "新对话", systemPrompt: "", agentEnabled: false, messages: [] },
+    },
+    topicOrder: [tid],
+    currentTopicId: tid,
+    settings: { apiUrl: "https://api.deepseek.com/v1/chat/completions", model: "deepseek-chat" },
+  };
+}
+
+function generateId() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+// ==================== 全局状态 ====================
+let appData = loadData();
+let isSending = false;
+let currentPreset = "deepseek";
+
+// ==================== DOM 引用 ====================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const sidebar = $("#sidebar");
+const overlay = $("#overlay");
+const topicList = $("#topicList");
+const chatArea = $("#chatArea");
+const btnSend = $("#btnSend");
+const agentBadge = $("#agentBadge");
+const modelName = $("#modelName");
+const inputHint = $("#inputHint");
+
+// ==================== 初始化 ====================
+function init() {
+  renderTopicList();
+  switchTopic(appData.currentTopicId);
+  updateStatusBar();
+  // 从服务端获取可用平台列表
+  fetch("/api/config")
+    .then(r => r.json())
+    .then(cfg => {
+      appData.serverHasKey = cfg.hasKey;
+      appData.availableProviders = cfg.providers || [];
+      if (!cfg.hasKey) {
+        inputHint.textContent = "⚠️ 服务端未配置 API Key";
+      } else if (appData.availableProviders.length > 0) {
+        // 如果还没选模型，默认选第一个可用的
+        const currentUrl = appData.settings.apiUrl || "";
+        const matched = appData.availableProviders.find(p => p.url === currentUrl);
+        if (!matched && appData.availableProviders[0]) {
+          appData.settings.apiUrl = appData.availableProviders[0].url;
+          appData.settings.model = appData.availableProviders[0].model;
+        }
+      }
+      updateStatusBar();
+    })
+    .catch(() => {
+      appData.serverHasKey = false;
+      inputHint.textContent = "⚠️ 无法连接服务器";
+    });
+}
+init();
+
+// ==================== 话题列表渲染 ====================
+function renderTopicList() {
+  topicList.innerHTML = "";
+  appData.topicOrder.forEach(tid => {
+    const topic = appData.topics[tid];
+    if (!topic) return;
+    const isActive = tid === appData.currentTopicId;
+    const icon = topic.agentEnabled ? "🤖" : "💬";
+    const name = topic.name || "未命名";
+    const div = document.createElement("div");
+    div.className = `topic-item${isActive ? " active" : ""}`;
+    div.innerHTML = `
+      <span class="topic-icon">${icon}</span>
+      <span class="topic-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+      <span class="topic-actions">
+        <button class="btn-icon" title="话题设置" onclick="event.stopPropagation();openTopicSettings('${tid}')">⚙</button>
+        <button class="btn-icon" title="删除" onclick="event.stopPropagation();deleteTopic('${tid}')">✕</button>
+      </span>
+    `;
+    div.onclick = () => switchTopic(tid);
+    topicList.appendChild(div);
+  });
+}
+
+// ==================== 话题管理 ====================
+function switchTopic(tid) {
+  if (!appData.topics[tid]) return;
+  appData.currentTopicId = tid;
+  chatArea.innerHTML = "";
+  const topic = appData.topics[tid];
+  topic.messages.forEach(msg => renderMessage(msg));
+  if (topic.messages.length === 0) {
+    chatArea.innerHTML = `
+      <div class="chat-empty">
+        <div class="empty-icon">💬</div>
+        <h3>开始对话</h3>
+        <p>在下方输入消息，按 Enter 发送<br>Shift + Enter 换行</p>
+      </div>`;
+  }
+  renderTopicList();
+  updateStatusBar();
+  closeSidebar();
+  saveAll();
+  scrollToBottom();
+}
+
+function newTopic() {
+  const name = prompt("请输入话题名称：", "新对话");
+  if (!name || !name.trim()) return;
+  const tid = generateId();
+  appData.topics[tid] = {
+    name: name.trim(),
+    systemPrompt: "",
+    agentEnabled: false,
+    messages: [],
+  };
+  appData.topicOrder.push(tid);
+  switchTopic(tid);
+}
+
+function deleteTopic(tid) {
+  if (appData.topicOrder.length <= 1) { showToast("至少保留一个话题"); return; }
+  const name = appData.topics[tid]?.name || "未命名";
+  if (!confirm(`确定要删除话题「${name}」吗？`)) return;
+  delete appData.topics[tid];
+  appData.topicOrder = appData.topicOrder.filter(t => t !== tid);
+  if (appData.currentTopicId === tid) {
+    appData.currentTopicId = appData.topicOrder[0];
+  }
+  switchTopic(appData.currentTopicId);
+}
+
+function getCurrentTopic() {
+  return appData.topics[appData.currentTopicId] || {};
+}
+
+// ==================== 消息渲染 ====================
+function renderMessage(msg) {
+  // 移除空状态
+  const empty = chatArea.querySelector(".chat-empty");
+  if (empty) empty.remove();
+
+  const role = msg.role;
+  if (role === "user") {
+    const div = document.createElement("div");
+    div.className = "msg user";
+    div.innerHTML = `<div class="avatar">👤</div><div class="bubble">${renderMarkdown(msg.content)}</div>`;
+    chatArea.appendChild(div);
+  } else if (role === "assistant") {
+    const div = document.createElement("div");
+    div.className = "msg assistant";
+    const content = msg.content || "";
+    // 同时显示 tool_calls 信息
+    let extra = "";
+    if (msg.toolCalls && msg.toolCalls.length > 0) {
+      extra = msg.toolCalls.map(tc =>
+        `<div class="tool-card"><div class="tool-header">🔧 ${escapeHtml(tc.name)}</div></div>`
+      ).join("");
+    }
+    div.innerHTML = `<div class="avatar">🤖</div><div class="bubble">${renderMarkdown(content)}${extra}</div>`;
+    chatArea.appendChild(div);
+  } else if (role === "tool") {
+    const div = document.createElement("div");
+    div.className = "tool-card";
+    div.innerHTML = `<div class="tool-header">📋 工具结果</div><div class="tool-result">${escapeHtml(msg.content || "")}</div>`;
+    chatArea.appendChild(div);
+  } else if (role === "error") {
+    const div = document.createElement("div");
+    div.className = "msg error";
+    div.innerHTML = `<div class="bubble">❌ ${escapeHtml(msg.content)}</div>`;
+    chatArea.appendChild(div);
+  }
+  scrollToBottom();
+}
+
+function renderToolCall(name, args) {
+  const empty = chatArea.querySelector(".chat-empty");
+  if (empty) empty.remove();
+  const div = document.createElement("div");
+  div.className = "tool-card";
+  const argsStr = typeof args === "string" ? args : JSON.stringify(args, null, 2);
+  div.innerHTML = `<div class="tool-header">🔧 ${escapeHtml(name)}</div><div class="tool-args">${escapeHtml(argsStr.substring(0, 300))}</div>`;
+  chatArea.appendChild(div);
+  scrollToBottom();
+}
+
+function renderToolResult(result) {
+  const div = document.createElement("div");
+  div.className = "tool-card";
+  div.innerHTML = `<div class="tool-header">📋 工具结果</div><div class="tool-result">${escapeHtml((result || "").substring(0, 500))}</div>`;
+  chatArea.appendChild(div);
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+}
+
+// ==================== Markdown 渲染 ====================
+function renderMarkdown(text) {
+  if (!text) return "";
+  let html = escapeHtml(text);
+
+  // 代码块 ```
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    return `<pre><code>${code.trim()}</code></pre>`;
+  });
+
+  // 行内代码 `
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // 标题
+  html = html.replace(/^#### (.+)$/gm, "<h4>$1</h4>");
+  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+
+  // 粗体 / 斜体
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>");
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  // 链接
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // 块引用
+  html = html.replace(/^&gt; (.+)$/gm, "<blockquote>$1</blockquote>");
+
+  // 水平线
+  html = html.replace(/^---$/gm, "<hr>");
+
+  // 无序列表
+  html = html.replace(/^[\-\*] (.+)$/gm, "<li>$1</li>");
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>");
+
+  // 有序列表
+  html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
+
+  // 段落 - 连续的纯文本行
+  html = html.replace(/\n\n/g, "</p><p>");
+  html = "<p>" + html + "</p>";
+  html = html.replace(/<p>\s*<\/p>/g, "");
+  html = html.replace(/<p>(<[houl])/g, "$1");
+  html = html.replace(/(<\/[houl][^>]*>)<\/p>/g, "$1");
+
+  return html;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ==================== 消息发送 ====================
+function onInputKeydown(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function sendMessage() {
+  const text = inputBox.value.trim();
+  if (!text || isSending) return;
+  if (!appData.serverHasKey) {
+    showToast("服务端未配置 API Key，请设置环境变量 API_KEY");
+    return;
+  }
+
+  const topic = getCurrentTopic();
+  topic.messages.push({ role: "user", content: text });
+  renderMessage({ role: "user", content: text });
+  inputBox.value = "";
+  inputBox.style.height = "auto";
+  setSending(true);
+
+  if (topic.agentEnabled) {
+    callApiAgent(topic);
+  } else {
+    callApiSimple(topic);
+  }
+}
+
+function setSending(sending) {
+  isSending = sending;
+  btnSend.disabled = sending;
+  btnSend.textContent = sending ? "⋯" : "➤";
+  inputBox.disabled = sending;
+}
+
+function updateStatusBar() {
+  const topic = getCurrentTopic();
+  const agentOn = topic.agentEnabled;
+  agentBadge.textContent = agentOn ? "🤖 Agent ON" : "📝 纯聊天";
+  agentBadge.className = `agent-badge ${agentOn ? "agent-on" : "agent-off"}`;
+  const mdl = appData.settings.model || "未设置";
+  modelName.textContent = `模型: ${mdl}`;
+  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent ON" : "📝 纯聊天"} | 模型: ${mdl}`;
+}
+
+// ==================== API 调用 ====================
+async function apiFetch(apiUrl, apiKey, body) {
+  // 所有 API 请求通过服务端 /api/chat 转发（Key 存在服务端，安全）
+  const resp = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apiUrl, payload: body }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`API 请求失败 (${resp.status}): ${err.error?.message || resp.statusText}`);
+  }
+  return resp.json();
+}
+
+async function callApiSimple(topic) {
+  const { apiUrl, apiKey, model } = appData.settings;
+  const isClaude = apiUrl.includes("anthropic.com");
+
+  // 构建消息
+  let messages = [];
+  const sysPrompt = topic.systemPrompt || "";
+  if (sysPrompt && !isClaude) {
+    messages.push({ role: "system", content: sysPrompt });
+  }
+
+  // 过滤出 user/assistant 消息（不含 tool）
+  const historyMsgs = topic.messages.filter(m => m.role === "user" || m.role === "assistant");
+  messages = messages.concat(historyMsgs.map(m => ({ role: m.role, content: m.content })));
+
+  try {
+    let responseText;
+    if (isClaude) {
+      responseText = await callClaudeSimple(messages, sysPrompt, apiUrl, apiKey, model);
+    } else {
+      responseText = await callOpenAICompat(messages, apiUrl, apiKey, model);
+    }
+    topic.messages.push({ role: "assistant", content: responseText });
+    renderMessage({ role: "assistant", content: responseText });
+  } catch (e) {
+    topic.messages.push({ role: "error", content: e.message });
+    renderMessage({ role: "error", content: e.message });
+  } finally {
+    setSending(false);
+    saveAll();
+    updateStatusBar();
+  }
+}
+
+async function callOpenAICompat(messages, apiUrl, apiKey, model) {
+  const data = await apiFetch(apiUrl, apiKey, {
+    model, max_tokens: MAX_TOKENS, messages, stream: false,
+  });
+  return data.choices[0].message.content;
+}
+
+async function callClaudeSimple(messages, sysPrompt, apiUrl, apiKey, model) {
+  const claudeMessages = messages
+    .filter(m => m.role === "user" || m.role === "assistant")
+    .map(m => ({ role: m.role, content: m.content }));
+  const body = { model, max_tokens: MAX_TOKENS, messages: claudeMessages };
+  if (sysPrompt) body.system = sysPrompt;
+
+  const data = await apiFetch(apiUrl, apiKey, body);
+  return data.content.filter(c => c.type === "text").map(c => c.text).join("\n");
+}
+
+// ==================== Agent 模式 API 调用 ====================
+async function callApiAgent(topic) {
+  const { apiUrl, apiKey, model } = appData.settings;
+  const isClaude = apiUrl.includes("anthropic.com");
+
+  try {
+    let responseText;
+    if (isClaude) {
+      responseText = await callClaudeAgent(topic, apiUrl, apiKey, model);
+    } else {
+      responseText = await callOpenAIAgent(topic, apiUrl, apiKey, model);
+    }
+    topic.messages.push({ role: "assistant", content: responseText });
+    renderMessage({ role: "assistant", content: responseText });
+  } catch (e) {
+    topic.messages.push({ role: "error", content: e.message });
+    renderMessage({ role: "error", content: e.message });
+  } finally {
+    setSending(false);
+    saveAll();
+    updateStatusBar();
+  }
+}
+
+async function callOpenAIAgent(topic, apiUrl, apiKey, model) {
+  const sysPrompt = topic.systemPrompt || "";
+  const agentPrompt = "你是一个拥有工具调用能力的 AI 助手。你可以调用工具来完成任务。每次工具调用后会收到结果，你可以继续调用工具或给出最终回答。";
+  const fullSystem = sysPrompt ? sysPrompt + "\n\n" + agentPrompt : agentPrompt;
+
+  // 构建完整消息列表
+  let fullMessages = [{ role: "system", content: fullSystem }];
+  fullMessages = fullMessages.concat(topic.messages.map(m => {
+    if (m.role === "user") return { role: "user", content: m.content };
+    if (m.role === "assistant") {
+      const obj = { role: "assistant", content: m.content || "" };
+      if (m.toolCalls) obj.tool_calls = m.toolCalls;
+      return obj;
+    }
+    if (m.role === "tool") return { role: "tool", tool_call_id: m.toolCallId, content: m.content };
+    return null;
+  }).filter(Boolean));
+
+  for (let round = 0; round < MAX_AGENT_ROUNDS; round++) {
+    const data = await apiFetch(apiUrl, apiKey, {
+      model, max_tokens: MAX_TOKENS, messages: fullMessages, tools: TOOLS, tool_choice: "auto", stream: false,
+    });
+    const choice = data.choices[0];
+    const msg = choice.message;
+
+    if (msg.tool_calls && choice.finish_reason === "tool_calls") {
+      fullMessages.push({
+        role: "assistant",
+        content: msg.content || "",
+        tool_calls: msg.tool_calls,
+      });
+
+      // 记录 tool_calls 到话题消息
+      const tcRecord = msg.tool_calls.map(tc => ({
+        id: tc.id,
+        name: tc.function.name,
+        arguments: tc.function.arguments,
+      }));
+
+      for (const tc of msg.tool_calls) {
+        const toolName = tc.function.name;
+        let toolArgs = {};
+        try { toolArgs = JSON.parse(tc.function.arguments); } catch (e) {}
+
+        renderToolCall(toolName, tc.function.arguments);
+        updateStatusBarDyn(`🔧 执行工具: ${toolName}…`);
+
+        // 危险工具确认
+        if (DANGEROUS_TOOLS.has(toolName)) {
+          const confirmed = confirm(`⚠️ 危险操作: ${toolName}\n\n参数:\n${JSON.stringify(toolArgs, null, 2)}\n\n是否允许执行？`);
+          if (!confirmed) {
+            const resultText = `用户拒绝了此操作：${toolName}`;
+            fullMessages.push({ role: "tool", tool_call_id: tc.id, content: resultText });
+            renderToolResult(resultText);
+            topic.messages.push({ role: "tool", toolCallId: tc.id, content: resultText });
+            continue;
+          }
+        }
+
+        updateStatusBarDyn(`⏳ 执行中: ${toolName}…`);
+        const resultText = executeTool(toolName, toolArgs);
+        fullMessages.push({ role: "tool", tool_call_id: tc.id, content: resultText });
+        renderToolResult(resultText);
+        topic.messages.push({ role: "tool", toolCallId: tc.id, content: resultText });
+      }
+
+      // 保存 assistant 消息（含 tool_calls）
+      topic.messages.push({
+        role: "assistant",
+        content: msg.content || "",
+        toolCalls: tcRecord,
+      });
+    } else {
+      updateStatusBarDyn("🤖 Claude 思考中…");
+      return msg.content || "";
+    }
+  }
+  return "⚠️ Agent 达到最大执行轮数（15轮），已停止。";
+}
+
+async function callClaudeAgent(topic, apiUrl, apiKey, model) {
+  const sysPrompt = topic.systemPrompt || "";
+  const agentPrompt = "你是一个拥有工具调用能力的 AI 助手。你可以调用工具来完成任务。";
+  const fullSystem = sysPrompt ? sysPrompt + "\n\n" + agentPrompt : agentPrompt;
+
+  let claudeMessages = [];
+  for (const m of topic.messages) {
+    if (m.role === "user") {
+      claudeMessages.push({ role: "user", content: m.content });
+    } else if (m.role === "assistant") {
+      const content = [];
+      if (m.content) content.push({ type: "text", text: m.content });
+      if (m.toolCalls) {
+        for (const tc of m.toolCalls) {
+          content.push({
+            type: "tool_use",
+            id: tc.id,
+            name: tc.name,
+            input: JSON.parse(tc.arguments || "{}"),
+          });
+        }
+      }
+      claudeMessages.push({ role: "assistant", content });
+    } else if (m.role === "tool") {
+      claudeMessages.push({
+        role: "user",
+        content: [{ type: "tool_result", tool_use_id: m.toolCallId, content: m.content }],
+      });
+    }
+  }
+
+  const claudeTools = TOOLS.map(t => ({
+    name: t.function.name,
+    description: t.function.description,
+    input_schema: t.function.parameters,
+  }));
+
+  for (let round = 0; round < MAX_AGENT_ROUNDS; round++) {
+    const body = { model, max_tokens: MAX_TOKENS, messages: claudeMessages, tools: claudeTools };
+    if (fullSystem) body.system = fullSystem;
+
+    const data = await apiFetch(apiUrl, apiKey, body);
+    const stopReason = data.stop_reason || "";
+    const content = data.content || [];
+
+    const toolUses = content.filter(c => c.type === "tool_use");
+    const textParts = content.filter(c => c.type === "text").map(c => c.text);
+
+    if (stopReason === "tool_use" && toolUses.length > 0) {
+      claudeMessages.push({ role: "assistant", content });
+      const tcRecord = [];
+      const toolResults = [];
+
+      for (const tu of toolUses) {
+        const toolName = tu.name;
+        const toolArgs = tu.input || {};
+        renderToolCall(toolName, JSON.stringify(toolArgs));
+        updateStatusBarDyn(`🔧 执行工具: ${toolName}…`);
+
+        if (DANGEROUS_TOOLS.has(toolName)) {
+          const confirmed = confirm(`⚠️ 危险操作: ${toolName}\n\n参数:\n${JSON.stringify(toolArgs, null, 2)}\n\n是否允许执行？`);
+          if (!confirmed) {
+            const resultText = `用户拒绝了此操作：${toolName}`;
+            toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: resultText });
+            renderToolResult(resultText);
+            topic.messages.push({ role: "tool", toolCallId: tu.id, content: resultText });
+            continue;
+          }
+        }
+
+        updateStatusBarDyn(`⏳ 执行中: ${toolName}…`);
+        const resultText = executeTool(toolName, toolArgs);
+        toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: resultText });
+        renderToolResult(resultText);
+        topic.messages.push({ role: "tool", toolCallId: tu.id, content: resultText });
+
+        tcRecord.push({ id: tu.id, name: toolName, arguments: JSON.stringify(toolArgs) });
+      }
+
+      claudeMessages.push({ role: "user", content: toolResults });
+      topic.messages.push({
+        role: "assistant",
+        content: textParts.join("\n"),
+        toolCalls: tcRecord,
+      });
+    } else {
+      updateStatusBarDyn("🤖 Claude 思考中…");
+      return textParts.join("\n");
+    }
+  }
+  return "⚠️ Agent 达到最大执行轮数（15轮），已停止。";
+}
+
+function updateStatusBarDyn(text) {
+  inputHint.textContent = text;
+}
+
+// ==================== 侧边栏（移动端） ====================
+function toggleSidebar() {
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("show");
+}
+
+function closeSidebar() {
+  sidebar.classList.remove("open");
+  overlay.classList.remove("show");
+}
+
+// ==================== 设置 ====================
+function openSettings() {
+  const s = appData.settings;
+  $("#setApiUrl").value = s.apiUrl || "";
+  $("#setModel").value = s.model || "";
+
+  // 从服务端获取可用平台列表
+  const providers = appData.availableProviders || [];
+  const tagsEl = $("#presetTags");
+  tagsEl.innerHTML = "";
+
+  if (providers.length > 0) {
+    providers.forEach(p => {
+      const tag = document.createElement("span");
+      tag.className = "preset-tag";
+      tag.dataset.url = p.url;
+      tag.dataset.model = p.model;
+      tag.textContent = p.name;
+      if (s.apiUrl === p.url) tag.classList.add("active");
+      tagsEl.appendChild(tag);
+    });
+    // 加一个自定义选项
+    const customTag = document.createElement("span");
+    customTag.className = "preset-tag";
+    customTag.dataset.url = "";
+    customTag.dataset.model = "";
+    customTag.textContent = "自定义";
+    if (!providers.find(p => p.url === s.apiUrl)) customTag.classList.add("active");
+    tagsEl.appendChild(customTag);
+
+    $("#availablePlatforms").textContent = providers.map(p => p.name).join(" · ");
+  } else {
+    tagsEl.innerHTML = '<span class="preset-tag active">自定义</span>';
+    $("#availablePlatforms").textContent = "未检测到服务端配置";
+  }
+
+  $("#settingsModal").classList.add("show");
+}
+
+function closeSettings() {
+  $("#settingsModal").classList.remove("show");
+}
+
+function saveSettings() {
+  const apiUrl = $("#setApiUrl").value.trim();
+  const model = $("#setModel").value.trim();
+  if (!apiUrl) { showToast("请输入 API URL"); return; }
+  appData.settings = { apiUrl, model };
+  saveAll();
+  updateStatusBar();
+  closeSettings();
+  showToast("✅ 设置已保存");
+}
+
+
+document.addEventListener("click", e => {
+  const tag = e.target.closest("#presetTags .preset-tag");
+  if (tag) {
+    // 更新选中样式
+    $$("#presetTags .preset-tag").forEach(t => t.classList.remove("active"));
+    tag.classList.add("active");
+    // 填充 URL 和模型
+    const url = tag.dataset.url || "";
+    const model = tag.dataset.model || "";
+    if (url) $("#setApiUrl").value = url;
+    if (model) $("#setModel").value = model;
+  }
+  if (e.target === $("#settingsModal")) closeSettings();
+  if (e.target === $("#topicSettingsModal")) closeTopicSettings();
+});
+
+// ==================== 话题设置 ====================
+function openTopicSettings(tid) {
+  if (tid) {
+    appData.currentTopicId = tid;
+    switchTopic(tid);
+  }
+  const topic = getCurrentTopic();
+  $("#topicAgentEnabled").checked = topic.agentEnabled || false;
+  $("#topicSystemPrompt").value = topic.systemPrompt || "";
+  onAgentToggle();
+  $("#topicSettingsModal").classList.add("show");
+}
+
+function closeTopicSettings() {
+  $("#topicSettingsModal").classList.remove("show");
+}
+
+function saveTopicSettings() {
+  const topic = getCurrentTopic();
+  topic.agentEnabled = $("#topicAgentEnabled").checked;
+  topic.systemPrompt = $("#topicSystemPrompt").value.trim();
+  saveAll();
+  updateStatusBar();
+  renderTopicList();
+  closeTopicSettings();
+  showToast("✅ 话题设置已保存");
+}
+
+function onAgentToggle() {
+  const enabled = $("#topicAgentEnabled").checked;
+  $("#agentHint").textContent = enabled
+    ? "开启后 AI 可以调用工具。浏览器环境下部分工具受限（无法读写本地文件、执行命令等）。危险操作每次会弹窗确认。"
+    : "关闭后 AI 将以纯文本模式对话，无法调用工具。";
+}
+
+// ==================== Toast ====================
+function showToast(msg) {
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ==================== 自动保存 ====================
+function saveAll() {
+  saveData(appData);
+}
+
+// ==================== 输入框自动高度 ====================
+inputBox.addEventListener("input", () => {
+  inputBox.style.height = "auto";
+  inputBox.style.height = Math.min(inputBox.scrollHeight, 120) + "px";
+});
+
+// ==================== 键盘快捷键 ====================
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "n") { e.preventDefault(); newTopic(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === ",") { e.preventDefault(); openSettings(); }
+});
+</script>
+
+</body>
+</html>
