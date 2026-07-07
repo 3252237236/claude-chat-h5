@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上传作品 - HZ Lab</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0f; --surface: rgba(255,255,255,0.04);
+  --text: #e8e8f0; --text-dim: #8888a0; --accent: #6c5ce7;
+  --border: rgba(255,255,255,0.08); --radius: 16px;
+}
+html, body {
+  height: 100%; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.app { max-width: 520px; margin: 0 auto; padding: 60px 20px; }
+h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+.sub { color: var(--text-dim); font-size: 14px; margin-bottom: 32px; }
+form { display: flex; flex-direction: column; gap: 18px; }
+label { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+input, textarea {
+  width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font-size: 15px; font-family: inherit;
+  outline: none; transition: border 0.2s;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 80px; }
+
+.file-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px;
+  text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text-dim);
+}
+.file-zone:hover { border-color: var(--accent); color: var(--accent); }
+.file-zone.has-file { border-color: #4caf50; color: #4caf50; }
+.file-zone input { display: none; }
+.file-info { font-size: 13px; margin-top: 8px; }
+
+.btn {
+  padding: 14px 28px; border: none; border-radius: var(--radius); font-size: 16px;
+  font-weight: 700; cursor: pointer; background: var(--accent); color: #fff;
+  transition: all 0.2s;
+}
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.msg { padding: 12px 16px; border-radius: var(--radius); font-size: 14px; text-align: center; }
+.msg.ok { background: rgba(0,210,160,0.1); color: #00d2a0; }
+.msg.err { background: rgba(240,101,149,0.1); color: #f06595; }
+
+.back { display: inline-block; margin-top: 24px; color: var(--text-dim); text-decoration: none; font-size: 14px; }
+.back:hover { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>📤 分享你的作品</h1>
+  <p class="sub">上传你做的工具、游戏、网站，所有人都能看到和下载</p>
+
+  <div id="msgBox"></div>
+
+  <form id="uploadForm" onsubmit="return false;">
+    <div>
+      <label>作品名称 *</label>
+      <input type="text" id="title" placeholder="给你的作品起个名字" maxlength="50" required>
+    </div>
+    <div>
+      <label>简介</label>
+      <textarea id="desc" placeholder="简单介绍一下你的作品…" maxlength="200"></textarea>
+    </div>
+    <div class="file-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div id="dropText">📁 点击选择文件（或拖拽到此处）<br><span style="font-size:12px">支持 HTML / ZIP / 图片 / 文档等，最大 50MB</span></div>
+      <div class="file-info" id="fileInfo"></div>
+      <input type="file" id="fileInput">
+    </div>
+    <button class="btn" id="submitBtn" onclick="doUpload()">🚀 上传发布</button>
+  </form>
+
+  <a href="/" class="back">← 返回首页</a>
+</div>
+
+<script>
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const fileInfo = document.getElementById("fileInfo");
+const dropText = document.getElementById("dropText");
+const msgBox = document.getElementById("msgBox");
+const submitBtn = document.getElementById("submitBtn");
+let selectedFile = null;
+
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    selectedFile = fileInput.files[0];
+    showFile();
+  }
+});
+
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.style.borderColor = "var(--accent)"; });
+dropZone.addEventListener("dragleave", () => { dropZone.style.borderColor = ""; });
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.style.borderColor = "";
+  if (e.dataTransfer.files.length > 0) {
+    selectedFile = e.dataTransfer.files[0];
+    showFile();
+  }
+});
+
+function showFile() {
+  dropZone.classList.add("has-file");
+  dropText.textContent = "📁 已选择文件";
+  const sizeMB = (selectedFile.size / 1024 / 1024).toFixed(1);
+  fileInfo.textContent = `${selectedFile.name} · ${sizeMB}MB`;
+}
+
+function showMsg(text, ok) {
+  msgBox.innerHTML = `<div class="msg ${ok ? 'ok' : 'err'}">${text}</div>`;
+  if (ok) setTimeout(() => msgBox.innerHTML = "", 5000);
+}
+
+async function doUpload() {
+  const title = document.getElementById("title").value.trim();
+  const desc = document.getElementById("desc").value.trim();
+  if (!title) { showMsg("请输入作品名称", false); return; }
+  if (!selectedFile) { showMsg("请选择文件", false); return; }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "上传中…";
+
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("desc", desc);
+  fd.append("file", selectedFile);
+
+  try {
+    const resp = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await resp.json();
+    if (resp.ok && data.ok) {
+      showMsg("✅ 上传成功！已发布到首页", true);
+      document.getElementById("title").value = "";
+      document.getElementById("desc").value = "";
+      selectedFile = null;
+      fileInput.value = "";
+      dropZone.classList.remove("has-file");
+      dropText.textContent = "📁 点击选择文件（或拖拽到此处）";
+      fileInfo.textContent = "";
+    } else {
+      showMsg("❌ " + (data.error || "上传失败"), false);
+    }
+  } catch (e) {
+    showMsg("❌ 网络错误，请重试", false);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "🚀 上传发布";
+  }
+}
+</script>
+</body>
+</html>
