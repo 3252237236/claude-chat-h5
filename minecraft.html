@@ -698,46 +698,55 @@ if (isMobile) {
     keys["KeyD"] = joystickX > threshold;
   }
 
-  // 触摸转动视角（在 canvas 上，排除摇杆区域）
+  // 触摸转动视角
   let rotateTouchId = null;
-  renderer.domElement.addEventListener("touchstart", e => {
+  function isOnJoystick(t) {
+    const r = joystickZone.getBoundingClientRect();
+    return t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
+  }
+  function isOnActionBtn(t) {
+    const btns = document.getElementById("actionBtns").getBoundingClientRect();
+    if (t.clientX >= btns.left && t.clientX <= btns.right && t.clientY >= btns.top && t.clientY <= btns.bottom) return true;
+    const hb = document.getElementById("hotbar").getBoundingClientRect();
+    return t.clientX >= hb.left && t.clientX <= hb.right && t.clientY >= hb.top && t.clientY <= hb.bottom;
+  }
+
+  renderer.domElement.style.touchAction = "none";
+  document.addEventListener("touchstart", e => {
     if (!locked) return;
     for (const t of e.changedTouches) {
-      const rect = joystickZone.getBoundingClientRect();
-      const inJoystick = t.clientX >= rect.left && t.clientX <= rect.right &&
-                         t.clientY >= rect.top && t.clientY <= rect.bottom;
-      if (!inJoystick && !joystickActive && rotateTouchId === null) {
+      if (isOnJoystick(t) || isOnActionBtn(t)) continue;
+      if (rotateTouchId === null) {
         rotateTouchId = t.identifier;
-        t._lastX = t.clientX;
-        t._lastY = t.clientY;
+        t._lx = t.clientX; t._ly = t.clientY;
         e.preventDefault();
         break;
       }
     }
-  });
-  renderer.domElement.addEventListener("touchmove", e => {
-    if (!locked) return;
+  }, { passive: false });
+  document.addEventListener("touchmove", e => {
+    if (!locked || rotateTouchId === null) return;
     for (const t of e.changedTouches) {
-      if (t.identifier === rotateTouchId && t._lastX !== undefined) {
-        player.yaw -= (t.clientX - t._lastX) * 0.005;
-        player.pitch -= (t.clientY - t._lastY) * 0.005;
+      if (t.identifier === rotateTouchId && t._lx !== undefined) {
+        const dx = t.clientX - t._lx;
+        const dy = t.clientY - t._ly;
+        player.yaw -= dx * 0.005;
+        player.pitch -= dy * 0.005;
         player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
-        t._lastX = t.clientX;
-        t._lastY = t.clientY;
+        t._lx = t.clientX; t._ly = t.clientY;
         e.preventDefault();
       }
     }
-  });
-  const endRotate = e => {
+  }, { passive: false });
+  document.addEventListener("touchend", e => {
     for (const t of e.changedTouches) {
       if (t.identifier === rotateTouchId) {
         rotateTouchId = null;
-        t._lastX = undefined;
+        t._lx = undefined;
       }
     }
-  };
-  renderer.domElement.addEventListener("touchend", endRotate);
-  renderer.domElement.addEventListener("touchcancel", endRotate);
+  });
+  document.addEventListener("touchcancel", () => { rotateTouchId = null; });
 
   // 动作按钮
   document.getElementById("btnJump").addEventListener("touchstart", e => {
