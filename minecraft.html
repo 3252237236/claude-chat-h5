@@ -246,62 +246,62 @@ function generateWorld() {
   }
 }
 
-// ==================== 渲染 ====================
+// ==================== 渲染（InstancedMesh） ====================
 const blockGeo = new THREE.BoxGeometry(1, 1, 1);
-// 预创建面材质缓存
-const materialCache = {};
-function getBlockMaterial(type) {
-  if (materialCache[type]) return materialCache[type];
-  const color = BLOCK_COLORS[type] || 0xffffff;
-  // 六面稍微不同明度模拟简单光照
-  const mats = [];
-  const c = new THREE.Color(color);
-  for (let i = 0; i < 6; i++) {
-    const brightness = [0.85, 0.75, 1.0, 0.65, 0.9, 0.9][i];
-    const faceColor = c.clone().multiplyScalar(brightness);
-    mats.push(new THREE.MeshLambertMaterial({ color: faceColor }));
-  }
-  materialCache[type] = mats;
-  return mats;
+const dummy = new THREE.Object3D();
+
+// 每种方块类型一个单色材质
+const blockMaterials = {};
+for (const [type, color] of Object.entries(BLOCK_COLORS)) {
+  blockMaterials[type] = new THREE.MeshLambertMaterial({ color });
 }
 
 const chunkGroup = new THREE.Group();
 scene.add(chunkGroup);
 
-// 合并几何体提升性能
+// 储存每个类型的 InstancedMesh
+const instancedMeshes = {};
+
 function rebuildMesh() {
-  chunkGroup.clear();
-  const geometries = {};
+  // 清空旧的
+  for (const im of Object.values(instancedMeshes)) {
+    im.geometry.dispose();
+    im.material.dispose();
+    chunkGroup.remove(im);
+  }
+  for (const key of Object.keys(instancedMeshes)) delete instancedMeshes[key];
 
-  const px = Math.floor(camera.position.x);
-  const pz = Math.floor(camera.position.z);
-  const R = RENDER_DIST;
-
-  for (let x = Math.max(0, px-R); x < Math.min(WORLD_SIZE, px+R); x++) {
-    for (let z = Math.max(0, pz-R); z < Math.min(WORLD_SIZE, pz+R); z++) {
+  // 收集所有暴露方块
+  const blocksByType = {};
+  for (let x = 0; x < WORLD_SIZE; x++) {
+    for (let z = 0; z < WORLD_SIZE; z++) {
       for (let y = 0; y < WORLD_SIZE; y++) {
         const b = getBlock(x, y, z);
         if (b === BLOCKS.AIR) continue;
-        // 只渲染至少一面暴露在空气中的方块
+        // 只渲染至少一面暴露的方块
         if (isSolid(x+1,y,z) && isSolid(x-1,y,z) && isSolid(x,y+1,z) && isSolid(x,y-1,z) &&
             isSolid(x,y,z+1) && isSolid(x,y,z-1)) continue;
-        if (!geometries[b]) geometries[b] = [];
-        geometries[b].push({ x, y, z });
+        if (!blocksByType[b]) blocksByType[b] = [];
+        blocksByType[b].push({ x, y, z });
       }
     }
   }
 
-  for (const [type, blocks] of Object.entries(geometries)) {
-    const merged = new THREE.BoxGeometry(1, 1, 1);
-    // 逐个方块创建 mesh（InstancedMesh 会更好但这里先简化）
-    const mats = getBlockMaterial(Number(type));
-    blocks.forEach(({x, y, z}) => {
-      const mesh = new THREE.Mesh(blockGeo, mats);
-      mesh.position.set(x, y, z);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      chunkGroup.add(mesh);
+  // 每种类型创建一个 InstancedMesh
+  for (const [type, blocks] of Object.entries(blocksByType)) {
+    const count = blocks.length;
+    const mat = new THREE.MeshLambertMaterial({ color: BLOCK_COLORS[Number(type)] || 0xffffff });
+    const im = new THREE.InstancedMesh(blockGeo, mat, count);
+    im.castShadow = true;
+    im.receiveShadow = true;
+    blocks.forEach(({x, y, z}, i) => {
+      dummy.position.set(x, y, z);
+      dummy.updateMatrix();
+      im.setMatrixAt(i, dummy.matrix);
     });
+    im.instanceMatrix.needsUpdate = true;
+    chunkGroup.add(im);
+    instancedMeshes[type] = im;
   }
 }
 
