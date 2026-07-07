@@ -583,6 +583,8 @@ function renderImageMessage(filename, dataUrl) {
     <img src="${dataUrl}" style="max-width:100%;max-height:400px;border-radius:8px;" alt="${escapeHtml(filename)}">
   </div>`;
   chatArea.appendChild(div);
+  // 存入待发送队列
+  pendingImages.push(dataUrl);
   scrollToBottom();
 }
 
@@ -675,6 +677,7 @@ function generateId() {
 let appData = loadData();
 let isSending = false;
 let currentPreset = "deepseek";
+let pendingImages = [];  // 待发送的图片 data URL
 
 // ==================== DOM 引用 ====================
 const $ = (sel) => document.querySelector(sel);
@@ -805,7 +808,19 @@ function renderMessage(msg) {
   if (role === "user") {
     const div = document.createElement("div");
     div.className = "msg user";
-    div.innerHTML = `<div class="avatar">👤</div><div class="bubble">${renderMarkdown(msg.content)}</div>`;
+    let contentHtml = "";
+    if (Array.isArray(msg.content)) {
+      // 多模态消息：提取文本和图片
+      const texts = msg.content.filter(c => c.type === "text").map(c => c.text).join("\n");
+      const images = msg.content.filter(c => c.type === "image_url").map(c => c.image_url?.url || "");
+      if (texts) contentHtml += renderMarkdown(texts);
+      images.forEach(url => {
+        contentHtml += `<img src="${url}" style="max-width:100%;max-height:300px;border-radius:8px;margin-top:6px;">`;
+      });
+    } else {
+      contentHtml = renderMarkdown(msg.content || "");
+    }
+    div.innerHTML = `<div class="avatar">👤</div><div class="bubble">${contentHtml}</div>`;
     chatArea.appendChild(div);
   } else if (role === "assistant") {
     const div = document.createElement("div");
@@ -925,15 +940,29 @@ function onInputKeydown(e) {
 
 function sendMessage() {
   const text = inputBox.value.trim();
-  if (!text || isSending) return;
+  const hasImages = pendingImages.length > 0;
+  if ((!text && !hasImages) || isSending) return;
   if (!appData.serverHasKey) {
     showToast("服务端未配置 API Key，请设置环境变量 API_KEY");
     return;
   }
 
   const topic = getCurrentTopic();
-  topic.messages.push({ role: "user", content: text });
-  renderMessage({ role: "user", content: text });
+
+  // 构建消息内容（支持多模态）
+  let messageContent;
+  if (hasImages) {
+    messageContent = [{ type: "text", text: text || "请分析这张图片" }];
+    pendingImages.forEach(dataUrl => {
+      messageContent.push({ type: "image_url", image_url: { url: dataUrl } });
+    });
+    pendingImages = [];
+  } else {
+    messageContent = text;
+  }
+
+  topic.messages.push({ role: "user", content: messageContent });
+  renderMessage({ role: "user", content: text || "[图片]" });
   inputBox.value = "";
   inputBox.style.height = "auto";
   setSending(true);
