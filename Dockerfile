@@ -4,6 +4,4 @@ WORKDIR /app
 
 COPY . /app
 
-EXPOSE 8765
-
 CMD ["python", "server.py"]
