@@ -249,9 +249,26 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
   .msg { max-width: 92%; }
   .tool-card { max-width: 92%; }
   .main-header { padding: 10px 14px; }
-  .chat-area { padding: 12px; }
-  .input-area { padding: 8px 12px 12px; }
-  .modal { width: 94%; padding: 16px; }
+  .main-header .model-name { display: none; }
+  .main-header .agent-badge { font-size: 10px; padding: 2px 8px; }
+  .chat-area { padding: 12px 8px; }
+  .msg .avatar { width: 28px; height: 28px; font-size: 14px; }
+  .msg .bubble { font-size: 14px; padding: 8px 12px; }
+  .input-area { padding: 8px 10px 12px; }
+  .input-row textarea { font-size: 16px; /* 防止 iOS 缩放 */ }
+  .input-hint { display: none; }
+  .modal { width: 96%; padding: 16px; margin: 8px; }
+  .topic-item .topic-actions { display: flex; /* 移动端始终显示操作按钮 */ }
+}
+
+/* 超小屏（< 400px） */
+@media (max-width: 400px) {
+  .sidebar { width: 260px; }
+  .main-header { padding: 8px 10px; gap: 8px; }
+  .chat-area { padding: 8px 4px; gap: 10px; }
+  .btn-send { width: 40px; height: 40px; }
+  .msg .bubble { font-size: 13px; }
+  .modal h3 { font-size: 16px; }
 }
 </style>
 </head>
