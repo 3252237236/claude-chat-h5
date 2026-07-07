@@ -46,10 +46,10 @@
     --primary-light: #1e1e3a;
   }
 }
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
 
 /* ========== 布局 ========== */
-.app { display: flex; height: 100vh; }
+.app { display: flex; height: 100%; height: 100dvh; }
 .sidebar {
   width: 280px; min-width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text);
   display: flex; flex-direction: column; transition: transform var(--transition); z-index: 100;
@@ -89,7 +89,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
 }
 .main-header {
   padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
 }
 .btn-menu { display: none; width: 36px; height: 36px; border: none; background: transparent; font-size: 20px; cursor: pointer; border-radius: var(--radius-sm); }
 .btn-menu:hover { background: var(--ai-bubble); }
@@ -169,6 +169,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
 /* ========== 输入区 ========== */
 .input-area {
   padding: 12px 20px 16px; border-top: 1px solid var(--border); background: var(--surface);
+  flex-shrink: 0;
 }
 .input-row { display: flex; gap: 10px; align-items: flex-end; }
 .input-row textarea {
@@ -242,23 +243,28 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
 @media (max-width: 768px) {
   .sidebar {
     position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%);
-    width: 280px; box-shadow: 4px 0 16px rgba(0,0,0,0.2);
+    width: 280px; box-shadow: 4px 0 16px rgba(0,0,0,0.2); z-index: 1000;
   }
   .sidebar.open { transform: translateX(0); }
-  .btn-menu { display: flex; align-items: center; justify-content: center; }
+  .btn-menu { display: flex; align-items: center; justify-content: center; color: var(--text); }
   .msg { max-width: 92%; }
   .tool-card { max-width: 92%; }
-  .main-header { padding: 10px 14px; }
+  .main-header { padding: 10px 14px; flex-shrink: 0; }
   .main-header .model-name { display: none; }
   .main-header .agent-badge { font-size: 10px; padding: 2px 8px; }
-  .chat-area { padding: 12px 8px; }
+  .main { height: 100%; height: 100dvh; }
+  .chat-area { padding: 12px 8px; flex: 1; overflow-y: auto; }
   .msg .avatar { width: 28px; height: 28px; font-size: 14px; }
   .msg .bubble { font-size: 14px; padding: 8px 12px; }
-  .input-area { padding: 8px 10px 12px; }
+  .input-area {
+    padding: 8px 10px max(12px, env(safe-area-inset-bottom));
+    flex-shrink: 0;
+  }
   .input-row textarea { font-size: 16px; /* 防止 iOS 缩放 */ }
   .input-hint { display: none; }
   .modal { width: 96%; padding: 16px; margin: 8px; }
-  .topic-item .topic-actions { display: flex; /* 移动端始终显示操作按钮 */ }
+  .topic-item .topic-actions { display: flex; }
+  .toast { bottom: max(80px, env(safe-area-inset-bottom, 24px)); }
 }
 
 /* 超小屏（< 400px） */
