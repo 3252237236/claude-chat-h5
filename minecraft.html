@@ -696,7 +696,7 @@ if (isMobile) {
   setupStick("camStick", "camThumb",
     (x, y) => {
       player.yaw -= x * 0.06;
-      player.pitch += y * 0.06;
+      player.pitch -= y * 0.06;
       player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
     },
     () => {} // 视角不回弹
