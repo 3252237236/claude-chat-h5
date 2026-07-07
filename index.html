@@ -179,6 +179,12 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
   transition: border-color var(--transition);
 }
 .input-row textarea:focus { border-color: var(--primary); }
+.btn-attach {
+  width: 40px; height: 44px; border: none; background: transparent; color: var(--text-secondary);
+  border-radius: var(--radius-sm); cursor: pointer; font-size: 18px; flex-shrink: 0;
+  transition: all var(--transition); display: flex; align-items: center; justify-content: center;
+}
+.btn-attach:hover { background: var(--ai-bubble); color: var(--primary); }
 .btn-send {
   width: 44px; height: 44px; border: none; background: var(--primary); color: #fff;
   border-radius: 50%; cursor: pointer; font-size: 18px; flex-shrink: 0;
@@ -312,6 +318,8 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
     <div class="input-area">
       <div class="input-row">
         <textarea id="inputBox" rows="1" placeholder="输入消息… (Enter 发送, Shift+Enter 换行)" onkeydown="onInputKeydown(event)"></textarea>
+        <input type="file" id="fileInput" style="display:none" onchange="onFileSelected(event)">
+        <button class="btn-attach" id="btnAttach" title="上传文件" onclick="document.getElementById('fileInput').click()">📎</button>
         <button class="btn-send" id="btnSend" onclick="sendMessage()">➤</button>
       </div>
       <div class="input-hint" id="inputHint">就绪 | 📝 纯聊天</div>
@@ -487,27 +495,61 @@ const TOOLS = [
 const DANGEROUS_TOOLS = new Set(["write_file", "edit_file", "run_command"]);
 
 // ==================== 工具执行 ====================
-function executeTool(name, args) {
+async function executeTool(name, args) {
   try {
+    let result;
     switch (name) {
-      case "read_file":       return toolReadFile(args);
-      case "write_file":      return toolWriteFile(args);
-      case "edit_file":       return toolEditFile(args);
-      case "list_directory":  return toolListDirectory(args);
-      case "search_files":    return toolSearchFiles(args);
-      case "search_content":  return toolSearchContent(args);
-      case "run_command":     return toolRunCommand(args);
-      case "open_url":        return toolOpenUrl(args);
-      case "open_app":        return toolOpenApp(args);
-      default:                return `未知工具: ${name}`;
+      case "read_file":       result = await toolReadFile(args); break;
+      case "write_file":      result = toolWriteFile(args); break;
+      case "edit_file":       result = toolEditFile(args); break;
+      case "list_directory":  result = toolListDirectory(args); break;
+      case "search_files":    result = toolSearchFiles(args); break;
+      case "search_content":  result = toolSearchContent(args); break;
+      case "run_command":     result = toolRunCommand(args); break;
+      case "open_url":        result = toolOpenUrl(args); break;
+      case "open_app":        result = toolOpenApp(args); break;
+      default:                result = `未知工具: ${name}`;
     }
+    return result;
   } catch (e) {
     return `工具执行出错: ${e.message}`;
   }
 }
 
 function toolReadFile(args) {
-  return "⚠️ 浏览器环境无法读取本地文件。请使用文件上传功能或将文件内容粘贴到对话中。";
+  // 浏览器环境：触发文件选择器，返回 Promise
+  return new Promise((resolve) => {
+    const input = document.getElementById("fileInput");
+    const oldChange = input.onchange;
+    input.onchange = function(e) {
+      // 恢复旧的 onchange（如果有的话）
+      input.onchange = oldChange;
+      const file = e.target.files[0];
+      if (!file) { resolve("用户取消了文件选择"); return; }
+      const reader = new FileReader();
+      reader.onload = () => resolve(`文件: ${file.name} (${file.size} 字节)\n\n${reader.result}`);
+      reader.onerror = () => resolve(`读取文件失败: ${reader.error}`);
+      reader.readAsText(file);
+    };
+    input.click();
+    // 超时 60 秒
+    setTimeout(() => { input.onchange = oldChange; resolve("文件选择超时"); }, 60000);
+  });
+}
+
+// 用户手动上传文件
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const content = `[上传文件: ${file.name}]\n\n${reader.result}`;
+    inputBox.value = inputBox.value ? inputBox.value + "\n\n" + content : content;
+    inputBox.focus();
+    inputBox.dispatchEvent(new Event("input"));
+  };
+  reader.readAsText(file);
+  e.target.value = "";
 }
 
 function toolWriteFile(args) {
@@ -1035,7 +1077,7 @@ async function callOpenAIAgent(topic, apiUrl, apiKey, model) {
         }
 
         updateStatusBarDyn(`⏳ 执行中: ${toolName}…`);
-        const resultText = executeTool(toolName, toolArgs);
+        const resultText = await executeTool(toolName, toolArgs);
         fullMessages.push({ role: "tool", tool_call_id: tc.id, content: resultText });
         renderToolResult(resultText);
         topic.messages.push({ role: "tool", toolCallId: tc.id, content: resultText });
@@ -1126,8 +1168,7 @@ async function callClaudeAgent(topic, apiUrl, apiKey, model) {
         }
 
         updateStatusBarDyn(`⏳ 执行中: ${toolName}…`);
-        const resultText = executeTool(toolName, toolArgs);
-        toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: resultText });
+        const resultText = await executeTool(toolName, toolArgs);        toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: resultText });
         renderToolResult(resultText);
         topic.messages.push({ role: "tool", toolCallId: tu.id, content: resultText });
 
