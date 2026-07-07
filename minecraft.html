@@ -114,7 +114,7 @@ const GRAVITY = 20;
 const MOVE_SPEED = 8;
 const JUMP_VEL = 9;
 const WORLD_SIZE = 64;
-const RENDER_DIST = 5;
+const RENDER_DIST = 64; // 渲染整个地图
 
 // 方块类型
 const BLOCKS = {
@@ -143,7 +143,7 @@ let selectedBlock = BLOCKS.GRASS;
 // ==================== 场景 ====================
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 40, 80);
+scene.fog = new THREE.Fog(0x87ceeb, 70, 100);
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 100);
 camera.position.set(WORLD_SIZE/2, 20, WORLD_SIZE/2 + 5);
@@ -538,8 +538,6 @@ window.lock = lock;
 
 // ==================== 主循环 ====================
 let lastTime = performance.now();
-let meshDirty = true;
-let meshTimer = 0;
 
 function gameLoop(now) {
   requestAnimationFrame(gameLoop);
@@ -549,12 +547,6 @@ function gameLoop(now) {
 
   physics(dt);
 
-  // 每 0.5 秒重建网格（仅在移动后）
-  meshTimer += dt;
-  if (meshTimer > 0.5) {
-    meshTimer = 0;
-    rebuildMesh();
-  }
 
   // 高亮准心方块
   const hit = raycastBlocks();
