@@ -439,35 +439,90 @@ highlightLine.visible = false;
 scene.add(highlightLine);
 
 // ==================== 物理 ====================
+const PW = 0.3;  // 玩家半宽
+const PH = 0.8;  // 玩家半高（眼在头顶）
+
+// 检查玩家脚下是否有方块
+function checkGround(px, py, pz) {
+  const feet = py;
+  for (let dx = -PW; dx <= PW; dx += PW) {
+    for (let dz = -PW; dz <= PW; dz += PW) {
+      if (isSolid(Math.floor(px + dx), Math.floor(feet - 0.05), Math.floor(pz + dz))) {
+        return true;
+      }
+    }
+  }
+  // 也检查中心
+  return isSolid(Math.floor(px), Math.floor(feet - 0.05), Math.floor(pz));
+}
+
+// 检查某个轴向上的碰撞
+function collidesX(px, py, pz) {
+  for (let dy = 0; dy <= 1.6; dy += 0.4) {
+    for (let dz = -PW; dz <= PW; dz += PW) {
+      if (isSolid(Math.floor(px + (px > player.x ? PW : -PW)), Math.floor(py + dy), Math.floor(pz + dz))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+function collidesZ(px, py, pz) {
+  for (let dy = 0; dy <= 1.6; dy += 0.4) {
+    for (let dx = -PW; dx <= PW; dx += PW) {
+      if (isSolid(Math.floor(px + dx), Math.floor(py + dy), Math.floor(pz + (pz > player.z ? PW : -PW)))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function physics(dt) {
   // 重力
   player.vy -= GRAVITY * dt;
+  player.vy = Math.max(player.vy, -40);
   player.y += player.vy * dt;
 
-  // 碰撞检测
-  const feet = Math.floor(player.y);
-  const cx = Math.floor(player.x), cz = Math.floor(player.z);
-
+  // 地面碰撞（多个检测点）
   player.onGround = false;
-  // 脚下方块
-  for (let dx = -1; dx <= 1; dx += 2) {
-    for (let dz = -1; dz <= 1; dz += 2) {
-      const bx = Math.floor(player.x + dx * 0.25);
-      const bz = Math.floor(player.z + dz * 0.25);
-      if (isSolid(bx, feet, bz)) {
-        if (player.y <= feet + 1 && player.vy < 0) {
-          player.y = feet + 1 + 0.001;
+  const feetY = player.y + 0.05; // 脚下稍往下看
+  for (let dx = -PW; dx <= PW + 0.01; dx += PW) {
+    for (let dz = -PW; dz <= PW + 0.01; dz += PW) {
+      const bx = Math.floor(player.x + dx);
+      const bz = Math.floor(player.z + dz);
+      const by = Math.floor(feetY);
+      if (isSolid(bx, by, bz)) {
+        const top = by + 1;
+        if (player.y <= top + 0.05 && player.vy <= 0) {
+          player.y = top + 0.001;
           player.vy = 0;
           player.onGround = true;
         }
       }
     }
   }
+
   // 头部碰撞
-  const headY = Math.floor(player.y + 1.6);
-  if (isSolid(cx, headY, cz)) {
-    player.y = headY - 1.6;
-    player.vy = Math.min(player.vy, 0);
+  const headY = player.y + 1.6;
+  for (let dx = -PW; dx <= PW + 0.01; dx += PW) {
+    for (let dz = -PW; dz <= PW + 0.01; dz += PW) {
+      const bx = Math.floor(player.x + dx);
+      const bz = Math.floor(player.z + dz);
+      const by = Math.floor(headY);
+      if (isSolid(bx, by, bz)) {
+        player.y = by - 1.6;
+        player.vy = Math.min(player.vy, 0);
+      }
+    }
+  }
+
+  // 防卡：如果身体卡进方块，上推
+  const bodyY = Math.floor(player.y + 0.9);
+  const bodyX = Math.floor(player.x), bodyZ = Math.floor(player.z);
+  if (isSolid(bodyX, bodyY, bodyZ)) {
+    player.y = bodyY + 1 + 0.01;
+    player.vy = 0;
   }
 
   // 水平移动
@@ -489,22 +544,21 @@ function physics(dt) {
       mz = mz / len * speed;
     }
 
-    // 碰撞解决
-    const nx = player.x + mx;
-    const nz = player.z + mz;
-    if (canStand(Math.floor(nx), feet, Math.floor(player.z)) &&
-        canStand(Math.floor(nx), feet+1, Math.floor(player.z))) {
-      player.x = nx;
+    // 分别处理 X 和 Z 轴（允许贴墙滑行）
+    const oldX = player.x, oldZ = player.z;
+    player.x += mx;
+    if (collidesX(player.x, player.y, player.z)) {
+      player.x = oldX;
     }
-    if (canStand(Math.floor(player.x), feet, Math.floor(nz)) &&
-        canStand(Math.floor(player.x), feet+1, Math.floor(nz))) {
-      player.z = nz;
+    player.z += mz;
+    if (collidesZ(player.x, player.y, player.z)) {
+      player.z = oldZ;
     }
   }
 
   // 边界
-  player.x = Math.max(1, Math.min(WORLD_SIZE-1, player.x));
-  player.z = Math.max(1, Math.min(WORLD_SIZE-1, player.z));
+  player.x = Math.max(1.3, Math.min(WORLD_SIZE - 1.3, player.x));
+  player.z = Math.max(1.3, Math.min(WORLD_SIZE - 1.3, player.z));
 
   updateCamera();
 }
@@ -685,30 +739,46 @@ if (isMobile) {
     keys["KeyD"] = joystickX > threshold;
   }
 
-  // 触摸转动视角
+  // 触摸转动视角（在 canvas 上，排除摇杆区域）
+  let rotateTouchId = null;
   renderer.domElement.addEventListener("touchstart", e => {
-    if (e.touches.length === 1 && !joystickActive && locked) {
-      e.preventDefault();
+    if (!locked) return;
+    for (const t of e.changedTouches) {
+      const rect = joystickZone.getBoundingClientRect();
+      const inJoystick = t.clientX >= rect.left && t.clientX <= rect.right &&
+                         t.clientY >= rect.top && t.clientY <= rect.bottom;
+      if (!inJoystick && !joystickActive && rotateTouchId === null) {
+        rotateTouchId = t.identifier;
+        t._lastX = t.clientX;
+        t._lastY = t.clientY;
+        e.preventDefault();
+        break;
+      }
     }
   });
   renderer.domElement.addEventListener("touchmove", e => {
-    if (e.touches.length === 1 && locked && !joystickActive) {
-      e.preventDefault();
-      const t = e.touches[0];
-      if (t._lastX !== undefined) {
+    if (!locked) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier === rotateTouchId && t._lastX !== undefined) {
         player.yaw -= (t.clientX - t._lastX) * 0.005;
         player.pitch -= (t.clientY - t._lastY) * 0.005;
         player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
+        t._lastX = t.clientX;
+        t._lastY = t.clientY;
+        e.preventDefault();
       }
-      t._lastX = t.clientX;
-      t._lastY = t.clientY;
     }
   });
-  renderer.domElement.addEventListener("touchend", e => {
-    if (e.touches.length === 0 && e.changedTouches.length === 1) {
-      e.changedTouches[0]._lastX = undefined;
+  const endRotate = e => {
+    for (const t of e.changedTouches) {
+      if (t.identifier === rotateTouchId) {
+        rotateTouchId = null;
+        t._lastX = undefined;
+      }
     }
-  });
+  };
+  renderer.domElement.addEventListener("touchend", endRotate);
+  renderer.domElement.addEventListener("touchcancel", endRotate);
 
   // 动作按钮
   document.getElementById("btnJump").addEventListener("touchstart", e => {
