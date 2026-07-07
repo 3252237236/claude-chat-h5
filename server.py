@@ -16,10 +16,14 @@ import sys
 import gzip
 import io
 import traceback
+import logging
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
+
+# 立即输出日志（方便 Railway 调试）
+logging.basicConfig(stream=sys.stderr, level=logging.INFO, format="%(message)s")
 
 # ==================== 配置 ====================
 PORT = int(os.environ.get("PORT", 8765))
@@ -295,30 +299,32 @@ class AppHandler(SimpleHTTPRequestHandler):
 
 
 def main():
-    os.chdir(STATIC_DIR)
-
-    available = get_available_providers()
-
-    print("=" * 52)
-    print("  🤖 Claude 聊天 H5 - 生产服务器")
-    print("=" * 52)
-    print(f"  监听:       http://{HOST}:{PORT}")
-    if available:
-        print(f"  可用平台:    {', '.join(p['name'] for p in available)}")
-        print(f"  共 {len(available)} 个平台已配置 Key")
-    else:
-        print(f"  API Key:    ❌ 未配置！")
-        print("  ")
-        print("  ⚠️  编辑 providers.json，在每个平台的 key 字段填你的 Key")
-        print("     或者设置环境变量 API_KEY=sk-xxx 作为通用 Key")
-    print("=" * 52)
-
-    server = HTTPServer((HOST, PORT), AppHandler)
     try:
+        os.chdir(STATIC_DIR)
+
+        available = get_available_providers()
+
+        print("=" * 52, flush=True)
+        print("  🤖 Claude 聊天 H5 - 生产服务器", flush=True)
+        print("=" * 52, flush=True)
+        print(f"  监听:       http://{HOST}:{PORT}", flush=True)
+        print(f"  工作目录:    {os.getcwd()}", flush=True)
+        print(f"  index.html: {'存在' if os.path.exists('index.html') else '缺失!'}", flush=True)
+        if available:
+            print(f"  可用平台:    {', '.join(p['name'] for p in available)}", flush=True)
+            print(f"  共 {len(available)} 个平台已配置 Key", flush=True)
+        else:
+            print(f"  API Key:    ❌ 未配置！", flush=True)
+            print(f"  MIMO_KEY环境: {'有' if os.environ.get('MIMO_KEY') else '无'}", flush=True)
+            print(f"  DEEPSEEK_KEY: {'有' if os.environ.get('DEEPSEEK_KEY') else '无'}", flush=True)
+        print("=" * 52, flush=True)
+
+        server = HTTPServer((HOST, PORT), AppHandler)
+        print(f"🚀 服务器已启动，等待请求...", flush=True)
         server.serve_forever()
-    except KeyboardInterrupt:
-        print("\n服务器已停止。")
-        server.shutdown()
+    except Exception as e:
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
