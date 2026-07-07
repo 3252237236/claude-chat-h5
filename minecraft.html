@@ -601,9 +601,15 @@ document.addEventListener("mousemove", e => {
 });
 
 function lock() {
-  renderer.domElement.requestPointerLock();
-  locked = true;
-  document.getElementById("lockHint").style.display = "none";
+  if (isMobile) {
+    // 手机端不需要指针锁定
+    locked = true;
+    document.getElementById("lockHint").style.display = "none";
+  } else {
+    renderer.domElement.requestPointerLock();
+    locked = true;
+    document.getElementById("lockHint").style.display = "none";
+  }
 }
 window.lock = lock;
 
@@ -724,11 +730,6 @@ if (isMobile) {
     }
   });
 
-  // 移动端点击锁定
-  document.getElementById("lockHint").addEventListener("touchend", e => {
-    e.preventDefault();
-    lock();
-  });
 }
 let lastTime = performance.now();
 
