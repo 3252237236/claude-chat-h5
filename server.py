@@ -32,12 +32,13 @@ TIMEOUT = int(os.environ.get("TIMEOUT", 180))
 # Key 优先级：providers.json 中的 key > 环境变量 > .claude_key 文件
 
 def _load_providers():
-    """从 providers.json 加载平台配置"""
-    # 先用脚本所在目录的绝对路径找
+    """从 providers.json 加载平台配置，不存在则回退到 providers.example.json"""
     base = os.path.dirname(os.path.abspath(__file__))
     paths = [
         os.path.join(base, "providers.json"),
         "providers.json",
+        os.path.join(base, "providers.example.json"),
+        "providers.example.json",
     ]
     for p in paths:
         try:
@@ -45,11 +46,11 @@ def _load_providers():
                 with open(p, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     providers = data.get("providers", [])
-                    print(f"  ✓ 加载 providers.json: {len(providers)} 个平台 ({p})")
+                    print(f"  ✓ 加载平台配置: {len(providers)} 个 ({os.path.basename(p)})")
                     return providers
         except Exception as e:
-            print(f"  ✗ providers.json 解析失败: {e}")
-    print("  ✗ 未找到 providers.json，无可用平台")
+            print(f"  ✗ 解析失败 ({p}): {e}")
+    print("  ✗ 未找到 providers.json 或 providers.example.json")
     return []
 
 def _load_key_file(filename):

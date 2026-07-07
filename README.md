@@ -11,7 +11,8 @@
 3. 点「New Project」→「Deploy from GitHub repo」→ 选你的仓库
 4. 在项目设置里加一个环境变量：
    ```
-   API_KEY = sk-be72692bda9d47c8b62b50b2c562e9d3
+   DEEPSEEK_KEY = sk-你的key
+   MIMO_KEY = tp-你的key
    ```
 5. 点 Deploy，等 2 分钟
 
