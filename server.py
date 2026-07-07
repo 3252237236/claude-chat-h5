@@ -18,6 +18,11 @@ import io
 import traceback
 import logging
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
+
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    """多线程 HTTP 服务器，Docker 环境下更稳定"""
+    daemon_threads = True
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
@@ -319,7 +324,7 @@ def main():
             print(f"  DEEPSEEK_KEY: {'有' if os.environ.get('DEEPSEEK_KEY') else '无'}", flush=True)
         print("=" * 52, flush=True)
 
-        server = HTTPServer((HOST, PORT), AppHandler)
+        server = ThreadingHTTPServer((HOST, PORT), AppHandler)
         print(f"🚀 服务器已启动，等待请求...", flush=True)
         server.serve_forever()
     except Exception as e:
