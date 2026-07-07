@@ -98,13 +98,6 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
 }
 .agent-on { background: #fff3e0; color: #e65100; }
 .agent-off { background: var(--ai-bubble); color: var(--text-secondary); }
-.model-toggle {
-  font-size: 11px; padding: 5px 12px; border-radius: 14px; border: 1px solid var(--border);
-  background: var(--bg); color: var(--text); cursor: pointer; font-weight: 600;
-  transition: all var(--transition); white-space: nowrap; margin-left: auto;
-}
-.model-toggle:hover { border-color: var(--primary); color: var(--primary); }
-.model-toggle.img-mode { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
 .main-header .model-name { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
 .chat-area {
   flex: 1; overflow-y: auto; padding: 20px;
@@ -265,7 +258,6 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
   .main-header { padding: 10px 14px; flex-shrink: 0; }
   .main-header .model-name { display: none; }
   .main-header .agent-badge { font-size: 10px; padding: 2px 8px; }
-  .model-toggle { font-size: 10px; padding: 3px 8px; }
   .main { height: 100%; height: 100dvh; }
   .chat-area { padding: 12px 8px; flex: 1; overflow-y: auto; }
   .msg .avatar { width: 28px; height: 28px; font-size: 14px; }
@@ -315,7 +307,6 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
     <div class="main-header">
       <button class="btn-menu" onclick="toggleSidebar()">☰</button>
       <span class="agent-badge agent-off" id="agentBadge">📝 纯聊天</span>
-      <button class="model-toggle" id="modelToggle" onclick="toggleModel()" title="切换模型">🖼️ 多模态</button>
     </div>
     <div class="chat-area" id="chatArea">
       <div class="chat-empty">
@@ -651,13 +642,7 @@ function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      if (data.topics && data.topicOrder) {
-        // 兼容旧数据
-        if (data.settings && data.settings.visionMode === undefined) {
-          data.settings.visionMode = false;
-        }
-        return data;
-      }
+      if (data.topics && data.topicOrder) return data;
     }
   } catch (e) {}
   return createFreshData();
@@ -679,7 +664,7 @@ function createFreshData() {
     },
     topicOrder: [tid],
     currentTopicId: tid,
-    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions", visionMode: false },
+    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions" },
   };
 }
 
@@ -691,35 +676,10 @@ function generateId() {
 }
 
 // ==================== 全局状态 ====================
-const TEXT_MODEL = "mimo-v2.5";
-const VISION_MODEL = "mimo-v2.5";
-
 let appData = loadData();
 let isSending = false;
 let currentPreset = "deepseek";
 let pendingImages = [];  // 待发送的图片 data URL
-
-function getModel() {
-  return appData.settings.visionMode ? VISION_MODEL : TEXT_MODEL;
-}
-
-function toggleModel() {
-  appData.settings.visionMode = !appData.settings.visionMode;
-  updateModelToggle();
-  updateStatusBar();
-  saveAll();
-}
-
-function updateModelToggle() {
-  const btn = document.getElementById("modelToggle");
-  if (appData.settings.visionMode) {
-    btn.textContent = "🖼️ 多模态";
-    btn.className = "model-toggle img-mode";
-  } else {
-    btn.textContent = "📝 文本";
-    btn.className = "model-toggle";
-  }
-}
 
 // ==================== DOM 引用 ====================
 const $ = (sel) => document.querySelector(sel);
@@ -1027,9 +987,7 @@ function updateStatusBar() {
   const agentOn = topic.agentEnabled;
   agentBadge.textContent = agentOn ? "🤖 Agent ON" : "📝 纯聊天";
   agentBadge.className = `agent-badge ${agentOn ? "agent-on" : "agent-off"}`;
-  const modelLabel = appData.settings.visionMode ? "多模态" : "文本";
-  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent ON" : "📝 纯聊天"} | ${modelLabel}`;
-  updateModelToggle();
+  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent ON" : "📝 纯聊天"}`;
 }
 
 // ==================== API 调用 ====================
@@ -1049,7 +1007,7 @@ async function apiFetch(apiUrl, apiKey, body) {
 
 async function callApiSimple(topic) {
   const { apiUrl, apiKey } = appData.settings;
-  const model = getModel();
+  const model = "mimo-v2.5";
   const isClaude = apiUrl.includes("anthropic.com");
 
   // 构建消息
@@ -1103,7 +1061,7 @@ async function callClaudeSimple(messages, sysPrompt, apiUrl, apiKey, model) {
 // ==================== Agent 模式 API 调用 ====================
 async function callApiAgent(topic) {
   const { apiUrl, apiKey } = appData.settings;
-  const model = getModel();
+  const model = "mimo-v2.5";
   const isClaude = apiUrl.includes("anthropic.com");
 
   try {
