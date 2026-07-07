@@ -23,9 +23,8 @@ ALL_PROVIDERS = _load_providers()
 for p in ALL_PROVIDERS:
     key = p.get("key", "") or os.environ.get(p.get("env", ""), "") or os.environ.get("API_KEY", "")
     p["_key"] = key
-    if key:
-        global GENERIC_KEY
-        GENERIC_KEY = GENERIC_KEY or key
+    if key and not GENERIC_KEY:
+        GENERIC_KEY = key
 
 # ---------- 路由 ----------
 @app.route("/")
