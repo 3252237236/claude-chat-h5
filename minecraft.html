@@ -91,8 +91,8 @@ canvas { display: block; }
   #backBtn { top: 8px; left: 8px; font-size: 11px; padding: 5px 10px; }
   #topBar { top: 8px; gap: 8px; }
   #topBar span { font-size: 11px; padding: 4px 10px; }
-  #hotbar { bottom: 20px; gap: 2px; }
-  .hotbar-slot { width: 40px; height: 40px; font-size: 18px; border-width: 2px; }
+  #hotbar { bottom: 90px; gap: 2px; z-index: 16; }
+  .hotbar-slot { width: 38px; height: 38px; font-size: 17px; border-width: 2px; }
   .hotbar-slot.active { transform: translateY(-4px); }
   #crosshair { width: 18px; height: 18px; }
   #crosshair::before { top: 8px; width: 18px; }
@@ -102,45 +102,48 @@ canvas { display: block; }
   #mobileControls {
     display: flex; position: fixed; inset: 0; z-index: 15; pointer-events: none;
   }
-  /* 虚拟摇杆 */
-  #joystickZone {
-    position: absolute; bottom: 120px; left: 24px;
-    width: 130px; height: 130px; pointer-events: all;
-  }
-  #joystickBase {
-    width: 130px; height: 130px; border-radius: 50%;
-    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+  /* 摇杆通用 */
+  .stick-zone { position: absolute; bottom: 100px; pointer-events: all; width: 120px; height: 120px; }
+  .stick-base {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.12);
     display: flex; align-items: center; justify-content: center;
   }
-  #joystickThumb {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: rgba(255,255,255,0.2); transition: none;
+  .stick-thumb {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); transition: none;
   }
-  /* 动作按钮 */
+  #moveStick { left: 20px; }
+  #camStick { right: 20px; }
+
+  /* 动作按钮（摇杆之间） */
   #actionBtns {
-    position: absolute; bottom: 130px; right: 16px; pointer-events: all;
-    display: flex; flex-direction: column; gap: 12px; align-items: center;
+    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+    z-index: 16; pointer-events: all; display: flex; gap: 16px;
   }
   .act-btn {
-    width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.4); color: #fff; font-size: 26px;
+    width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.45); color: #fff; font-size: 22px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; user-select: none; -webkit-user-select: none;
     backdrop-filter: blur(4px);
   }
-  .act-btn:active { background: rgba(255,255,255,0.2); }
-  #btnJump { width: 70px; height: 70px; font-size: 18px; font-weight: 700; }
+  .act-btn:active { background: rgba(255,255,255,0.25); }
+  #btnJump { width: 64px; height: 64px; font-size: 18px; font-weight: 700; }
 }
 
 /* 超小屏 */
 @media (max-width: 400px) {
-  #joystickZone { bottom: 100px; left: 8px; width: 110px; height: 110px; }
-  #joystickBase { width: 110px; height: 110px; }
-  #joystickThumb { width: 48px; height: 48px; }
-  #actionBtns { bottom: 110px; right: 8px; gap: 8px; }
-  .act-btn { width: 50px; height: 50px; font-size: 22px; }
-  #btnJump { width: 60px; height: 60px; font-size: 16px; }
-  .hotbar-slot { width: 34px; height: 34px; font-size: 16px; }
+  .stick-zone { bottom: 85px; width: 100px; height: 100px; }
+  .stick-base { width: 100px; height: 100px; }
+  .stick-thumb { width: 42px; height: 42px; }
+  #moveStick { left: 8px; }
+  #camStick { right: 8px; }
+  #actionBtns { bottom: 95px; gap: 10px; }
+  .act-btn { width: 46px; height: 46px; font-size: 20px; }
+  #btnJump { width: 54px; height: 54px; font-size: 16px; }
+  .hotbar-slot { width: 32px; height: 32px; font-size: 15px; }
+  #hotbar { bottom: 75px; }
 }
 </style>
 </head>
@@ -160,13 +163,19 @@ canvas { display: block; }
 
 <!-- 手机控制 -->
 <div id="mobileControls">
-  <div id="joystickZone">
-    <div id="joystickBase"><div id="joystickThumb"></div></div>
+  <!-- 移动摇杆 -->
+  <div class="stick-zone" id="moveStick">
+    <div class="stick-base"><div class="stick-thumb" id="moveThumb"></div></div>
   </div>
+  <!-- 视角摇杆 -->
+  <div class="stick-zone" id="camStick">
+    <div class="stick-base"><div class="stick-thumb" id="camThumb"></div></div>
+  </div>
+  <!-- 动作按钮 -->
   <div id="actionBtns">
-    <button class="act-btn" id="btnBreak" style="font-size:16px;font-weight:700;">⛏</button>
+    <button class="act-btn" id="btnBreak">⛏</button>
     <button class="act-btn" id="btnJump">⬆</button>
-    <button class="act-btn" id="btnPlace" style="font-size:16px;font-weight:700;">🧱</button>
+    <button class="act-btn" id="btnPlace">🧱</button>
   </div>
 </div>
 
@@ -631,126 +640,67 @@ const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) ||
   ('ontouchstart' in window && window.innerWidth < 1024);
 
 if (isMobile) {
-  // 锁定提示文案
-  document.querySelector("#lockHint .msg").innerHTML = '🎮 点击开始游戏<div><p>触屏操控：摇杆移动 · 拖动视角 · 按钮操作</p></div>';
+  document.querySelector("#lockHint .msg").innerHTML = '🎮 点击开始游戏<div><p>左摇杆移动 · 右摇杆视角 · 中间按钮操作</p></div>';
 
-  // 虚拟摇杆
-  let joystickActive = false;
-  let joystickId = null;
-  let joystickX = 0, joystickY = 0;
-  const joystickZone = document.getElementById("joystickZone");
-  const thumb = document.getElementById("joystickThumb");
-  const baseRadius = 65;
-  const thumbRadius = 28;
+  // ===== 通用摇杆函数 =====
+  function setupStick(zoneId, thumbId, onMove, onUp) {
+    const zone = document.getElementById(zoneId);
+    const thumb = document.getElementById(thumbId);
+    let activeId = null;
+    const baseR = 60, thumbR = 25, maxR = baseR - thumbR;
 
-  joystickZone.addEventListener("touchstart", e => {
-    e.preventDefault();
-    if (joystickActive) return;
-    joystickActive = true;
-    joystickId = e.changedTouches[0].identifier;
-    updateJoystick(e.changedTouches[0]);
-  });
-  joystickZone.addEventListener("touchmove", e => {
-    e.preventDefault();
-    for (const t of e.changedTouches) {
-      if (t.identifier === joystickId) updateJoystick(t);
+    function update(touch) {
+      const rect = zone.getBoundingClientRect();
+      const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+      let dx = touch.clientX - cx, dy = touch.clientY - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > maxR) { dx = dx/dist*maxR; dy = dy/dist*maxR; }
+      thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+      onMove(dx / maxR, dy / maxR);
     }
-  });
-  joystickZone.addEventListener("touchend", e => {
-    for (const t of e.changedTouches) {
-      if (t.identifier === joystickId) {
-        joystickActive = false;
-        joystickId = null;
-        joystickX = 0; joystickY = 0;
-        thumb.style.transform = "translate(0,0)";
-        keys["KeyW"] = keys["KeyS"] = keys["KeyA"] = keys["KeyD"] = false;
-      }
-    }
-  });
-  joystickZone.addEventListener("touchcancel", () => {
-    joystickActive = false; joystickId = null;
-    joystickX = 0; joystickY = 0;
-    thumb.style.transform = "translate(0,0)";
-    keys["KeyW"] = keys["KeyS"] = keys["KeyA"] = keys["KeyD"] = false;
-  });
 
-  function updateJoystick(touch) {
-    const rect = joystickZone.getBoundingClientRect();
-    const cx = rect.left + rect.width/2;
-    const cy = rect.top + rect.height/2;
-    let dx = touch.clientX - cx;
-    let dy = touch.clientY - cy;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    const maxDist = baseRadius - thumbRadius;
-    if (dist > maxDist) {
-      dx = dx / dist * maxDist;
-      dy = dy / dist * maxDist;
-    }
-    joystickX = dx / maxDist;
-    joystickY = dy / maxDist;
-    thumb.style.transform = `translate(${dx}px, ${dy}px)`;
-
-    // 映射到 WASD
-    const threshold = 0.3;
-    keys["KeyW"] = joystickY < -threshold;
-    keys["KeyS"] = joystickY > threshold;
-    keys["KeyA"] = joystickX < -threshold;
-    keys["KeyD"] = joystickX > threshold;
+    zone.addEventListener("touchstart", e => {
+      e.preventDefault(); e.stopPropagation();
+      if (activeId !== null) return;
+      activeId = e.changedTouches[0].identifier;
+      update(e.changedTouches[0]);
+    });
+    zone.addEventListener("touchmove", e => {
+      e.preventDefault(); e.stopPropagation();
+      for (const t of e.changedTouches) { if (t.identifier === activeId) update(t); }
+    });
+    const end = () => {
+      activeId = null;
+      thumb.style.transform = "translate(0,0)";
+      onUp();
+    };
+    zone.addEventListener("touchend", e => {
+      for (const t of e.changedTouches) { if (t.identifier === activeId) end(); }
+    });
+    zone.addEventListener("touchcancel", end);
   }
 
-  // 触摸转动视角
-  let rotateTouchId = null;
-  function isOnUI(t) {
-    // 检查是否在 UI 元素上（不处理）
-    const zones = [
-      document.getElementById("joystickZone"),
-      document.getElementById("actionBtns"),
-      document.getElementById("hotbar"),
-      document.getElementById("backBtn"),
-      document.getElementById("topBar"),
-    ];
-    for (const el of zones) {
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      if (t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom) return true;
-    }
-    return false;
-  }
+  // ===== 左摇杆：移动 =====
+  setupStick("moveStick", "moveThumb",
+    (x, y) => {
+      const t = 0.2;
+      keys["KeyW"] = y < -t;
+      keys["KeyS"] = y > t;
+      keys["KeyA"] = x < -t;
+      keys["KeyD"] = x > t;
+    },
+    () => { keys["KeyW"] = keys["KeyS"] = keys["KeyA"] = keys["KeyD"] = false; }
+  );
 
-  renderer.domElement.style.touchAction = "none";
-  document.addEventListener("touchstart", e => {
-    if (!locked) return;
-    for (const t of e.changedTouches) {
-      if (isOnUI(t)) continue;
-      if (rotateTouchId === null) {
-        rotateTouchId = t.identifier;
-        t._lx = t.clientX; t._ly = t.clientY;
-        break;
-      }
-    }
-  });
-  document.addEventListener("touchmove", e => {
-    if (!locked || rotateTouchId === null) return;
-    for (const t of e.changedTouches) {
-      if (t.identifier === rotateTouchId && t._lx !== undefined) {
-        const dx = t.clientX - t._lx;
-        const dy = t.clientY - t._ly;
-        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
-          player.yaw -= dx * 0.004;
-          player.pitch -= dy * 0.004;
-          player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
-        }
-        t._lx = t.clientX; t._ly = t.clientY;
-        e.preventDefault();
-      }
-    }
-  }, { passive: false });
-  document.addEventListener("touchend", e => {
-    for (const t of e.changedTouches) {
-      if (t.identifier === rotateTouchId) { rotateTouchId = null; t._lx = undefined; }
-    }
-  });
-  document.addEventListener("touchcancel", () => { rotateTouchId = null; });
+  // ===== 右摇杆：视角 =====
+  setupStick("camStick", "camThumb",
+    (x, y) => {
+      player.yaw -= x * 0.06;
+      player.pitch += y * 0.06;
+      player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch));
+    },
+    () => {} // 视角不回弹
+  );
 
   // 动作按钮
   document.getElementById("btnJump").addEventListener("touchstart", e => {
