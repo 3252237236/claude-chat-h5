@@ -290,7 +290,6 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
     <div class="topic-list" id="topicList"></div>
     <div class="sidebar-footer">
       <button class="btn-new" onclick="newTopic()">＋ 新建话题</button>
-      <button class="btn-settings" onclick="openSettings()">⚙️ 设置</button>
     </div>
   </div>
 
@@ -316,25 +315,6 @@ html, body { height: 100%; height: 100dvh; font-family: -apple-system, BlinkMacS
         <button class="btn-send" id="btnSend" onclick="sendMessage()">➤</button>
       </div>
       <div class="input-hint" id="inputHint">就绪 | 📝 纯聊天</div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 设置模态框 ===== -->
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal">
-    <h3>⚙️ API 设置</h3>
-    <label>可用平台（由服务端配置）</label>
-    <div class="preset-tags" id="presetTags"></div>
-    <label>API URL</label>
-    <input type="text" id="setApiUrl" placeholder="https://api.deepseek.com/v1/chat/completions">
-    <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 8px; margin-top: 14px; font-size: 12px; color: #2e7d32;">
-      🔐 管理员在服务端配置好 Key，用户直接选平台用。<br>
-      支持的平台：<span id="availablePlatforms">加载中…</span>
-    </div>
-    <div class="btn-row">
-      <button class="btn-secondary" onclick="closeSettings()">取消</button>
-      <button class="btn-primary" onclick="saveSettings()">保存</button>
     </div>
   </div>
 </div>
@@ -1181,72 +1161,7 @@ function closeSidebar() {
   overlay.classList.remove("show");
 }
 
-// ==================== 设置 ====================
-function openSettings() {
-  const s = appData.settings;
-  $("#setApiUrl").value = s.apiUrl || "";
-
-  // 从服务端获取可用平台列表
-  const providers = appData.availableProviders || [];
-  const tagsEl = $("#presetTags");
-  tagsEl.innerHTML = "";
-
-  if (providers.length > 0) {
-    providers.forEach(p => {
-      const tag = document.createElement("span");
-      tag.className = "preset-tag";
-      tag.dataset.url = p.url;
-      tag.dataset.model = p.model;
-      tag.textContent = p.name;
-      if (s.apiUrl === p.url) tag.classList.add("active");
-      tagsEl.appendChild(tag);
-    });
-    // 加一个自定义选项
-    const customTag = document.createElement("span");
-    customTag.className = "preset-tag";
-    customTag.dataset.url = "";
-    customTag.dataset.model = "";
-    customTag.textContent = "自定义";
-    if (!providers.find(p => p.url === s.apiUrl)) customTag.classList.add("active");
-    tagsEl.appendChild(customTag);
-
-    $("#availablePlatforms").textContent = providers.map(p => p.name).join(" · ");
-  } else {
-    tagsEl.innerHTML = '<span class="preset-tag active">自定义</span>';
-    $("#availablePlatforms").textContent = "未检测到服务端配置";
-  }
-
-  $("#settingsModal").classList.add("show");
-}
-
-function closeSettings() {
-  $("#settingsModal").classList.remove("show");
-}
-
-function saveSettings() {
-  const apiUrl = $("#setApiUrl").value.trim();
-  if (!apiUrl) { showToast("请输入 API URL"); return; }
-  appData.settings.apiUrl = apiUrl;
-  saveAll();
-  updateStatusBar();
-  closeSettings();
-  showToast("✅ 设置已保存");
-}
-
-
 document.addEventListener("click", e => {
-  const tag = e.target.closest("#presetTags .preset-tag");
-  if (tag) {
-    // 更新选中样式
-    $$("#presetTags .preset-tag").forEach(t => t.classList.remove("active"));
-    tag.classList.add("active");
-    // 填充 URL 和模型
-    const url = tag.dataset.url || "";
-    const model = tag.dataset.model || "";
-    if (url) $("#setApiUrl").value = url;
-    if (model) appData.settings.model = model;
-  }
-  if (e.target === $("#settingsModal")) closeSettings();
   if (e.target === $("#topicSettingsModal")) closeTopicSettings();
 });
 
@@ -1308,7 +1223,6 @@ inputBox.addEventListener("input", () => {
 // ==================== 键盘快捷键 ====================
 document.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.key === "n") { e.preventDefault(); newTopic(); }
-  if ((e.ctrlKey || e.metaKey) && e.key === ",") { e.preventDefault(); openSettings(); }
 });
 </script>
 
