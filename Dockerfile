@@ -4,4 +4,4 @@ WORKDIR /app
 
 COPY . /app
 
-CMD ["python", "server.py"]
+CMD ["python", "test_server.py"]
