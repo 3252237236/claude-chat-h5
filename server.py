@@ -13,8 +13,10 @@ PORT = int(os.environ.get("PORT", 8765))
 TIMEOUT = int(os.environ.get("TIMEOUT", 180))
 GENERIC_KEY = ""
 
-UPLOAD_DIR = "uploads"
-META_FILE = "uploads.json"
+# 数据目录：Railway 挂载卷用 /data，本地用 .
+DATA_DIR = os.environ.get("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+META_FILE = os.path.join(DATA_DIR, "uploads.json")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ---------- 加载平台 ----------
