@@ -8,173 +8,193 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --c-bg: #f5f1ec;
-  --c-surface: rgba(255,255,255,0.55);
-  --c-surface-hover: rgba(255,255,255,0.78);
-  --c-border: rgba(0,0,0,0.06);
-  --c-border-hover: rgba(0,0,0,0.10);
-  --c-text: #3d3832;
-  --c-text-dim: #9b948b;
-  --c-accent: #e67e45;
-  --c-accent2: #6b9b6d;
-  --c-accent3: #7d8fa3;
-  --c-accent4: #c8893d;
-  --radius: 22px;
+  --bg: #f7f5f2;
+  --text: #1c1c1e;
+  --text-dim: #8e8e93;
+  --radius: 28px;
+  --gap: 14px;
 }
 
 html, body {
   min-height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--c-bg);
-  color: var(--c-text);
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
-}
-
-/* ===== 背景纹理 ===== */
-.bg-texture {
-  position: fixed; inset: 0; z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm15 20a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 48a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm40 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2z' fill='%233d3832' opacity='.03'/%3E%3C/svg%3E");
-  pointer-events: none;
 }
 
 /* ===== 主容器 ===== */
 .app {
-  position: relative; z-index: 1;
-  max-width: 880px; margin: 0 auto;
-  padding: 60px 24px 80px;
+  max-width: 980px; margin: 0 auto;
+  padding: 48px 20px 80px;
   min-height: 100vh;
-  display: flex; flex-direction: column;
 }
 
 /* ===== 头部 ===== */
 .hero {
-  text-align: left; padding: 80px 0 56px;
-  max-width: 600px;
-}
-.hero .logo {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px;
-  background: var(--c-text);
-  color: var(--c-bg);
-  border-radius: 12px;
-  font-size: 16px; font-weight: 800;
-  margin-bottom: 28px;
+  padding: 40px 0 36px;
 }
 .hero h1 {
-  font-size: 52px; font-weight: 740; letter-spacing: -2px;
-  line-height: 1.05; margin-bottom: 16px;
-  color: var(--c-text);
+  font-size: 38px; font-weight: 780; letter-spacing: -2px;
+  margin-bottom: 8px;
 }
-.hero .subtitle {
-  font-size: 18px; color: var(--c-text-dim);
-  line-height: 1.7; max-width: 460px;
+.hero .sub {
+  font-size: 16px; color: var(--text-dim); line-height: 1.6;
 }
 
-/* ===== 分区标题 ===== */
-.section-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
-  text-transform: uppercase; color: var(--c-text-dim);
-  margin: 16px 0 18px;
-}
-
-/* ===== 卡片网格 ===== */
-.cards {
+/* ===== Bento 网格 ===== */
+.bento {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 148px;
+  gap: var(--gap);
 }
 
-/* ===== 毛玻璃卡片 ===== */
-.card {
+/* ===== Bento 块 ===== */
+.block {
   position: relative;
-  background: var(--c-surface);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  padding: 26px 24px 24px;
+  padding: 24px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
   text-decoration: none; color: inherit;
+  display: flex; flex-direction: column;
   overflow: hidden;
 }
-.card::after {
-  content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
-  pointer-events: none;
-  border-radius: var(--radius);
-}
-.card:hover {
-  background: var(--c-surface-hover);
-  border-color: var(--c-border-hover);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+.block:hover {
+  transform: scale(0.98);
+  filter: brightness(0.96);
 }
 
-.card .card-icon {
-  width: 46px; height: 46px; border-radius: 15px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: 16px;
-  position: relative; z-index: 1;
+/* 各块配色 */
+.block-chat  { background: #ebe6f5; }
+.block-mc    { background: #ddebe0; }
+.block-files { background: #e6eaf0; }
+.block-submit{ background: #f5efe6; border: 2px dashed rgba(0,0,0,0.1); }
+
+.block .b-icon {
+  font-size: 28px; margin-bottom: auto;
+  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+  border-radius: 14px; background: rgba(255,255,255,0.5);
 }
-.card h3 { font-size: 18px; font-weight: 680; margin-bottom: 6px; position: relative; z-index: 1; }
-.card p { font-size: 14px; color: var(--c-text-dim); line-height: 1.55; position: relative; z-index: 1; }
-.card .card-badge {
-  display: inline-block; margin-top: 14px;
-  font-size: 11px; font-weight: 600; padding: 4px 10px;
+.block h3 { font-size: 19px; font-weight: 700; margin: 4px 0 3px; }
+.block .b-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.block .b-tag {
+  display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 14px;
+  background: rgba(255,255,255,0.55); color: var(--text-dim);
+  width: fit-content;
+}
+
+/* 大块 - AI 聊天 */
+.block-chat {
+  grid-column: span 2; grid-row: span 2;
+  padding: 32px;
+}
+.block-chat .b-icon { font-size: 36px; width: 58px; height: 58px; border-radius: 18px; }
+.block-chat h3 { font-size: 24px; margin-top: 8px; }
+.block-chat .b-desc { font-size: 15px; max-width: 260px; }
+
+/* 中等块 */
+.block-mc, .block-files, .block-submit {
+  grid-column: span 1; grid-row: span 1;
+}
+
+/* ===== 社区区块 ===== */
+.community-section {
+  margin-top: 44px;
+}
+.community-section .sec-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 14px;
+}
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+}
+
+.comm-card {
+  background: #f0eee9;
   border-radius: 20px;
-  background: rgba(0,0,0,0.04);
-  color: var(--c-text-dim);
-  position: relative; z-index: 1;
+  padding: 20px; cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none; color: inherit;
+  display: flex; flex-direction: column; gap: 8px;
 }
-.card:hover .card-badge { background: rgba(0,0,0,0.06); color: var(--c-text); }
+.comm-card:hover {
+  background: #e8e6e1;
+  transform: scale(0.98);
+}
+.comm-card .cc-icon {
+  font-size: 24px; width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.5);
+}
+.comm-card .cc-title { font-size: 15px; font-weight: 670; }
+.comm-card .cc-meta { font-size: 12px; color: var(--text-dim); }
 
-/* 虚线卡片 */
-.card-dashed { border-style: dashed; border-color: rgba(0,0,0,0.1); }
+.comm-submit {
+  background: transparent; border: 2px dashed rgba(0,0,0,0.08);
+  align-items: center; justify-content: center; text-align: center;
+}
+.comm-submit:hover { background: rgba(0,0,0,0.02); }
+.comm-submit .cc-icon { background: rgba(0,0,0,0.03); font-size: 22px; }
 
 /* ===== 底部 ===== */
 .footer {
-  margin-top: auto; text-align: left; padding-top: 60px;
-  font-size: 13px; color: var(--c-text-dim);
+  margin-top: 60px; font-size: 13px; color: var(--text-dim);
 }
 
 /* ===== 响应式 ===== */
-@media (max-width: 600px) {
-  .app { padding: 40px 16px 50px; }
-  .hero { padding: 30px 0 36px; }
-  .hero h1 { font-size: 38px; letter-spacing: -1.5px; }
-  .hero .subtitle { font-size: 16px; }
-  .cards { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+  .bento { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
+  .block-chat { grid-column: span 2; grid-row: span 2; }
+  .community-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .app { padding: 32px 14px 60px; }
+  .hero { padding: 20px 0 24px; }
+  .hero h1 { font-size: 32px; }
+  .bento { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .block { min-height: 120px; }
+  .block-chat { grid-column: span 1; grid-row: span 1; min-height: 180px; }
+  .community-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 
-<div class="bg-texture"></div>
-
 <div class="app">
   <header class="hero">
-    <div class="logo">HZ</div>
     <h1>HZ Lab</h1>
-    <p class="subtitle">探索 AI 与工具的无限可能<br>所有项目免费开放，点开即用</p>
+    <p class="sub">探索 AI 与工具的无限可能 · 所有项目免费开放，点开即用</p>
   </header>
 
-  <div class="section-label">Apps</div>
-  <div class="cards" id="builtinCards"></div>
+  <!-- Bento 主区域 -->
+  <div class="bento" id="bentoGrid"></div>
 
-  <div class="section-label" id="communityTitle" style="display:none;">社区作品</div>
-  <div class="cards" id="communityCards"></div>
+  <!-- 社区作品 -->
+  <div class="community-section" id="communitySection" style="display:none;">
+    <div class="sec-label">社区作品</div>
+    <div class="community-grid" id="communityGrid"></div>
+  </div>
 
-  <footer class="footer">
-    &copy; 2026 HZ Lab
-  </footer>
+  <footer class="footer">&copy; 2026 HZ Lab</footer>
 </div>
 
 <script>
-// ========== 加载内置应用 ==========
-(async function loadApps() {
-  const container = document.getElementById("builtinCards");
+// ===== 内置块映射 =====
+const blockClass = {
+  "AI 聊天": "block-chat",
+  "MiniCraft": "block-mc",
+  "文件仓库": "block-files",
+  "提交作品": "block-submit",
+};
+
+(async function loadBento() {
+  const grid = document.getElementById("bentoGrid");
   try {
     const resp = await fetch("apps.json");
     if (!resp.ok) throw new Error();
@@ -182,64 +202,55 @@ html, body {
     if (!apps.length) return;
 
     apps.forEach(app => {
-      const card = document.createElement("a");
-      card.className = "card" + (app.dashed ? " card-dashed" : "");
-      card.href = app.url;
-      card.innerHTML = `
-        <div class="card-icon" style="background:${app.color}18;color:${app.color};">${app.icon}</div>
-        <h3>${escapeHtml(app.title)}</h3>
-        <p>${escapeHtml(app.desc)}</p>
-        <span class="card-badge">${escapeHtml(app.badge || "")}</span>`;
-      container.appendChild(card);
+      const el = document.createElement("a");
+      el.className = "block " + (blockClass[app.title] || "");
+      el.href = app.url;
+      el.innerHTML = `
+        <div class="b-icon">${app.icon}</div>
+        <h3>${esc(app.title)}</h3>
+        <div class="b-desc">${esc(app.desc)}</div>
+        <span class="b-tag">${esc(app.badge||"")}</span>`;
+      grid.appendChild(el);
     });
-  } catch (e) {
-    container.innerHTML = `
-      <a href="/chat" class="card">
-        <div class="card-icon" style="background:#e67e4518;color:#e67e45;">💬</div>
-        <h3>AI 聊天</h3><p>智能对话，Agent 工具调用</p><span class="card-badge">🚀 已上线</span>
-      </a>`;
+  } catch(e) {
+    grid.innerHTML = `<a href="/chat" class="block block-chat" style="grid-column:span 2;grid-row:span 2;padding:32px;">
+      <div class="b-icon" style="font-size:36px;width:58px;height:58px;border-radius:18px;">💬</div>
+      <h3 style="font-size:24px;margin-top:8px;">AI 聊天</h3><div class="b-desc" style="font-size:15px;max-width:260px;">智能对话，Agent 工具调用</div><span class="b-tag">🚀 已上线</span></a>`;
   }
 })();
 
-// ========== 加载社区作品 ==========
+// ===== 社区作品 =====
 (async function loadCommunity() {
   try {
     const resp = await fetch("/api/community-apps");
     const items = await resp.json();
     if (!items.length) return;
 
-    document.getElementById("communityTitle").style.display = "";
-    const container = document.getElementById("communityCards");
+    document.getElementById("communitySection").style.display = "";
+    const grid = document.getElementById("communityGrid");
 
     items.forEach(item => {
-      const card = document.createElement("a");
-      card.className = "card";
-      card.href = item.url;
-
-      const time = new Date(item.time * 1000);
-      const timeStr = time.toLocaleDateString("zh-CN");
-
-      card.innerHTML = `
-        <div class="card-icon" style="background:${item.color}18;color:${item.color};">${escapeHtml(item.icon)}</div>
-        <h3>${escapeHtml(item.title)}</h3>
-        <p>${escapeHtml(item.desc)}</p>
-        <span class="card-badge">${escapeHtml(item.author)} · ${timeStr}</span>`;
-      container.appendChild(card);
+      const el = document.createElement("a");
+      el.className = "comm-card";
+      el.href = item.url;
+      const time = new Date(item.time*1000);
+      el.innerHTML = `
+        <div class="cc-icon" style="background:${item.color}18;color:${item.color};">${esc(item.icon)}</div>
+        <div class="cc-title">${esc(item.title)}</div>
+        <div class="cc-meta">${esc(item.author)} · ${time.toLocaleDateString("zh-CN")}</div>`;
+      grid.appendChild(el);
     });
 
+    // 提交入口
     const tip = document.createElement("a");
-    tip.className = "card card-dashed";
+    tip.className = "comm-card comm-submit";
     tip.href = "/submit";
-    tip.innerHTML = `
-      <div class="card-icon" style="background:rgba(0,0,0,0.04);color:var(--c-text-dim);">➕</div>
-      <h3>提交你的作品</h3>
-      <p>发布工具、游戏、网站，让所有人看到</p>
-      <span class="card-badge">🚀 立即发布</span>`;
-    container.appendChild(tip);
-  } catch (e) {}
+    tip.innerHTML = `<div class="cc-icon">➕</div><div class="cc-title">提交作品</div><div class="cc-meta">发布到首页</div>`;
+    grid.appendChild(tip);
+  } catch(e) {}
 })();
 
-function escapeHtml(s) {
+function esc(s) {
   const d = document.createElement("div");
   d.textContent = s;
   return d.innerHTML;
