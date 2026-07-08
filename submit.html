@@ -8,193 +8,154 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0f;
-  --surface: rgba(255,255,255,0.03);
-  --surface2: rgba(255,255,255,0.06);
-  --border: rgba(255,255,255,0.08);
-  --text: #e8e8f0;
-  --text-dim: #8888a0;
-  --accent: #6c5ce7;
-  --accent-glow: rgba(108,92,231,0.3);
-  --green: #00d2a0;
-  --blue: #4dabf7;
-  --orange: #ff922b;
-  --pink: #f06595;
-  --red: #ff6b6b;
-  --radius: 16px;
+  --c-bg: #f5f1ec;
+  --c-surface: rgba(255,255,255,0.55);
+  --c-surface2: rgba(0,0,0,0.03);
+  --c-border: rgba(0,0,0,0.06);
+  --c-border2: rgba(0,0,0,0.10);
+  --c-text: #3d3832;
+  --c-text-dim: #9b948b;
+  --c-accent: #e67e45;
+  --c-red: #d4574a;
+  --c-green: #6b9b6d;
+  --radius: 22px;
+  --radius-sm: 14px;
 }
 
 html, body {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 背景 */
-.bg {
-  position: fixed; inset: 0; z-index: 0; overflow: hidden;
-}
-.bg-orb {
-  position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12;
-}
-.bg-orb:nth-child(1) {
-  width: 500px; height: 500px; background: var(--accent);
-  top: -150px; right: -100px; animation: orbFloat 20s ease-in-out infinite;
-}
-.bg-orb:nth-child(2) {
-  width: 350px; height: 350px; background: var(--green);
-  bottom: -100px; left: -100px; animation: orbFloat 18s ease-in-out infinite reverse;
-}
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, -40px) scale(1.1); }
+.bg-texture {
+  position: fixed; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm15 20a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 48a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm40 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2z' fill='%233d3832' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events: none;
 }
 
-/* 主容器 */
 .app {
   position: relative; z-index: 1;
-  max-width: 640px; margin: 0 auto;
+  max-width: 580px; margin: 0 auto;
   padding: 40px 24px 60px;
   min-height: 100vh;
-  display: flex; flex-direction: column;
 }
 
-/* 返回 */
 .back {
   display: inline-flex; align-items: center; gap: 6px;
-  color: var(--text-dim); text-decoration: none; font-size: 14px;
+  color: var(--c-text-dim); text-decoration: none; font-size: 14px;
   margin-bottom: 32px; transition: color 0.2s;
-  width: fit-content;
 }
-.back:hover { color: var(--text); }
+.back:hover { color: var(--c-text); }
 
-/* 表单卡片 */
+/* 主卡片 */
 .form-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--c-surface);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  padding: 36px 32px;
+  padding: 36px 30px;
 }
-.form-card h1 {
-  font-size: 24px; font-weight: 700; margin-bottom: 6px;
-}
-.form-card .subtitle {
-  font-size: 14px; color: var(--text-dim); margin-bottom: 32px;
-  line-height: 1.6;
-}
+.form-card h1 { font-size: 24px; font-weight: 740; letter-spacing: -0.5px; margin-bottom: 6px; }
+.form-card .subtitle { font-size: 14px; color: var(--c-text-dim); margin-bottom: 30px; line-height: 1.6; }
 
 .form-group { margin-bottom: 20px; }
 .form-group label {
-  display: block; font-size: 13px; font-weight: 600; color: var(--text-dim);
-  margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--c-text-dim); margin-bottom: 6px;
 }
-.form-group label .req { color: var(--red); margin-left: 2px; }
 
 input, textarea, select {
   width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 15px; color: var(--text);
-  font-family: inherit;
+  padding: 11px 14px;
+  font-size: 15px; color: var(--c-text);
+  font-family: inherit; outline: none;
   transition: border-color 0.2s;
-  outline: none;
 }
-input:focus, textarea:focus, select:focus {
-  border-color: var(--accent);
-}
-textarea { resize: vertical; min-height: 80px; }
-select { cursor: pointer; appearance: none; }
+input:focus, textarea:focus, select:focus { border-color: var(--c-accent); }
+textarea { resize: vertical; min-height: 70px; }
 
 /* 颜色选择器 */
-.color-picker {
-  display: flex; gap: 10px; flex-wrap: wrap;
-}
+.color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
 .color-dot {
-  width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
   border: 2px solid transparent; transition: all 0.2s;
-  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #fff;
 }
 .color-dot:hover { transform: scale(1.1); }
-.color-dot.active {
-  border-color: #fff;
-  box-shadow: 0 0 16px var(--dot-color, #fff);
-}
-.color-dot .check {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 14px; opacity: 0; transition: opacity 0.2s;
-}
+.color-dot.active { border-color: var(--c-text); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+.color-dot .check { opacity: 0; transition: opacity 0.2s; }
 .color-dot.active .check { opacity: 1; }
 
-/* emoji 选择 */
-.emoji-grid {
-  display: flex; gap: 8px; flex-wrap: wrap;
-}
+/* emoji */
+.emoji-grid { display: flex; gap: 7px; flex-wrap: wrap; }
 .emoji-btn {
-  width: 40px; height: 40px; border-radius: 10px;
-  background: var(--surface2); border: 1px solid transparent;
-  font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--c-surface2); border: 1px solid transparent;
+  font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all 0.2s;
 }
-.emoji-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--border); }
-.emoji-btn.active { border-color: var(--accent); background: rgba(108,92,231,0.15); }
+.emoji-btn:hover { background: rgba(230,126,69,0.08); border-color: var(--c-accent); }
+.emoji-btn.active { border-color: var(--c-accent); background: rgba(230,126,69,0.12); }
 
-/* 文件上传区 */
+/* 文件上传 */
 .file-zone {
-  border: 2px dashed var(--border); border-radius: 12px;
-  padding: 28px; text-align: center; cursor: pointer;
+  border: 2px dashed var(--c-border2); border-radius: 12px;
+  padding: 24px; text-align: center; cursor: pointer;
   transition: all 0.2s;
 }
-.file-zone:hover { border-color: var(--accent); background: rgba(108,92,231,0.05); }
-.file-zone .file-icon { font-size: 36px; margin-bottom: 8px; }
-.file-zone .file-text { font-size: 14px; color: var(--text-dim); }
-.file-zone .file-name { font-size: 14px; color: var(--accent); margin-top: 8px; font-weight: 600; }
+.file-zone:hover { border-color: var(--c-accent); background: rgba(230,126,69,0.04); }
+.file-zone .file-icon { font-size: 32px; margin-bottom: 6px; opacity: 0.5; }
+.file-zone .file-text { font-size: 13px; color: var(--c-text-dim); }
+.file-zone .file-name { font-size: 13px; color: var(--c-accent); margin-top: 6px; font-weight: 600; }
 .file-zone input[type=file] { display: none; }
 
-/* 提示 */
-.hint {
-  font-size: 12px; color: var(--text-dim); margin-top: 6px;
-}
-.optional { color: var(--text-dim); font-weight: 400; font-size: 11px; }
+.hint { font-size: 12px; color: var(--c-text-dim); margin-top: 5px; line-height: 1.5; }
 
 /* 按钮 */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700;
-  cursor: pointer; border: none; transition: all 0.25s;
-  width: 100%; margin-top: 12px;
+  padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 650;
+  cursor: pointer; border: none; font-family: inherit;
+  width: 100%; margin-top: 8px;
+  transition: all 0.25s;
 }
 .btn-primary {
-  background: var(--accent); color: #fff;
-  box-shadow: 0 4px 20px var(--accent-glow);
+  background: var(--c-text); color: var(--c-bg);
 }
-.btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.btn-primary:hover { filter: brightness(1.3); transform: translateY(-1px); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; }
 
-/* 成功/错误消息 */
-.msg {
-  padding: 14px 18px; border-radius: 10px; font-size: 14px; margin-top: 16px;
-  display: none;
-}
-.msg-ok { background: rgba(0,210,160,0.1); color: var(--green); border: 1px solid rgba(0,210,160,0.2); }
-.msg-err { background: rgba(255,107,107,0.1); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
+.msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-top: 14px; display: none; }
+.msg-ok { background: rgba(107,155,109,0.08); color: var(--c-green); }
+.msg-err { background: rgba(212,87,74,0.08); color: var(--c-red); }
 
-/* 预览卡片 */
-.preview-section { margin-top: 28px; }
-.preview-section h3 { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+/* 预览 */
+.preview-section { margin-top: 24px; }
+.preview-section h3 { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-dim); margin-bottom: 10px; }
 .preview-card {
-  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px; transition: all 0.3s;
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: all 0.3s;
 }
 .preview-card .pc-icon {
-  width: 40px; height: 40px; border-radius: 10px;
+  width: 40px; height: 40px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px; margin-bottom: 10px;
+  font-size: 19px; margin-bottom: 10px;
 }
-.preview-card .pc-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-.preview-card .pc-desc { font-size: 13px; color: var(--text-dim); }
+.preview-card .pc-title { font-size: 16px; font-weight: 680; margin-bottom: 3px; }
+.preview-card .pc-desc { font-size: 13px; color: var(--c-text-dim); }
 
 @media (max-width: 500px) {
   .form-card { padding: 24px 20px; }
@@ -203,81 +164,64 @@ select { cursor: pointer; appearance: none; }
 </head>
 <body>
 
-<div class="bg">
-  <div class="bg-orb"></div>
-  <div class="bg-orb"></div>
-</div>
+<div class="bg-texture"></div>
 
 <div class="app">
   <a href="/" class="back">← 返回首页</a>
 
   <div class="form-card" id="formCard">
-    <h1>🚀 提交作品</h1>
+    <h1>提交作品</h1>
     <p class="subtitle">发布你的工具、游戏、网站，所有人都会在首页看到它。</p>
 
-    <!-- 标题 -->
     <div class="form-group">
-      <label>标题 <span class="req">*</span></label>
+      <label>标题</label>
       <input type="text" id="title" placeholder="给你的作品起个名字" maxlength="30">
     </div>
 
-    <!-- 描述 -->
     <div class="form-group">
-      <label>简介 <span class="req">*</span></label>
+      <label>简介</label>
       <textarea id="desc" placeholder="一句话介绍你的作品" maxlength="80"></textarea>
     </div>
 
-    <!-- 图标 -->
     <div class="form-group">
       <label>图标</label>
-      <div class="emoji-grid" id="emojiPicker">
-      </div>
+      <div class="emoji-grid" id="emojiPicker"></div>
     </div>
 
-    <!-- 颜色 -->
     <div class="form-group">
       <label>主题色</label>
-      <div class="color-picker" id="colorPicker">
-      </div>
+      <div class="color-picker" id="colorPicker"></div>
     </div>
 
-    <!-- 链接 -->
     <div class="form-group">
-      <label>链接 <span class="req">*</span></label>
-      <input type="text" id="url" placeholder="https://... 或 /uploads/xxx.html" maxlength="200">
-      <div class="hint">可以是任何网址，或上传文件后获得的上传链接</div>
+      <label>链接</label>
+      <input type="text" id="url" placeholder="https://... 或上传后自动生成" maxlength="200">
     </div>
 
-    <!-- HTML文件上传 -->
     <div class="form-group">
-      <label>上传项目文件 <span class="optional">(可选)</span></label>
-      <div class="file-zone" id="fileZone" onclick="document.getElementById('fileInput').click()">
+      <label>上传项目文件（可选）</label>
+      <div class="file-zone" onclick="document.getElementById('fileInput').click()">
         <div class="file-icon">📦</div>
-        <div class="file-text">点击上传 HTML 文件 或 ZIP 压缩包</div>
+        <div class="file-text">HTML 文件 或 ZIP 压缩包</div>
         <div class="file-name" id="fileName" style="display:none"></div>
       </div>
       <input type="file" id="fileInput" accept=".html,.htm,.zip">
-      <div class="hint">单个 HTML 文件 → 直接上传 · 文件夹项目（HTML+CSS+JS+图片）→ 打成 ZIP 上传</div>
+      <div class="hint">单个 HTML → 直接上传 · 文件夹项目 → 打成 ZIP</div>
     </div>
 
-    <!-- 作者 -->
     <div class="form-group">
-      <label>你的名字 <span class="optional">(可选)</span></label>
+      <label>你的名字（可选）</label>
       <input type="text" id="author" placeholder="匿名" maxlength="20">
     </div>
 
-    <button class="btn btn-primary" id="submitBtn" onclick="submitApp()">
-      ✨ 发布到首页
-    </button>
-
+    <button class="btn btn-primary" id="submitBtn" onclick="submitApp()">发布到首页</button>
     <div class="msg msg-ok" id="msgOk"></div>
     <div class="msg msg-err" id="msgErr"></div>
   </div>
 
-  <!-- 实时预览 -->
   <div class="preview-section">
     <h3>卡片预览</h3>
-    <div class="preview-card" id="previewCard">
+    <div class="preview-card">
       <div class="pc-icon" id="pcIcon">🎯</div>
       <div class="pc-title" id="pcTitle">作品标题</div>
       <div class="pc-desc" id="pcDesc">作品简介…</div>
@@ -286,81 +230,73 @@ select { cursor: pointer; appearance: none; }
 </div>
 
 <script>
-const COLORS = ["#6c5ce7","#00d2a0","#4dabf7","#ff922b","#f06595","#ff6b6b","#ffd43b","#20c997"];
+const COLORS = ["#e67e45","#6b9b6d","#7d8fa3","#c8893d","#d4574a","#8b7e6d","#5b8c85","#ba7a5a"];
 const EMOJIS = ["🎮","🎯","🧩","🎨","🎵","📝","🔧","🧮","🗺️","🎲","📊","🤖","🛠️","🎬","📸","🌐","💡","⚡","🔥","💎","🌈","🎪","🎭","🕹️"];
 
 let selectedColor = COLORS[0];
 let selectedEmoji = EMOJIS[0];
 let uploadedFile = null;
 
-// 颜色选择器
+// 颜色
 (function() {
-  const picker = document.getElementById("colorPicker");
+  const p = document.getElementById("colorPicker");
   COLORS.forEach(c => {
-    const dot = document.createElement("div");
-    dot.className = "color-dot" + (c === selectedColor ? " active" : "");
-    dot.style.cssText = `background:${c};--dot-color:${c}44;`;
-    dot.innerHTML = '<span class="check">✓</span>';
-    dot.onclick = () => {
-      document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
-      dot.classList.add("active");
-      selectedColor = c;
-      updatePreview();
+    const d = document.createElement("div");
+    d.className = "color-dot" + (c===selectedColor?" active":"");
+    d.style.background = c;
+    d.innerHTML = '<span class="check">✓</span>';
+    d.onclick = () => {
+      document.querySelectorAll(".color-dot").forEach(x=>x.classList.remove("active"));
+      d.classList.add("active");
+      selectedColor = c; updatePreview();
     };
-    picker.appendChild(dot);
+    p.appendChild(d);
   });
 })();
 
-// Emoji 选择器
+// Emoji
 (function() {
-  const picker = document.getElementById("emojiPicker");
+  const p = document.getElementById("emojiPicker");
   EMOJIS.forEach(e => {
-    const btn = document.createElement("div");
-    btn.className = "emoji-btn" + (e === selectedEmoji ? " active" : "");
-    btn.textContent = e;
-    btn.onclick = () => {
-      document.querySelectorAll(".emoji-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedEmoji = e;
-      updatePreview();
+    const b = document.createElement("div");
+    b.className = "emoji-btn" + (e===selectedEmoji?" active":"");
+    b.textContent = e;
+    b.onclick = () => {
+      document.querySelectorAll(".emoji-btn").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      selectedEmoji = e; updatePreview();
     };
-    picker.appendChild(btn);
+    p.appendChild(b);
   });
 })();
 
-// 文件上传
+// 文件
 document.getElementById("fileInput").addEventListener("change", function() {
-  const file = this.files[0];
-  if (!file) return;
-  uploadedFile = file;
-  const isZip = file.name.toLowerCase().endsWith(".zip");
+  const f = this.files[0];
+  if (!f) return;
+  uploadedFile = f;
+  const isZip = f.name.toLowerCase().endsWith(".zip");
   const tag = isZip ? "📦" : "📄";
-  const hint = isZip ? " (ZIP 项目包，将自动解压)" : "";
-  document.getElementById("fileName").textContent = tag + " " + file.name + " (" + formatSize(file.size) + ")" + hint;
+  const hint = isZip ? " (自动解压)" : "";
+  document.getElementById("fileName").textContent = tag + " " + f.name + " (" + fmt(f.size) + ")" + hint;
   document.getElementById("fileName").style.display = "";
   if (!document.getElementById("url").value) {
-    document.getElementById("url").placeholder = isZip ? "解压后自动获得链接" : "上传后自动获得链接";
+    document.getElementById("url").placeholder = isZip ? "解压后自动生成链接" : "上传后自动生成链接";
   }
 });
 
-function formatSize(bytes) {
-  if (bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + "MB";
-  return (bytes/1024).toFixed(0) + "KB";
-}
+function fmt(b) { return b>1024*1024?(b/1024/1024).toFixed(1)+"MB":(b/1024).toFixed(0)+"KB"; }
 
 // 实时预览
 ["title","desc"].forEach(id => {
   document.getElementById(id).addEventListener("input", updatePreview);
 });
-
 function updatePreview() {
-  const title = document.getElementById("title").value || "作品标题";
-  const desc = document.getElementById("desc").value || "作品简介…";
   document.getElementById("pcIcon").textContent = selectedEmoji;
-  document.getElementById("pcIcon").style.background = selectedColor + "22";
+  document.getElementById("pcIcon").style.background = selectedColor + "18";
   document.getElementById("pcIcon").style.color = selectedColor;
-  document.getElementById("pcTitle").textContent = title;
-  document.getElementById("pcDesc").textContent = desc;
+  document.getElementById("pcTitle").textContent = document.getElementById("title").value || "作品标题";
+  document.getElementById("pcDesc").textContent = document.getElementById("desc").value || "作品简介…";
 }
 updatePreview();
 
@@ -371,50 +307,42 @@ async function submitApp() {
   let url = document.getElementById("url").value.trim();
   const author = document.getElementById("author").value.trim();
 
-  // 验证
-  if (!title) return showMsg("请输入标题", "err");
-  if (!desc) return showMsg("请输入简介", "err");
-  if (!url && !uploadedFile) return showMsg("请填写链接或上传 HTML 文件", "err");
+  if (!title) return showMsg("请输入标题","err");
+  if (!desc) return showMsg("请输入简介","err");
+  if (!url && !uploadedFile) return showMsg("请填写链接或上传文件","err");
 
   const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.textContent = "提交中…";
+  btn.disabled = true; btn.textContent = "提交中…";
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("desc", desc);
-  formData.append("url", url);
-  formData.append("author", author);
-  formData.append("icon", selectedEmoji);
-  formData.append("color", selectedColor);
-  if (uploadedFile) formData.append("file", uploadedFile);
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("desc", desc);
+  fd.append("url", url);
+  fd.append("author", author);
+  fd.append("icon", selectedEmoji);
+  fd.append("color", selectedColor);
+  if (uploadedFile) fd.append("file", uploadedFile);
 
   try {
-    const resp = await fetch("/api/submit-app", { method: "POST", body: formData });
-    const data = await resp.json();
+    const data = await fetch("/api/submit-app", {method:"POST",body:fd}).then(r=>r.json());
     if (data.ok) {
-      showMsg("✅ 发布成功！返回首页即可看到你的作品卡片", "ok");
-      document.getElementById("formCard").querySelectorAll("input[type=text], textarea").forEach(el => el.value = "");
+      showMsg("✅ 发布成功！返回首页即可看到你的作品","ok");
+      document.getElementById("formCard").querySelectorAll("input[type=text], textarea").forEach(el=>el.value="");
       uploadedFile = null;
       document.getElementById("fileName").style.display = "none";
       document.getElementById("fileInput").value = "";
     } else {
-      showMsg(data.error || "发布失败", "err");
+      showMsg(data.error||"发布失败","err");
     }
-  } catch (e) {
-    showMsg("网络错误，请稍后再试", "err");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "✨ 发布到首页";
-  }
+  } catch(e) { showMsg("网络错误","err"); }
+  finally { btn.disabled = false; btn.textContent = "发布到首页"; }
 }
 
 function showMsg(text, type) {
-  const el = type === "ok" ? document.getElementById("msgOk") : document.getElementById("msgErr");
-  el.textContent = text;
-  el.style.display = "block";
-  document.getElementById(type === "ok" ? "msgErr" : "msgOk").style.display = "none";
-  if (type === "ok") setTimeout(() => { el.style.display = "none"; }, 5000);
+  const el = type==="ok" ? document.getElementById("msgOk") : document.getElementById("msgErr");
+  el.textContent = text; el.style.display = "block";
+  document.getElementById(type==="ok"?"msgErr":"msgOk").style.display = "none";
+  if (type==="ok") setTimeout(()=>{el.style.display="none";}, 5000);
 }
 </script>
 </body>

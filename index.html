@@ -8,274 +8,200 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0f;
-  --surface: rgba(255,255,255,0.03);
-  --surface-hover: rgba(255,255,255,0.06);
-  --border: rgba(255,255,255,0.06);
-  --text: #e8e8f0;
-  --text-dim: #8888a0;
-  --accent: #6c5ce7;
-  --accent-glow: rgba(108,92,231,0.3);
-  --green: #00d2a0;
-  --green-glow: rgba(0,210,160,0.3);
-  --blue: #4dabf7;
-  --blue-glow: rgba(77,171,247,0.3);
-  --orange: #ff922b;
-  --orange-glow: rgba(255,146,43,0.3);
-  --pink: #f06595;
-  --pink-glow: rgba(240,101,149,0.3);
-  --radius: 20px;
-  --radius-sm: 14px;
-  --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --c-bg: #f5f1ec;
+  --c-surface: rgba(255,255,255,0.55);
+  --c-surface-hover: rgba(255,255,255,0.78);
+  --c-border: rgba(0,0,0,0.06);
+  --c-border-hover: rgba(0,0,0,0.10);
+  --c-text: #3d3832;
+  --c-text-dim: #9b948b;
+  --c-accent: #e67e45;
+  --c-accent2: #6b9b6d;
+  --c-accent3: #7d8fa3;
+  --c-accent4: #c8893d;
+  --radius: 22px;
 }
 
 html, body {
   min-height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
+  background: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ========== 背景动效 ========== */
-.bg {
-  position: fixed; inset: 0; z-index: 0; overflow: hidden;
-}
-.bg-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.15;
-  animation: orbFloat 20s ease-in-out infinite;
-}
-.bg-orb:nth-child(1) {
-  width: 600px; height: 600px;
-  background: var(--accent);
-  top: -200px; left: -100px;
-  animation-delay: 0s;
-}
-.bg-orb:nth-child(2) {
-  width: 400px; height: 400px;
-  background: var(--blue);
-  bottom: -100px; right: -100px;
-  animation-delay: -7s;
-}
-.bg-orb:nth-child(3) {
-  width: 300px; height: 300px;
-  background: var(--green);
-  top: 50%; left: 50%;
-  animation-delay: -14s;
-  opacity: 0.08;
-}
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(60px, -40px) scale(1.1); }
-  50% { transform: translate(-30px, -80px) scale(0.9); }
-  75% { transform: translate(-50px, 30px) scale(1.05); }
+/* ===== 背景纹理 ===== */
+.bg-texture {
+  position: fixed; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm15 20a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 48a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm40 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2z' fill='%233d3832' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events: none;
 }
 
-/* 网格纹理 */
-.bg-grid {
-  position: fixed; inset: 0; z-index: 0; opacity: 0.03;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-/* ========== 主容器 ========== */
+/* ===== 主容器 ===== */
 .app {
   position: relative; z-index: 1;
-  max-width: 960px; margin: 0 auto;
+  max-width: 880px; margin: 0 auto;
   padding: 60px 24px 80px;
   min-height: 100vh;
   display: flex; flex-direction: column;
 }
 
-/* ========== 头部 ========== */
+/* ===== 头部 ===== */
 .hero {
-  text-align: center; padding: 80px 0 60px;
+  text-align: left; padding: 80px 0 56px;
+  max-width: 600px;
 }
 .hero .logo {
-  display: inline-flex; align-items: center; gap: 12px;
-  margin-bottom: 24px;
-}
-.hero .logo-icon {
-  width: 52px; height: 52px;
-  background: linear-gradient(135deg, var(--accent), var(--blue));
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 0 40px var(--accent-glow);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  background: var(--c-text);
+  color: var(--c-bg);
+  border-radius: 12px;
+  font-size: 16px; font-weight: 800;
+  margin-bottom: 28px;
 }
 .hero h1 {
-  font-size: 48px; font-weight: 800; letter-spacing: -2px;
-  background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 52px; font-weight: 740; letter-spacing: -2px;
+  line-height: 1.05; margin-bottom: 16px;
+  color: var(--c-text);
 }
 .hero .subtitle {
-  font-size: 17px; color: var(--text-dim); max-width: 500px; margin: 0 auto;
-  line-height: 1.7;
+  font-size: 18px; color: var(--c-text-dim);
+  line-height: 1.7; max-width: 460px;
 }
 
-/* ========== 项目卡片 ========== */
-.section-title {
-  font-size: 13px; font-weight: 700; letter-spacing: 3px;
-  text-transform: uppercase; color: var(--text-dim);
-  margin: 20px 0 24px; text-align: center;
+/* ===== 分区标题 ===== */
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--c-text-dim);
+  margin: 16px 0 18px;
 }
+
+/* ===== 卡片网格 ===== */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
 }
+
+/* ===== 毛玻璃卡片 ===== */
 .card {
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--c-surface);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  padding: 32px 28px 28px;
+  padding: 26px 24px 24px;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   text-decoration: none; color: inherit;
   overflow: hidden;
 }
-.card::before {
+.card::after {
   content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
-  opacity: 0; transition: opacity var(--transition);
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: var(--radius);
 }
 .card:hover {
-  background: var(--surface-hover);
-  border-color: rgba(255,255,255,0.12);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 80px var(--card-glow, var(--accent-glow));
+  background: var(--c-surface-hover);
+  border-color: var(--c-border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
 }
-.card:hover::before { opacity: 1; }
+
 .card .card-icon {
-  width: 48px; height: 48px; border-radius: 14px;
+  width: 46px; height: 46px; border-radius: 15px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: 18px;
+  font-size: 22px; margin-bottom: 16px;
+  position: relative; z-index: 1;
 }
-.card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
-.card p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+.card h3 { font-size: 18px; font-weight: 680; margin-bottom: 6px; position: relative; z-index: 1; }
+.card p { font-size: 14px; color: var(--c-text-dim); line-height: 1.55; position: relative; z-index: 1; }
 .card .card-badge {
-  display: inline-block; margin-top: 16px;
+  display: inline-block; margin-top: 14px;
   font-size: 11px; font-weight: 600; padding: 4px 10px;
-  border-radius: 20px; background: rgba(255,255,255,0.05);
-  color: var(--text-dim);
-}
-.card:hover .card-badge { color: var(--text); }
-
-/* 聊天卡片主题色 */
-.card-chat { --card-accent: var(--accent); --card-glow: var(--accent-glow); }
-.card-chat .card-icon { background: rgba(108,92,231,0.12); color: #b8a9ff; }
-.card-mc { --card-accent: var(--green); --card-glow: var(--green-glow); }
-.card-mc .card-icon { background: rgba(0,210,160,0.12); color: #5effd4; }
-
-/* 占位卡片 */
-.card-soon {
-  opacity: 0.4; cursor: default; pointer-events: none;
-}
-.card-soon:hover { transform: none; box-shadow: none; background: var(--surface); border-color: var(--border); }
-.card-soon:hover::before { opacity: 0; }
-.card-soon .card-icon { background: rgba(255,255,255,0.04); color: var(--text-dim); }
-.card-soon .card-soon-tag {
-  position: absolute; top: 20px; right: 20px;
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--text-dim);
-  padding: 3px 10px; border: 1px solid rgba(255,255,255,0.08);
   border-radius: 20px;
+  background: rgba(0,0,0,0.04);
+  color: var(--c-text-dim);
+  position: relative; z-index: 1;
 }
+.card:hover .card-badge { background: rgba(0,0,0,0.06); color: var(--c-text); }
 
-/* ========== 底部 ========== */
+/* 虚线卡片 */
+.card-dashed { border-style: dashed; border-color: rgba(0,0,0,0.1); }
+
+/* ===== 底部 ===== */
 .footer {
-  margin-top: auto; text-align: center; padding-top: 60px;
-  font-size: 12px; color: var(--text-dim);
+  margin-top: auto; text-align: left; padding-top: 60px;
+  font-size: 13px; color: var(--c-text-dim);
 }
 
-/* ========== 响应式 ========== */
+/* ===== 响应式 ===== */
 @media (max-width: 600px) {
-  .app { padding: 40px 16px 60px; }
-  .hero { padding: 40px 0 40px; }
-  .hero h1 { font-size: 34px; }
-  .hero .subtitle { font-size: 15px; }
+  .app { padding: 40px 16px 50px; }
+  .hero { padding: 30px 0 36px; }
+  .hero h1 { font-size: 38px; letter-spacing: -1.5px; }
+  .hero .subtitle { font-size: 16px; }
   .cards { grid-template-columns: 1fr; }
-  .bg-orb:nth-child(1) { width: 300px; height: 300px; }
-  .bg-orb:nth-child(2) { width: 200px; height: 200px; }
 }
 </style>
 </head>
 <body>
 
-<!-- 背景 -->
-<div class="bg">
-  <div class="bg-orb"></div>
-  <div class="bg-orb"></div>
-  <div class="bg-orb"></div>
-</div>
-<div class="bg-grid"></div>
+<div class="bg-texture"></div>
 
-<!-- 主内容 -->
 <div class="app">
   <header class="hero">
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-    </div>
+    <div class="logo">HZ</div>
     <h1>HZ Lab</h1>
     <p class="subtitle">探索 AI 与工具的无限可能<br>所有项目免费开放，点开即用</p>
   </header>
 
-  <div class="section-title">Apps</div>
+  <div class="section-label">Apps</div>
   <div class="cards" id="builtinCards"></div>
 
-  <div class="section-title" id="communityTitle" style="display:none;">社区作品</div>
+  <div class="section-label" id="communityTitle" style="display:none;">社区作品</div>
   <div class="cards" id="communityCards"></div>
 
   <footer class="footer">
-    &copy; 2026 HZ Lab · Built with ❤️
+    &copy; 2026 HZ Lab
   </footer>
 </div>
 
 <script>
-// ========== 加载内置应用（从 apps.json） ==========
+// ========== 加载内置应用 ==========
 (async function loadApps() {
   const container = document.getElementById("builtinCards");
   try {
     const resp = await fetch("apps.json");
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    if (!resp.ok) throw new Error();
     const apps = await resp.json();
     if (!apps.length) return;
 
     apps.forEach(app => {
       const card = document.createElement("a");
-      card.className = "card";
+      card.className = "card" + (app.dashed ? " card-dashed" : "");
       card.href = app.url;
-      const glow = app.color + "44";
-      card.style.cssText =
-        `--card-accent:${app.color};--card-glow:${glow};`
-        + (app.dashed ? "border-style:dashed;" : "");
-
-      card.innerHTML =
-        `<div class="card-icon" style="background:${app.color}22;color:${app.color};">${app.icon}</div>
+      card.innerHTML = `
+        <div class="card-icon" style="background:${app.color}18;color:${app.color};">${app.icon}</div>
         <h3>${escapeHtml(app.title)}</h3>
         <p>${escapeHtml(app.desc)}</p>
         <span class="card-badge">${escapeHtml(app.badge || "")}</span>`;
       container.appendChild(card);
     });
   } catch (e) {
-    // apps.json 加载失败时显示默认卡片，保证首页不空
     container.innerHTML = `
-      <a href="/chat" class="card" style="--card-accent:#6c5ce7;--card-glow:#6c5ce744;">
-        <div class="card-icon" style="background:#6c5ce722;color:#6c5ce7;">💬</div>
+      <a href="/chat" class="card">
+        <div class="card-icon" style="background:#e67e4518;color:#e67e45;">💬</div>
         <h3>AI 聊天</h3><p>智能对话，Agent 工具调用</p><span class="card-badge">🚀 已上线</span>
       </a>`;
   }
 })();
 
-// ========== 加载社区提交的作品 ==========
+// ========== 加载社区作品 ==========
 (async function loadCommunity() {
   try {
     const resp = await fetch("/api/community-apps");
@@ -289,31 +215,28 @@ html, body {
       const card = document.createElement("a");
       card.className = "card";
       card.href = item.url;
-      card.style.cssText = `--card-accent:${item.color};--card-glow:${item.color}44;`;
 
       const time = new Date(item.time * 1000);
       const timeStr = time.toLocaleDateString("zh-CN");
 
       card.innerHTML = `
-        <div class="card-icon" style="background:${item.color}22;color:${item.color};">${escapeHtml(item.icon)}</div>
+        <div class="card-icon" style="background:${item.color}18;color:${item.color};">${escapeHtml(item.icon)}</div>
         <h3>${escapeHtml(item.title)}</h3>
         <p>${escapeHtml(item.desc)}</p>
-        <span class="card-badge">👤 ${escapeHtml(item.author)} · ${timeStr}</span>`;
+        <span class="card-badge">${escapeHtml(item.author)} · ${timeStr}</span>`;
       container.appendChild(card);
     });
 
-    // 提交入口卡片
     const tip = document.createElement("a");
-    tip.className = "card";
+    tip.className = "card card-dashed";
     tip.href = "/submit";
-    tip.style.cssText = "--card-accent:#8888a0;--card-glow:transparent;border-style:dashed;";
     tip.innerHTML = `
-      <div class="card-icon" style="background:rgba(255,255,255,0.04);color:#8888a0;">➕</div>
+      <div class="card-icon" style="background:rgba(0,0,0,0.04);color:var(--c-text-dim);">➕</div>
       <h3>提交你的作品</h3>
       <p>发布工具、游戏、网站，让所有人看到</p>
       <span class="card-badge">🚀 立即发布</span>`;
     container.appendChild(tip);
-  } catch (e) { /* 加载失败不影响主页 */ }
+  } catch (e) {}
 })();
 
 function escapeHtml(s) {
@@ -322,6 +245,5 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 </script>
-
 </body>
 </html>
