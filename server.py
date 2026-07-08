@@ -9,7 +9,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, static_folder=".")
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB 上限
-app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 PORT = int(os.environ.get("PORT", 8765))
 TIMEOUT = int(os.environ.get("TIMEOUT", 180))
@@ -17,6 +16,17 @@ GENERIC_KEY = ""
 
 # 数据目录：Railway 挂载卷用 /data，本地用 .
 DATA_DIR = os.environ.get("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+
+# 持久化 secret key，避免重启后 session 失效
+SECRET_FILE = os.path.join(DATA_DIR, ".secret_key")
+if os.path.exists(SECRET_FILE):
+    with open(SECRET_FILE, "r") as f:
+        app.secret_key = f.read().strip()
+else:
+    app.secret_key = secrets.token_hex(32)
+    os.makedirs(os.path.dirname(SECRET_FILE), exist_ok=True)
+    with open(SECRET_FILE, "w") as f:
+        f.write(app.secret_key)
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 META_FILE = os.path.join(DATA_DIR, "uploads.json")
 COMMUNITY_APPS_FILE = os.path.join(DATA_DIR, "community_apps.json")
