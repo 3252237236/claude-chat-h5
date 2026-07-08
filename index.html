@@ -8,238 +8,267 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0b;
-  --surface: #111111;
-  --surface2: #171717;
-  --text: #fafafa;
-  --text-dim: #888888;
-  --border: rgba(255,255,255,0.08);
-  --shadow-border: 0 0 0 1px rgba(255,255,255,0.07);
-  --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 2px 4px rgba(0,0,0,0.3), 0 0 0 1px rgba(250,250,250,0.02) inset;
-  --radius: 8px;
+  --bg: #0a0a0f;
+  --surface: rgba(255,255,255,0.03);
+  --surface-hover: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.06);
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108,92,231,0.3);
+  --green: #00d2a0;
+  --green-glow: rgba(0,210,160,0.3);
+  --blue: #4dabf7;
+  --blue-glow: rgba(77,171,247,0.3);
+  --orange: #ff922b;
+  --orange-glow: rgba(255,146,43,0.3);
+  --pink: #f06595;
+  --pink-glow: rgba(240,101,149,0.3);
+  --radius: 20px;
+  --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html, body { min-height: 100%; }
-body {
+html, body {
+  min-height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.16px;
+  overflow-x: hidden;
 }
 
-/* ===== 几何背景 ===== */
-.bg-geo {
-  position: fixed; inset: 0; z-index: 0; overflow: hidden;
-  pointer-events: none;
+/* ===== 背景光晕 ===== */
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(120px); opacity: 0.15;
+  animation: orbFloat 20s ease-in-out infinite;
 }
-.bg-geo::before {
-  content: "";
-  position: absolute; inset: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
+.bg-orb:nth-child(1) {
+  width: 600px; height: 600px; background: var(--accent);
+  top: -200px; left: -100px; animation-delay: 0s;
+}
+.bg-orb:nth-child(2) {
+  width: 400px; height: 400px; background: var(--blue);
+  bottom: -100px; right: -100px; animation-delay: -7s;
+}
+.bg-orb:nth-child(3) {
+  width: 300px; height: 300px; background: var(--green);
+  top: 50%; left: 50%; animation-delay: -14s; opacity: 0.08;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(60px, -40px) scale(1.1); }
+  50% { transform: translate(-30px, -80px) scale(0.9); }
+  75% { transform: translate(-50px, 30px) scale(1.05); }
+}
+
+/* 网格 */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; opacity: 0.03;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
 /* ===== 主容器 ===== */
 .app {
   position: relative; z-index: 1;
-  max-width: 720px; margin: 0 auto;
-  padding: 80px 24px 96px;
+  max-width: 960px; margin: 0 auto;
+  padding: 60px 24px 80px;
   min-height: 100vh;
+  display: flex; flex-direction: column;
 }
 
 /* ===== 头部 ===== */
 .hero {
-  margin-bottom: 64px;
+  text-align: center; padding: 80px 0 60px;
 }
 .hero .logo {
-  display: inline-flex; align-items: center; gap: 10px;
-  margin-bottom: 40px;
-  text-decoration: none; color: var(--text);
+  display: inline-flex; align-items: center; gap: 12px;
+  margin-bottom: 24px;
 }
 .hero .logo-icon {
-  width: 28px; height: 28px; border-radius: 6px;
-  background: var(--text); color: var(--bg);
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  border-radius: 16px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 600;
+  font-size: 24px;
+  box-shadow: 0 0 40px var(--accent-glow);
 }
 .hero h1 {
-  font-size: 48px; font-weight: 600; letter-spacing: -2.4px;
-  line-height: 1.08; margin-bottom: 16px;
+  font-size: 48px; font-weight: 800; letter-spacing: -2px;
+  background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-.hero .sub {
-  font-size: 18px; color: var(--text-dim);
-  line-height: 1.6; max-width: 480px;
-}
-
-/* ===== 项目列表 ===== */
-.projects {
-  display: flex; flex-direction: column;
+.hero .subtitle {
+  font-size: 17px; color: var(--text-dim); max-width: 500px; margin: 0 auto;
+  line-height: 1.7;
 }
 
-.project-row {
-  display: flex; align-items: center; gap: 16px;
-  padding: 20px 0;
-  text-decoration: none; color: inherit;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  transition: opacity 0.15s;
-}
-.project-row:first-child { border-top: 1px solid rgba(255,255,255,0.05); }
-.project-row:hover { opacity: 0.8; }
-
-.project-row .pr-icon {
-  width: 40px; height: 40px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; flex-shrink: 0;
-  background: var(--surface2);
-  box-shadow: var(--shadow-border);
-}
-
-.project-row .pr-info { flex: 1; min-width: 0; }
-.project-row .pr-name {
-  font-size: 16px; font-weight: 500; letter-spacing: -0.24px;
-}
-.project-row .pr-desc {
-  font-size: 14px; color: var(--text-dim); margin-top: 2px;
-}
-
-.project-row .pr-badge {
-  font-size: 11px; font-weight: 500; color: var(--text-dim);
-  padding: 3px 10px; border-radius: 100px;
-  background: var(--surface2);
-  box-shadow: var(--shadow-border);
-  white-space: nowrap; flex-shrink: 0;
-}
-
-.project-row .pr-arrow {
-  color: var(--text-dim); font-size: 14px; flex-shrink: 0;
-  transition: transform 0.15s;
-}
-.project-row:hover .pr-arrow { transform: translateX(3px); }
-
-/* ===== 社区区块 ===== */
-.section {
-  margin-top: 80px;
-}
+/* ===== 卡片 ===== */
 .section-title {
-  font-size: 12px; font-weight: 500; letter-spacing: 1.2px;
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
   text-transform: uppercase; color: var(--text-dim);
-  margin-bottom: 16px;
+  margin: 20px 0 24px; text-align: center;
 }
-
-.community-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 0;
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 28px 28px;
+  cursor: pointer;
+  transition: all var(--transition);
   text-decoration: none; color: inherit;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  transition: opacity 0.15s;
+  overflow: hidden;
 }
-.community-row:first-child { border-top: 1px solid rgba(255,255,255,0.05); }
-.community-row:hover { opacity: 0.8; }
-
-.community-row .cr-icon {
-  width: 32px; height: 32px; border-radius: 7px;
+.card::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+  opacity: 0; transition: opacity var(--transition);
+}
+.card:hover {
+  background: var(--surface-hover);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 80px var(--card-glow, var(--accent-glow));
+}
+.card:hover::before { opacity: 1; }
+.card .card-icon {
+  width: 48px; height: 48px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; flex-shrink: 0;
+  font-size: 22px; margin-bottom: 18px;
 }
-.community-row .cr-info { flex: 1; min-width: 0; }
-.community-row .cr-name { font-size: 14px; font-weight: 500; }
-.community-row .cr-meta { font-size: 13px; color: var(--text-dim); }
-.community-row .cr-arrow { color: var(--text-dim); font-size: 13px; flex-shrink: 0; transition: transform 0.15s; }
-.community-row:hover .cr-arrow { transform: translateX(3px); }
+.card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+.card p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+.card .card-badge {
+  display: inline-block; margin-top: 16px;
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+}
+.card:hover .card-badge { color: var(--text); }
 
 /* ===== 底部 ===== */
 .footer {
-  margin-top: 80px;
-  font-size: 13px; color: var(--text-dim);
+  margin-top: auto; text-align: center; padding-top: 60px;
+  font-size: 12px; color: var(--text-dim);
 }
 
 /* ===== 响应式 ===== */
 @media (max-width: 600px) {
-  .app { padding: 48px 16px 64px; }
-  .hero { margin-bottom: 40px; }
-  .hero h1 { font-size: 36px; letter-spacing: -1.6px; }
-  .hero .sub { font-size: 16px; }
-  .project-row { padding: 16px 0; }
-  .project-row .pr-badge { display: none; }
+  .app { padding: 40px 16px 60px; }
+  .hero { padding: 40px 0 40px; }
+  .hero h1 { font-size: 34px; }
+  .hero .subtitle { font-size: 15px; }
+  .cards { grid-template-columns: 1fr; }
+  .bg-orb:nth-child(1) { width: 300px; height: 300px; }
+  .bg-orb:nth-child(2) { width: 200px; height: 200px; }
 }
 </style>
 </head>
 <body>
 
-<div class="bg-geo"></div>
+<div class="bg">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+<div class="bg-grid"></div>
 
 <div class="app">
   <header class="hero">
-    <a href="/" class="logo">
-      <span class="logo-icon">HZ</span>
-      HZ Lab
-    </a>
-    <h1>探索 AI 与工具的无限可能</h1>
-    <p class="sub">所有项目免费开放，点开即用。每个应用都是独立的一扇门。</p>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+    </div>
+    <h1>HZ Lab</h1>
+    <p class="subtitle">探索 AI 与工具的无限可能<br>所有项目免费开放，点开即用</p>
   </header>
 
-  <div class="projects" id="projectList"></div>
+  <div class="section-title">Apps</div>
+  <div class="cards" id="builtinCards"></div>
 
-  <div class="section" id="communitySection" hidden>
-    <div class="section-title">社区作品</div>
-    <div id="communityList"></div>
-  </div>
+  <div class="section-title" id="communityTitle" style="display:none;">社区作品</div>
+  <div class="cards" id="communityCards"></div>
 
-  <footer class="footer">&copy; 2026 HZ Lab</footer>
+  <footer class="footer">&copy; 2026 HZ Lab · Built with ❤️</footer>
 </div>
 
 <script>
-(async function() {
-  const list = document.getElementById("projectList");
-
+// ===== 加载内置应用 (apps.json) =====
+(async function loadApps() {
+  const container = document.getElementById("builtinCards");
   try {
-    const apps = await fetch("apps.json").then(r => r.json());
+    const resp = await fetch("apps.json");
+    if (!resp.ok) throw new Error();
+    const apps = await resp.json();
+    if (!apps.length) return;
 
     apps.forEach(app => {
-      const row = document.createElement("a");
-      row.className = "project-row";
-      row.href = app.url;
-      row.innerHTML = `
-        <div class="pr-icon" style="background:${app.color}14;color:${app.color};box-shadow:0 0 0 1px ${app.color}18;">
-          ${app.icon}
-        </div>
-        <div class="pr-info">
-          <div class="pr-name">${esc(app.title)}</div>
-          <div class="pr-desc">${esc(app.desc)}</div>
-        </div>
-        ${app.badge ? `<span class="pr-badge">${esc(app.badge)}</span>` : ""}
-        <span class="pr-arrow">→</span>`;
-      list.appendChild(row);
+      const card = document.createElement("a");
+      card.className = "card";
+      card.href = app.url;
+      const glow = app.color + "44";
+      card.style.cssText =
+        `--card-accent:${app.color};--card-glow:${glow};`
+        + (app.dashed ? "border-style:dashed;" : "");
+
+      card.innerHTML = `
+        <div class="card-icon" style="background:${app.color}22;color:${app.color};">${app.icon}</div>
+        <h3>${esc(app.title)}</h3>
+        <p>${esc(app.desc)}</p>
+        <span class="card-badge">${esc(app.badge||"")}</span>`;
+      container.appendChild(card);
     });
   } catch(e) {
-    list.innerHTML = `<a href="/chat" class="project-row">
-      <div class="pr-icon">💬</div>
-      <div class="pr-info"><div class="pr-name">AI 聊天</div><div class="pr-desc">智能对话，Agent 工具调用</div></div>
-      <span class="pr-badge">🚀 已上线</span><span class="pr-arrow">→</span></a>`;
+    container.innerHTML = `<a href="/chat" class="card" style="--card-accent:#6c5ce7;--card-glow:#6c5ce744;">
+      <div class="card-icon" style="background:#6c5ce722;color:#6c5ce7;">💬</div>
+      <h3>AI 聊天</h3><p>智能对话，Agent 工具调用</p><span class="card-badge">🚀 已上线</span></a>`;
   }
+})();
 
-  // 社区作品
+// ===== 加载社区作品 =====
+(async function loadCommunity() {
+  const container = document.getElementById("communityCards");
   try {
-    const items = await fetch("/api/community-apps").then(r => r.json());
+    const resp = await fetch("/api/community-apps");
+    const items = await resp.json();
     if (!items.length) return;
-    document.getElementById("communitySection").hidden = false;
-    const cl = document.getElementById("communityList");
 
+    document.getElementById("communityTitle").style.display = "";
     items.forEach(item => {
-      const row = document.createElement("a");
-      row.className = "community-row";
-      row.href = item.url;
+      const card = document.createElement("a");
+      card.className = "card";
+      card.href = item.url;
+      card.style.cssText = `--card-accent:${item.color};--card-glow:${item.color}44;`;
+
       const time = new Date(item.time * 1000);
-      row.innerHTML = `
-        <div class="cr-icon" style="background:${item.color}14;color:${item.color};">${esc(item.icon)}</div>
-        <div class="cr-info">
-          <div class="cr-name">${esc(item.title)}</div>
-          <div class="cr-meta">${esc(item.author)} · ${time.toLocaleDateString("zh-CN")}</div>
-        </div>
-        <span class="cr-arrow">→</span>`;
-      cl.appendChild(row);
+      card.innerHTML = `
+        <div class="card-icon" style="background:${item.color}22;color:${item.color};">${esc(item.icon)}</div>
+        <h3>${esc(item.title)}</h3>
+        <p>${esc(item.desc)}</p>
+        <span class="card-badge">👤 ${esc(item.author)} · ${time.toLocaleDateString("zh-CN")}</span>`;
+      container.appendChild(card);
     });
+
+    const tip = document.createElement("a");
+    tip.className = "card";
+    tip.href = "/submit";
+    tip.style.cssText = "--card-accent:#8888a0;--card-glow:transparent;border-style:dashed;";
+    tip.innerHTML = `
+      <div class="card-icon" style="background:rgba(255,255,255,0.04);color:#8888a0;">➕</div>
+      <h3>提交你的作品</h3>
+      <p>发布工具、游戏、网站，让所有人看到</p>
+      <span class="card-badge">🚀 立即发布</span>`;
+    container.appendChild(tip);
   } catch(e) {}
 })();
 

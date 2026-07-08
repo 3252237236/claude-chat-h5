@@ -8,180 +8,181 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0b;
-  --surface: #111;
-  --surface2: #171717;
-  --text: #fafafa;
-  --text-dim: #888;
-  --border: rgba(255,255,255,0.06);
-  --radius: 8px;
+  --bg: #0a0a0f;
+  --surface: rgba(255,255,255,0.03);
+  --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108,92,231,0.3);
+  --green: #00d2a0;
+  --red: #ff6b6b;
+  --radius: 20px;
 }
 
-html, body { min-height: 100%; }
-body {
+html, body {
+  height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.16px;
+  overflow-x: hidden;
 }
 
-.bg-dots {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(120px); opacity: 0.10;
+  animation: orbFloat 20s ease-in-out infinite;
+}
+.bg-orb:nth-child(1) {
+  width: 500px; height: 500px; background: var(--accent);
+  top: -150px; right: -100px;
+}
+.bg-orb:nth-child(2) {
+  width: 350px; height: 350px; background: var(--green);
+  bottom: -100px; left: -100px; animation-direction: reverse;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -40px) scale(1.1); }
+}
+
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; opacity: 0.03;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
 .app {
   position: relative; z-index: 1;
-  max-width: 520px; margin: 0 auto;
-  padding: 48px 24px 80px;
+  max-width: 580px; margin: 0 auto;
+  padding: 40px 24px 60px;
   min-height: 100vh;
 }
 
-.topbar {
-  display: flex; align-items: center; gap: 24px;
-  margin-bottom: 48px;
+.back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-dim); text-decoration: none; font-size: 14px;
+  margin-bottom: 32px; transition: color 0.2s;
 }
-.topbar .logo {
-  display: flex; align-items: center; gap: 8px;
-  text-decoration: none; color: var(--text);
-  font-size: 14px; font-weight: 500;
-}
-.topbar .logo-icon {
-  width: 24px; height: 24px; border-radius: 5px;
-  background: var(--text); color: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 600;
-}
-.topbar .sep { color: var(--text-dim); }
-.topbar .current { font-size: 14px; color: var(--text-dim); }
-
-/* 标题 */
-.page-title { margin-bottom: 32px; }
-.page-title h1 { font-size: 32px; font-weight: 600; letter-spacing: -1.28px; margin-bottom: 4px; }
-.page-title .sub { font-size: 14px; color: var(--text-dim); }
+.back:hover { color: var(--text); }
 
 /* 表单卡片 */
 .form-card {
   background: var(--surface);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 28px 24px;
+  padding: 36px 30px;
 }
+.form-card h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.form-card .subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 30px; line-height: 1.6; }
 
-.form-group { margin-bottom: 18px; }
+.form-group { margin-bottom: 20px; }
 .form-group label {
-  display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
-  color: var(--text-dim); margin-bottom: 5px;
+  display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
 }
-.form-group input, .form-group textarea {
-  width: 100%; background: var(--surface2); border: none;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
-  border-radius: 6px; padding: 10px 12px; font-size: 14px; color: var(--text);
-  font-family: inherit; outline: none;
-}
-.form-group input:focus, .form-group textarea:focus {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
-}
-.form-group textarea { resize: vertical; min-height: 60px; }
 
-.color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+input, textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px; color: var(--text);
+  font-family: inherit; outline: none;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 70px; }
+
+.color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
 .color-dot {
-  width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
-  border: 2px solid transparent;
+  width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: rgba(255,255,255,0.6);
-  transition: all 0.15s;
+  font-size: 12px; color: #fff;
 }
 .color-dot:hover { transform: scale(1.1); }
-.color-dot.active { border-color: var(--text); }
-.color-dot .check { opacity: 0; }
-.color-dot.active .check { opacity: 1; }
+.color-dot.active { border-color: #fff; box-shadow: 0 0 16px var(--dot-color); }
 
-.emoji-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+.emoji-grid { display: flex; gap: 7px; flex-wrap: wrap; }
 .emoji-btn {
-  width: 34px; height: 34px; border-radius: 6px;
-  background: var(--surface2);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
-  border: none;
-  font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid transparent;
+  font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
 }
-.emoji-btn:hover { background: #222; }
-.emoji-btn.active { box-shadow: 0 0 0 1px rgba(255,255,255,0.3); background: #222; }
+.emoji-btn:hover { background: rgba(108,92,231,0.15); border-color: var(--accent); }
+.emoji-btn.active { border-color: var(--accent); background: rgba(108,92,231,0.15); }
 
 .file-zone {
-  border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px;
-  padding: 18px; text-align: center; cursor: pointer;
-  transition: border-color 0.15s;
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: all 0.2s;
 }
-.file-zone:hover { border-color: rgba(255,255,255,0.2); }
-.file-zone .file-icon { font-size: 24px; margin-bottom: 2px; opacity: 0.3; }
-.file-zone .file-text { font-size: 12px; color: var(--text-dim); }
-.file-zone .file-name { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.file-zone:hover { border-color: var(--accent); background: rgba(108,92,231,0.05); }
+.file-zone .file-icon { font-size: 32px; margin-bottom: 6px; opacity: 0.4; }
+.file-zone .file-text { font-size: 13px; color: var(--text-dim); }
+.file-zone .file-name { font-size: 13px; color: var(--accent); margin-top: 6px; font-weight: 600; }
 .file-zone input[type=file] { display: none; }
 
-.hint { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+.hint { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
 
 .btn {
-  width: 100%; padding: 10px; border-radius: 6px;
-  border: none; background: var(--text); color: var(--bg);
-  font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
-  margin-top: 4px; transition: opacity 0.15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit;
+  width: 100%; margin-top: 8px;
+  background: var(--accent); color: #fff;
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transition: all 0.25s;
 }
-.btn:hover { opacity: 0.85; }
-.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; }
 
-.msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 10px; display: none; }
-.msg-ok { background: rgba(0,210,160,0.1); color: #00d2a0; }
-.msg-err { background: rgba(255,90,80,0.1); color: #ff6b60; }
+.msg { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-top: 14px; display: none; }
+.msg-ok { background: rgba(0,210,160,0.1); color: var(--green); border: 1px solid rgba(0,210,160,0.2); }
+.msg-err { background: rgba(255,107,107,0.1); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
 
-/* 预览 */
-.preview { margin-top: 20px; }
-.preview-label { font-size: 11px; font-weight: 500; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.5px; }
-.preview-row {
-  background: var(--surface);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  display: flex; align-items: center; gap: 14px;
+.preview-section { margin-top: 24px; }
+.preview-section h3 { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+.preview-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
 }
-.preview-row .pv-icon {
-  width: 36px; height: 36px; border-radius: 7px;
+.preview-card .pc-icon {
+  width: 40px; height: 40px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px; flex-shrink: 0;
+  font-size: 19px; margin-bottom: 10px;
 }
-.preview-row .pv-name { font-size: 14px; font-weight: 500; }
-.preview-row .pv-desc { font-size: 13px; color: var(--text-dim); }
+.preview-card .pc-title { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+.preview-card .pc-desc { font-size: 13px; color: var(--text-dim); }
 
-@media (max-width: 600px) {
-  .app { padding: 32px 14px 60px; }
-  .page-title h1 { font-size: 24px; letter-spacing: -0.96px; }
-  .form-card { padding: 20px 16px; }
+@media (max-width: 500px) {
+  .app { padding: 28px 16px 50px; }
+  .form-card { padding: 24px 20px; }
 }
 </style>
 </head>
 <body>
 
-<div class="bg-dots"></div>
+<div class="bg">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+<div class="bg-grid"></div>
 
 <div class="app">
-  <div class="topbar">
-    <a href="/" class="logo">
-      <span class="logo-icon">HZ</span>
-      HZ Lab
-    </a>
-    <span class="sep">/</span>
-    <span class="current">提交作品</span>
-  </div>
-
-  <div class="page-title">
-    <h1>提交作品</h1>
-    <p class="sub">发布你的工具、游戏、网站，所有人都会在首页看到它</p>
-  </div>
+  <a href="/" class="back">← 返回首页</a>
 
   <div class="form-card" id="formCard">
+    <h1>提交作品</h1>
+    <p class="subtitle">发布你的工具、游戏、网站，所有人都会在首页看到它。</p>
+
     <div class="form-group">
       <label>标题</label>
       <input type="text" id="title" placeholder="给你的作品起个名字" maxlength="30">
@@ -203,38 +204,37 @@ body {
       <input type="text" id="url" placeholder="https://... 或上传后自动生成" maxlength="200">
     </div>
     <div class="form-group">
-      <label>上传项目文件</label>
+      <label>上传项目文件（可选）</label>
       <div class="file-zone" onclick="document.getElementById('fileInput').click()">
         <div class="file-icon">📦</div>
         <div class="file-text">HTML 文件 或 ZIP 压缩包</div>
         <div class="file-name" id="fileName" style="display:none"></div>
       </div>
       <input type="file" id="fileInput" accept=".html,.htm,.zip">
-      <div class="hint">单个 HTML 直接上传 · 文件夹项目打成 ZIP</div>
+      <div class="hint">单个 HTML → 直接上传 · 文件夹项目 → 打成 ZIP</div>
     </div>
     <div class="form-group">
-      <label>你的名字</label>
+      <label>你的名字（可选）</label>
       <input type="text" id="author" placeholder="匿名" maxlength="20">
     </div>
+
     <button class="btn" id="submitBtn" onclick="submitApp()">发布到首页</button>
     <div class="msg msg-ok" id="msgOk"></div>
     <div class="msg msg-err" id="msgErr"></div>
   </div>
 
-  <div class="preview">
-    <div class="preview-label">卡片预览</div>
-    <div class="preview-row">
-      <div class="pv-icon" id="pcIcon">🎯</div>
-      <div>
-        <div class="pv-name" id="pcTitle">作品标题</div>
-        <div class="pv-desc" id="pcDesc">作品简介…</div>
-      </div>
+  <div class="preview-section">
+    <h3>卡片预览</h3>
+    <div class="preview-card">
+      <div class="pc-icon" id="pcIcon">🎯</div>
+      <div class="pc-title" id="pcTitle">作品标题</div>
+      <div class="pc-desc" id="pcDesc">作品简介…</div>
     </div>
   </div>
 </div>
 
 <script>
-const COLORS = ["#5e6ad2","#4d8c5e","#7d8fa3","#c8893d","#d4574a","#8b7e6d","#5b8c85","#ba7a5a"];
+const COLORS = ["#6c5ce7","#00d2a0","#4dabf7","#ff922b","#f06595","#ff6b6b","#ffd43b","#20c997"];
 const EMOJIS = ["🎮","🎯","🧩","🎨","🎵","📝","🔧","🧮","🗺️","🎲","📊","🤖","🛠️","🎬","📸","🌐","💡","⚡","🔥","💎","🌈","🎪","🎭","🕹️"];
 
 let selectedColor = COLORS[0], selectedEmoji = EMOJIS[0], uploadedFile = null;
@@ -244,7 +244,7 @@ let selectedColor = COLORS[0], selectedEmoji = EMOJIS[0], uploadedFile = null;
   COLORS.forEach(c => {
     const d = document.createElement("div");
     d.className = "color-dot" + (c===selectedColor?" active":"");
-    d.style.background = c;
+    d.style.cssText = `background:${c};--dot-color:${c}44;`;
     d.innerHTML = '<span class="check">✓</span>';
     d.onclick = () => {
       document.querySelectorAll(".color-dot").forEach(x=>x.classList.remove("active"));
@@ -285,7 +285,7 @@ function fmt(b) { return b>1024*1024?(b/1024/1024).toFixed(1)+"MB":(b/1024).toFi
 ["title","desc"].forEach(id => document.getElementById(id).addEventListener("input", updatePreview));
 function updatePreview() {
   document.getElementById("pcIcon").textContent = selectedEmoji;
-  document.getElementById("pcIcon").style.background = selectedColor + "18";
+  document.getElementById("pcIcon").style.background = selectedColor + "22";
   document.getElementById("pcIcon").style.color = selectedColor;
   document.getElementById("pcTitle").textContent = document.getElementById("title").value || "作品标题";
   document.getElementById("pcDesc").textContent = document.getElementById("desc").value || "作品简介…";
@@ -297,6 +297,7 @@ async function submitApp() {
   const desc = document.getElementById("desc").value.trim();
   let url = document.getElementById("url").value.trim();
   const author = document.getElementById("author").value.trim();
+
   if (!title) return showMsg("请输入标题","err");
   if (!desc) return showMsg("请输入简介","err");
   if (!url && !uploadedFile) return showMsg("请填写链接或上传文件","err");
@@ -312,7 +313,7 @@ async function submitApp() {
   try {
     const data = await fetch("/api/submit-app",{method:"POST",body:fd}).then(r=>r.json());
     if (data.ok) {
-      showMsg("发布成功！返回首页即可看到","ok");
+      showMsg("✅ 发布成功！返回首页即可看到","ok");
       document.getElementById("formCard").querySelectorAll("input[type=text], textarea").forEach(el=>el.value="");
       uploadedFile = null;
       document.getElementById("fileName").style.display = "none";
@@ -328,8 +329,6 @@ function showMsg(text, type) {
   document.getElementById(type==="ok"?"msgErr":"msgOk").style.display = "none";
   if (type==="ok") setTimeout(()=>{el.style.display="none";}, 5000);
 }
-
-function esc(s) { const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 </script>
 </body>
 </html>
