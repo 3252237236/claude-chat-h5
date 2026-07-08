@@ -114,6 +114,10 @@ def upload_page():
 def submit_page():
     return send_file("submit.html")
 
+@app.route("/files")
+def files_page():
+    return send_file("files.html")
+
 # ---------- 社区作品 API ----------
 @app.route("/api/community-apps")
 def api_community_apps():

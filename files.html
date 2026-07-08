@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文件仓库 · HZ Lab</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: rgba(255,255,255,0.03);
+  --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108,92,231,0.3);
+  --green: #00d2a0;
+  --red: #ff6b6b;
+  --radius: 16px;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* 背景 */
+.bg {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+}
+.bg-orb {
+  position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.10;
+  animation: orbFloat 20s ease-in-out infinite;
+}
+.bg-orb:nth-child(1) {
+  width: 500px; height: 500px; background: var(--accent);
+  top: -150px; right: -100px;
+}
+.bg-orb:nth-child(2) {
+  width: 350px; height: 350px; background: var(--green);
+  bottom: -100px; left: -100px; animation-direction: reverse;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -40px) scale(1.1); }
+}
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 800px; margin: 0 auto;
+  padding: 40px 24px 60px;
+  min-height: 100vh;
+}
+
+.back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-dim); text-decoration: none; font-size: 14px;
+  margin-bottom: 24px; transition: color 0.2s;
+}
+.back:hover { color: var(--text); }
+
+/* 头部 */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px; margin-bottom: 28px;
+}
+.header h1 { font-size: 26px; font-weight: 800; }
+.header .count { font-size: 14px; color: var(--text-dim); }
+
+/* 上传按钮 */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; transition: all 0.25s;
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+/* 文件卡片网格 */
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.file-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none; color: inherit;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+}
+.file-card:hover {
+  background: var(--surface2);
+  border-color: rgba(255,255,255,0.14);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.file-card .fc-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.file-card .fc-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.file-card .fc-ext {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-dim);
+  padding: 3px 8px; border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+}
+.file-card .fc-title {
+  font-size: 15px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-card .fc-meta {
+  font-size: 12px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 8px;
+}
+.file-card .fc-meta span {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* 空状态 */
+.empty {
+  text-align: center; padding: 60px 20px; color: var(--text-dim);
+  grid-column: 1 / -1;
+}
+.empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty p { font-size: 14px; line-height: 1.6; }
+
+/* 上传弹窗 */
+.overlay {
+  position: fixed; inset: 0; z-index: 10;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: #14141f; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px 28px;
+  width: 100%; max-width: 440px;
+}
+.modal h2 { font-size: 20px; margin-bottom: 20px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+}
+.form-group input, .form-group textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text);
+  font-family: inherit; outline: none; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 50px; }
+
+.file-zone {
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.file-zone:hover { border-color: var(--accent); background: rgba(108,92,231,0.05); }
+.file-zone .fz-icon { font-size: 32px; margin-bottom: 6px; }
+.file-zone .fz-text { font-size: 13px; color: var(--text-dim); }
+.file-zone .fz-name { font-size: 13px; color: var(--accent); margin-top: 6px; font-weight: 600; }
+.file-zone input[type=file] { display: none; }
+
+.btn-row { display: flex; gap: 10px; margin-top: 8px; }
+.btn-cancel {
+  flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: transparent; color: var(--text); font-size: 14px; cursor: pointer;
+  font-family: inherit;
+}
+.btn-submit {
+  flex: 2; padding: 12px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; display: none; }
+.msg-err { background: rgba(255,107,107,0.1); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
+.msg-ok { background: rgba(0,210,160,0.1); color: var(--green); border: 1px solid rgba(0,210,160,0.2); }
+
+@media (max-width: 500px) {
+  .header { flex-direction: column; align-items: flex-start; }
+  .file-grid { grid-template-columns: 1fr; }
+  .modal { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+
+<div class="app">
+  <a href="/" class="back">← 返回首页</a>
+
+  <div class="header">
+    <div>
+      <h1>📁 文件仓库</h1>
+      <div class="count" id="fileCount">加载中…</div>
+    </div>
+    <button class="btn btn-primary" onclick="showUpload()">⬆️ 上传文件</button>
+  </div>
+
+  <div class="file-grid" id="fileGrid"></div>
+</div>
+
+<!-- 上传弹窗 -->
+<div class="overlay" id="uploadModal" style="display:none;">
+  <div class="modal">
+    <h2>上传文件</h2>
+    <div class="form-group">
+      <label>标题 <span style="color:var(--red)">*</span></label>
+      <input type="text" id="uTitle" placeholder="给文件起个名字" maxlength="30">
+    </div>
+    <div class="form-group">
+      <label>简介</label>
+      <textarea id="uDesc" placeholder="可选描述" maxlength="60"></textarea>
+    </div>
+    <div class="file-zone" onclick="document.getElementById('uFile').click()">
+      <div class="fz-icon">📂</div>
+      <div class="fz-text">点击选择文件</div>
+      <div class="fz-name" id="uFileName" style="display:none"></div>
+    </div>
+    <input type="file" id="uFile">
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="hideUpload()">取消</button>
+      <button class="btn-submit" id="uSubmit" onclick="doUpload()">上传</button>
+    </div>
+    <div class="msg msg-err" id="uMsgErr"></div>
+    <div class="msg msg-ok" id="uMsgOk"></div>
+  </div>
+</div>
+
+<script>
+const fileIcons = {
+  html:"🌐", htm:"🌐", zip:"📦", rar:"📦", "7z":"📦",
+  png:"🖼️", jpg:"🖼️", jpeg:"🖼️", gif:"🖼️", svg:"🎨", webp:"🖼️",
+  pdf:"📄", txt:"📝", doc:"📝", docx:"📝",
+  py:"🐍", js:"📜", ts:"📜", java:"☕", jar:"☕", exe:"⚙️",
+  mp3:"🎵", wav:"🎵", mp4:"🎬", mov:"🎬", avi:"🎬",
+  json:"📋", xml:"📋", csv:"📊",
+};
+
+function iconFor(name) {
+  const ext = (name || "").split(".").pop().toLowerCase();
+  return fileIcons[ext] || "📁";
+}
+
+function formatSize(bytes) {
+  if (bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + " MB";
+  return (bytes/1024).toFixed(0) + " KB";
+}
+
+// 加载文件列表
+async function loadFiles() {
+  const grid = document.getElementById("fileGrid");
+  try {
+    const resp = await fetch("/api/uploads");
+    const items = await resp.json();
+    document.getElementById("fileCount").textContent = items.length + " 个文件";
+    if (!items.length) {
+      grid.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>仓库还是空的<br>点击上方按钮上传第一个文件</p></div>`;
+      return;
+    }
+    grid.innerHTML = items.map(item => {
+      const ext = (item.filename || "").split(".").pop().toLowerCase();
+      const time = new Date(item.time * 1000);
+      return `
+        <a href="/uploads/${item.stored}" class="file-card" download>
+          <div class="fc-top">
+            <div class="fc-icon">${iconFor(item.filename)}</div>
+            <div class="fc-ext">.${ext}</div>
+          </div>
+          <div class="fc-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+          <div class="fc-meta">
+            <span>📏 ${formatSize(item.size)}</span>
+            <span>🕐 ${time.toLocaleDateString("zh-CN")}</span>
+          </div>
+        </a>`;
+    }).join("");
+  } catch (e) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>加载失败</p></div>`;
+  }
+}
+
+// 上传弹窗
+let uploadFile = null;
+document.getElementById("uFile").addEventListener("change", function() {
+  const f = this.files[0];
+  if (!f) return;
+  uploadFile = f;
+  document.getElementById("uFileName").textContent = "📎 " + f.name + " (" + formatSize(f.size) + ")";
+  document.getElementById("uFileName").style.display = "";
+  if (!document.getElementById("uTitle").value) {
+    document.getElementById("uTitle").value = f.name.replace(/\.[^.]+$/, "");
+  }
+});
+
+function showUpload() {
+  document.getElementById("uploadModal").style.display = "flex";
+  document.getElementById("uTitle").value = "";
+  document.getElementById("uDesc").value = "";
+  document.getElementById("uFileName").style.display = "none";
+  document.getElementById("uFile").value = "";
+  document.getElementById("uMsgErr").style.display = "none";
+  document.getElementById("uMsgOk").style.display = "none";
+  uploadFile = null;
+}
+function hideUpload() { document.getElementById("uploadModal").style.display = "none"; }
+
+async function doUpload() {
+  const title = document.getElementById("uTitle").value.trim();
+  const desc = document.getElementById("uDesc").value.trim();
+  if (!title) { showMsg("请输入标题", "err"); return; }
+  if (!uploadFile) { showMsg("请选择文件", "err"); return; }
+
+  const btn = document.getElementById("uSubmit");
+  btn.disabled = true; btn.textContent = "上传中…";
+
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("desc", desc);
+  fd.append("file", uploadFile);
+
+  try {
+    const resp = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await resp.json();
+    if (data.ok) {
+      showMsg("✅ 上传成功", "ok");
+      loadFiles();
+      setTimeout(hideUpload, 800);
+    } else {
+      showMsg(data.error || "上传失败", "err");
+    }
+  } catch (e) {
+    showMsg("网络错误", "err");
+  } finally {
+    btn.disabled = false; btn.textContent = "上传";
+  }
+}
+
+function showMsg(text, type) {
+  const el = type === "ok" ? document.getElementById("uMsgOk") : document.getElementById("uMsgErr");
+  el.textContent = text; el.style.display = "block";
+  document.getElementById(type === "ok" ? "uMsgErr" : "uMsgOk").style.display = "none";
+}
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// 初始加载
+loadFiles();
+</script>
+</body>
+</html>
