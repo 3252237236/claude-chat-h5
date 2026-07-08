@@ -8,211 +8,199 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --sidebar-w: 212px;
-  --sidebar-bg: #1c1c1e;
-  --main-bg: #fafafa;
-  --text: #1a1a1a;
-  --text-dim: #6e6e73;
-  --border: #e8e8eb;
-  --hover: #f2f2f4;
+  --bg: #0a0a0b;
+  --surface: #111;
+  --surface2: #171717;
+  --text: #fafafa;
+  --text-dim: #888;
+  --border: rgba(255,255,255,0.06);
+  --radius: 8px;
 }
 
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--main-bg);
+  background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  display: flex;
+  letter-spacing: -0.16px;
 }
 
-/* ===== 侧边栏 ===== */
-.sidebar {
-  width: var(--sidebar-w);
-  background: var(--sidebar-bg);
-  color: #fff;
-  display: flex; flex-direction: column;
-  position: fixed; top: 0; left: 0; bottom: 0;
-  z-index: 10;
-  padding: 16px 12px;
+.bg-dots {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
-.sidebar-brand {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 8px 20px;
-  font-size: 15px; font-weight: 680;
-  color: #fff; text-decoration: none;
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 720px; margin: 0 auto;
+  padding: 48px 24px 80px;
+  min-height: 100vh;
 }
-.sidebar-brand .sb-icon {
-  width: 26px; height: 26px; border-radius: 7px;
-  background: #fff; color: #1c1c1e;
+
+/* 顶栏 */
+.topbar {
+  display: flex; align-items: center; gap: 24px;
+  margin-bottom: 48px;
+}
+.topbar .logo {
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none; color: var(--text);
+  font-size: 14px; font-weight: 500;
+}
+.topbar .logo-icon {
+  width: 24px; height: 24px; border-radius: 5px;
+  background: var(--text); color: var(--bg);
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800;
+  font-size: 11px; font-weight: 600;
 }
+.topbar .sep { color: var(--text-dim); font-size: 14px; }
+.topbar .current { font-size: 14px; color: var(--text-dim); }
 
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 8px; border-radius: 6px;
-  font-size: 13px; font-weight: 500;
-  color: rgba(255,255,255,0.65);
-  text-decoration: none;
-  transition: all 0.12s;
+/* 头部 */
+.header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 24px; gap: 16px;
 }
-.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
-.nav-item .ni-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.header h1 { font-size: 32px; font-weight: 600; letter-spacing: -1.28px; }
+.header .count { font-size: 14px; color: var(--text-dim); }
 
-/* ===== 主内容区 ===== */
-.main {
-  flex: 1; margin-left: var(--sidebar-w);
-  padding: 40px 36px 80px;
-  max-width: calc(780px + 72px);
-}
-
-.main-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 20px;
-}
-.main-header h1 { font-size: 22px; font-weight: 680; letter-spacing: -0.5px; }
-.main-header .count { font-size: 13px; color: var(--text-dim); }
-.main-header .left { display: flex; flex-direction: column; gap: 2px; }
-
-/* ===== 按钮 ===== */
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 14px; border-radius: 6px;
-  font-size: 12px; font-weight: 580; cursor: pointer; border: none;
-  background: var(--text); color: #fff;
-  font-family: inherit;
-  transition: all 0.15s;
+  padding: 8px 16px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; cursor: pointer; border: none;
+  background: var(--text); color: var(--bg);
+  font-family: inherit; letter-spacing: -0.1px;
+  transition: opacity 0.15s;
 }
-.btn:hover { filter: brightness(1.3); }
+.btn:hover { opacity: 0.85; }
 
-/* ===== 文件列表 ===== */
-.file-list {
-  border: 1px solid var(--border);
-  border-radius: 8px; overflow: hidden;
-}
-
+/* 文件行 */
 .file-row {
   display: flex; align-items: center; gap: 14px;
-  padding: 12px 18px;
-  background: #fff;
+  padding: 16px 0;
   text-decoration: none; color: inherit;
-  transition: background 0.1s;
   border-bottom: 1px solid var(--border);
+  transition: opacity 0.15s;
 }
-.file-row:last-child { border-bottom: none; }
-.file-row:hover { background: var(--hover); }
+.file-row:first-child { border-top: 1px solid var(--border); }
+.file-row:hover { opacity: 0.8; }
 
 .file-row .fr-icon {
-  width: 30px; height: 30px; border-radius: 7px;
+  width: 36px; height: 36px; border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex-shrink: 0;
-  background: var(--hover);
+  font-size: 17px; flex-shrink: 0;
+  background: var(--surface2);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
 }
 .file-row .fr-info { flex: 1; min-width: 0; }
-.file-row .fr-name { font-size: 13px; font-weight: 530; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.file-row .fr-meta { font-size: 12px; color: var(--text-dim); }
+.file-row .fr-name { font-size: 14px; font-weight: 500; }
+.file-row .fr-meta { font-size: 13px; color: var(--text-dim); }
 .file-row .fr-ext {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.5px;
   text-transform: uppercase; color: var(--text-dim);
-  padding: 2px 7px; border-radius: 4px;
-  background: var(--hover); flex-shrink: 0;
+  padding: 3px 8px; border-radius: 100px;
+  background: var(--surface2);
+  flex-shrink: 0;
 }
-.file-row .fr-arrow { font-size: 13px; color: var(--text-dim); flex-shrink: 0; }
+.file-row .fr-arrow { color: var(--text-dim); flex-shrink: 0; transition: transform 0.15s; }
+.file-row:hover .fr-arrow { transform: translateX(3px); }
 
-/* ===== 空状态 ===== */
-.empty { text-align: center; padding: 48px 20px; color: var(--text-dim); }
-.empty .empty-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.3; }
+.empty { text-align: center; padding: 64px 20px; color: var(--text-dim); }
 
-/* ===== 弹窗 ===== */
+/* 弹窗 */
 .overlay {
   position: fixed; inset: 0; z-index: 20;
-  background: rgba(0,0,0,0.2); backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
 }
 .modal {
-  background: #fff; border: 1px solid var(--border);
-  border-radius: 8px; padding: 28px 24px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 12px 48px rgba(0,0,0,0.5);
+  border-radius: var(--radius);
+  padding: 28px 24px;
   width: 100%; max-width: 380px;
 }
-.modal h2 { font-size: 18px; font-weight: 650; margin-bottom: 16px; }
+.modal h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.4px; margin-bottom: 18px; }
 
 .form-group { margin-bottom: 14px; }
 .form-group label {
-  display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
   color: var(--text-dim); margin-bottom: 4px;
 }
 .form-group input, .form-group textarea {
-  width: 100%; background: var(--hover); border: 1px solid var(--border);
-  border-radius: 6px; padding: 8px 12px; font-size: 13px; color: var(--text);
-  font-family: inherit; outline: none; transition: border-color 0.2s;
+  width: 100%; background: var(--surface2); border: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 10px 12px; font-size: 14px; color: var(--text);
+  font-family: inherit; outline: none;
 }
-.form-group input:focus, .form-group textarea:focus { border-color: #aaa; }
+.form-group input:focus, .form-group textarea:focus {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
 .form-group textarea { resize: vertical; min-height: 44px; }
 
 .file-zone {
-  border: 1px dashed var(--border); border-radius: 6px;
+  border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px;
   padding: 18px; text-align: center; cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s;
 }
-.file-zone:hover { border-color: #aaa; background: var(--hover); }
-.file-zone .fz-icon { font-size: 26px; margin-bottom: 2px; opacity: 0.35; }
+.file-zone:hover { border-color: rgba(255,255,255,0.2); }
+.file-zone .fz-icon { font-size: 24px; margin-bottom: 2px; opacity: 0.3; }
 .file-zone .fz-text { font-size: 12px; color: var(--text-dim); }
-.file-zone .fz-name { font-size: 12px; font-weight: 600; margin-top: 4px; }
+.file-zone .fz-name { font-size: 12px; font-weight: 500; margin-top: 4px; }
 .file-zone input[type=file] { display: none; }
 
 .btn-row { display: flex; gap: 8px; margin-top: 6px; }
 .btn-cancel {
-  flex: 1; padding: 8px; border-radius: 6px;
-  background: var(--hover); border: 1px solid var(--border);
+  flex: 1; padding: 9px; border-radius: 6px;
+  background: var(--surface2); border: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
   color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit;
 }
 .btn-submit {
-  flex: 2; padding: 8px; border-radius: 6px; border: none;
-  background: var(--text); color: #fff; font-size: 13px; font-weight: 600;
+  flex: 2; padding: 9px; border-radius: 6px; border: none;
+  background: var(--text); color: var(--bg); font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: inherit;
 }
-.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-submit:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .msg { padding: 8px 12px; border-radius: 5px; font-size: 12px; margin-top: 8px; display: none; }
-.msg-err { background: rgba(212,87,74,0.06); color: #d4574a; }
-.msg-ok { background: rgba(107,155,109,0.06); color: #5a8a5e; }
+.msg-err { background: rgba(255,90,80,0.1); color: #ff6b60; }
+.msg-ok { background: rgba(0,210,160,0.1); color: #00d2a0; }
 
-@media (max-width: 640px) {
-  body { flex-direction: column; }
-  .sidebar { position: relative; width: 100%; flex-direction: row; padding: 10px 12px; overflow-x: auto; align-items: center; gap: 4px; }
-  .sidebar-brand { padding: 0 8px 0 0; }
-  .sidebar-nav { flex-direction: row; flex: 1; overflow-x: auto; }
-  .nav-item { white-space: nowrap; font-size: 12px; padding: 6px 10px; }
-  .main { margin-left: 0; padding: 24px 14px 60px; }
+@media (max-width: 600px) {
+  .app { padding: 32px 14px 60px; }
+  .header { flex-direction: column; align-items: flex-start; }
+  .header h1 { font-size: 24px; letter-spacing: -0.96px; }
 }
 </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <a href="/" class="sidebar-brand">
-    <span class="sb-icon">HZ</span>
-    HZ Lab
-  </a>
-  <nav class="sidebar-nav" id="sidebarNav"></nav>
-</aside>
+<div class="bg-dots"></div>
 
-<main class="main">
-  <div class="main-header">
-    <div class="left">
+<div class="app">
+  <div class="topbar">
+    <a href="/" class="logo">
+      <span class="logo-icon">HZ</span>
+      HZ Lab
+    </a>
+    <span class="sep">/</span>
+    <span class="current">文件仓库</span>
+  </div>
+
+  <div class="header">
+    <div>
       <h1>文件仓库</h1>
-      <span class="count" id="fileCount">加载中…</span>
+      <div class="count" id="fileCount">加载中…</div>
     </div>
     <button class="btn" onclick="showUpload()">上传文件</button>
   </div>
 
-  <div class="file-list" id="fileList"></div>
-</main>
+  <div id="fileList"></div>
+</div>
 
 <div class="overlay" id="uploadModal" style="display:none;">
   <div class="modal">
@@ -222,8 +210,8 @@ body {
       <input type="text" id="uTitle" placeholder="给文件起个名字" maxlength="30">
     </div>
     <div class="form-group">
-      <label>简介（可选）</label>
-      <textarea id="uDesc" placeholder="一句话描述" maxlength="60"></textarea>
+      <label>简介</label>
+      <textarea id="uDesc" placeholder="可选描述" maxlength="60"></textarea>
     </div>
     <div class="file-zone" onclick="document.getElementById('uFile').click()">
       <div class="fz-icon">📂</div>
@@ -253,15 +241,15 @@ function iconFor(n) { return icons[(n||"").split(".").pop().toLowerCase()] || "�
 function fmt(b) { return b>1024*1024?(b/1024/1024).toFixed(1)+" MB":(b/1024).toFixed(0)+" KB"; }
 
 async function loadFiles() {
-  const list = document.getElementById("fileList");
+  const el = document.getElementById("fileList");
   try {
     const items = await fetch("/api/uploads").then(r=>r.json());
     document.getElementById("fileCount").textContent = items.length + " 个文件";
     if (!items.length) {
-      list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>仓库还是空的，点击上方按钮上传</p></div>`;
+      el.innerHTML = `<div class="empty"><p>仓库还是空的，点击上方按钮上传</p></div>`;
       return;
     }
-    list.innerHTML = items.map(item => {
+    el.innerHTML = items.map(item => {
       const ext = (item.filename||"").split(".").pop().toLowerCase();
       const time = new Date(item.time*1000);
       return `<a href="/uploads/${item.stored}" class="file-row" download>
@@ -274,25 +262,8 @@ async function loadFiles() {
         <span class="fr-arrow">↓</span>
       </a>`;
     }).join("");
-  } catch(e) {
-    list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>加载失败</p></div>`;
-  }
+  } catch(e) { el.innerHTML = `<div class="empty"><p>加载失败</p></div>`; }
 }
-
-// 加载侧边栏
-(async function loadSidebar() {
-  const nav = document.getElementById("sidebarNav");
-  try {
-    const apps = await fetch("/apps.json").then(r=>r.json());
-    apps.forEach(app => {
-      const item = document.createElement("a");
-      item.className = "nav-item" + (location.pathname === app.url ? " active" : "");
-      item.href = app.url;
-      item.innerHTML = `<span class="ni-icon">${app.icon}</span><span>${esc(app.title)}</span>`;
-      nav.appendChild(item);
-    });
-  } catch(e) {}
-})();
 
 let uploadFile = null;
 document.getElementById("uFile").addEventListener("change", function() {
@@ -308,36 +279,40 @@ document.getElementById("uFile").addEventListener("change", function() {
 
 function showUpload() {
   document.getElementById("uploadModal").style.display = "flex";
-  document.getElementById("uTitle").value = "";
-  document.getElementById("uDesc").value = "";
-  document.getElementById("uFileName").style.display = "none";
+  ["uTitle","uDesc","uFileName","uMsgErr","uMsgOk"].forEach(id => {
+    const el = document.getElementById(id);
+    if (id === "uFileName") { el.style.display = "none"; return; }
+    if (id.startsWith("uMsg")) { el.style.display = "none"; return; }
+    el.value = "";
+  });
   document.getElementById("uFile").value = "";
-  document.getElementById("uMsgErr").style.display = "none";
-  document.getElementById("uMsgOk").style.display = "none";
   uploadFile = null;
 }
 function hideUpload() { document.getElementById("uploadModal").style.display = "none"; }
 
 async function doUpload() {
   const title = document.getElementById("uTitle").value.trim();
-  const desc = document.getElementById("uDesc").value.trim();
   if (!title) { showMsg("请输入标题","err"); return; }
   if (!uploadFile) { showMsg("请选择文件","err"); return; }
 
   const btn = document.getElementById("uSubmit");
   btn.disabled = true; btn.textContent = "上传中…";
 
-  const fd = new FormData(); fd.append("title", title); fd.append("desc", desc); fd.append("file", uploadFile);
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("desc", document.getElementById("uDesc").value.trim());
+  fd.append("file", uploadFile);
+
   try {
     const data = await fetch("/api/upload",{method:"POST",body:fd}).then(r=>r.json());
-    if (data.ok) { showMsg("✅ 上传成功","ok"); loadFiles(); setTimeout(hideUpload, 800); }
+    if (data.ok) { showMsg("上传成功","ok"); loadFiles(); setTimeout(hideUpload, 800); }
     else { showMsg(data.error||"上传失败","err"); }
   } catch(e) { showMsg("网络错误","err"); }
   finally { btn.disabled = false; btn.textContent = "上传"; }
 }
 
 function showMsg(text, type) {
-  const el = type==="ok" ? document.getElementById("uMsgOk") : document.getElementById("uMsgErr");
+  const el = document.getElementById(type==="ok"?"uMsgOk":"uMsgErr");
   el.textContent = text; el.style.display = "block";
   document.getElementById(type==="ok"?"uMsgErr":"uMsgOk").style.display = "none";
 }
