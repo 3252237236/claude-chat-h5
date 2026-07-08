@@ -1,0 +1,27 @@
+[
+  {
+    "title": "AI 聊天",
+    "desc": "基于 MiMo 模型的多话题智能对话，支持 Agent 工具调用与图片识别",
+    "icon": "💬",
+    "url": "/chat",
+    "color": "#6c5ce7",
+    "badge": "🚀 已上线"
+  },
+  {
+    "title": "MiniCraft",
+    "desc": "简易我的世界 · 3D 体素沙盒，自由建造与探索",
+    "icon": "⛏️",
+    "url": "/minecraft.html",
+    "color": "#00d2a0",
+    "badge": "🎮 来玩"
+  },
+  {
+    "title": "分享作品",
+    "desc": "上传你做的工具、游戏、网站，让所有人看到",
+    "icon": "📤",
+    "url": "/upload",
+    "color": "#ff922b",
+    "badge": "➕ 发布",
+    "dashed": true
+  }
+]
