@@ -316,7 +316,7 @@ async function doUpload() {
     const resp = await fetch("/api/upload", { method: "POST", body: fd });
     if (resp.status === 401) { location.href = "/login"; return; }
     const data = await resp.json();
-    if (data.ok) { showMsg("上传成功","ok"); loadFiles(); setTimeout(hideUpload, 800); }
+    if (data.ok) { showMsg("上传成功，等待管理员审核","ok"); loadFiles(); setTimeout(hideUpload, 800); }
     else { showMsg(data.error||"上传失败","err"); }
   } catch(e) { showMsg("网络错误","err"); }
   finally { btn.disabled = false; btn.textContent = "上传"; }

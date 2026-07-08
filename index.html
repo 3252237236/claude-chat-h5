@@ -227,10 +227,14 @@ async function checkAuth() {
   try {
     const data = await fetch("/api/me").then(r => r.json());
     if (data.user) {
+      const adminLink = data.user.is_admin
+        ? `<a href="/admin" style="font-size:11px;color:var(--orange);text-decoration:none;padding:4px 10px;border-radius:12px;background:rgba(255,146,43,0.12);">🛡️ 管理</a>`
+        : "";
       document.getElementById("userBar").innerHTML = `
         <span class="ub-user">
           <span class="ub-dot"></span>
           ${esc(data.user.username)}
+          ${adminLink}
           <button class="ub-btn-logout" onclick="doLogout()">登出</button>
         </span>`;
     }

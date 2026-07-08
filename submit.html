@@ -314,7 +314,7 @@ async function submitApp() {
     if (resp.status === 401) { location.href = "/login"; return; }
     const data = await resp.json();
     if (data.ok) {
-      showMsg("✅ 发布成功！返回首页即可看到","ok");
+      showMsg("✅ 提交成功！等待管理员审核后即可在首页展示","ok");
       document.getElementById("formCard").querySelectorAll("input[type=text], textarea").forEach(el=>el.value="");
       uploadedFile = null; document.getElementById("fileName").style.display = "none"; document.getElementById("fileInput").value = "";
     } else { showMsg(data.error||"发布失败","err"); }

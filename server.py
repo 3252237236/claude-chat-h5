@@ -31,16 +31,23 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
-                created_at INTEGER NOT NULL
+                created_at INTEGER NOT NULL,
+                is_admin INTEGER DEFAULT 0
             )
         """)
+        # 迁移：给旧表加 is_admin 列
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+        if "is_admin" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
 
 def create_user(username, password):
     with sqlite3.connect(DB_PATH) as conn:
+        # 第一个注册的用户自动成为管理员
+        count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
         try:
             conn.execute(
-                "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
-                (username, generate_password_hash(password), int(time.time()))
+                "INSERT INTO users (username, password_hash, created_at, is_admin) VALUES (?, ?, ?, ?)",
+                (username, generate_password_hash(password), int(time.time()), 1 if count == 0 else 0)
             )
             return True, None
         except sqlite3.IntegrityError:
@@ -49,11 +56,11 @@ def create_user(username, password):
 def verify_user(username, password):
     with sqlite3.connect(DB_PATH) as conn:
         row = conn.execute(
-            "SELECT id, username, password_hash FROM users WHERE username = ?",
+            "SELECT id, username, password_hash, is_admin FROM users WHERE username = ?",
             (username,)
         ).fetchone()
         if row and check_password_hash(row[2], password):
-            return {"id": row[0], "username": row[1]}
+            return {"id": row[0], "username": row[1], "is_admin": bool(row[3])}
     return None
 
 init_db()
@@ -65,6 +72,17 @@ def login_required(f):
     def wrapper(*args, **kwargs):
         if not session.get("user"):
             return jsonify({"error": "请先登录"}), 401
+        return f(*args, **kwargs)
+    return wrapper
+
+def admin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        user = session.get("user")
+        if not user:
+            return jsonify({"error": "请先登录"}), 401
+        if not user.get("is_admin"):
+            return jsonify({"error": "需要管理员权限"}), 403
         return f(*args, **kwargs)
     return wrapper
 
@@ -196,6 +214,10 @@ def submit_page():
 def files_page():
     return send_file("files.html")
 
+@app.route("/admin")
+def admin_page():
+    return send_file("admin.html")
+
 # ---------- 用户认证 API ----------
 @app.route("/api/register", methods=["POST"])
 def api_register():
@@ -243,8 +265,9 @@ def api_me():
 # ---------- 社区作品 API ----------
 @app.route("/api/community-apps")
 def api_community_apps():
-    """返回所有社区提交的作品"""
-    return jsonify(load_community_apps())
+    """返回所有已审核的社区作品"""
+    items = [i for i in load_community_apps() if i.get("status", "approved") == "approved"]
+    return jsonify(items)
 
 @app.route("/api/submit-app", methods=["POST"])
 @login_required
@@ -307,18 +330,20 @@ def api_submit_app():
         "color": color,
         "author": author or "匿名",
         "time": int(time.time()),
+        "status": "pending",
     }
 
     apps = load_community_apps()
-    apps.insert(0, item)  # 最新的排前面
+    apps.insert(0, item)
     save_community_apps(apps)
 
-    return jsonify({"ok": True, "item": item})
+    return jsonify({"ok": True, "item": item, "pending": True})
 
 @app.route("/api/uploads")
 def api_uploads():
-    """返回所有上传作品列表"""
-    return jsonify(load_uploads())
+    """返回所有已审核的上传文件"""
+    items = [i for i in load_uploads() if i.get("status", "approved") == "approved"]
+    return jsonify(items)
 
 @app.route("/api/upload", methods=["POST"])
 @login_required
@@ -347,13 +372,94 @@ def api_upload():
         "stored": unique_name,
         "size": os.path.getsize(filepath),
         "time": int(time.time()),
+        "status": "pending",
     }
 
     uploads = load_uploads()
-    uploads.insert(0, item)  # 最新的排前面
+    uploads.insert(0, item)
     save_uploads(uploads)
 
-    return jsonify({"ok": True, "item": item})
+    return jsonify({"ok": True, "item": item, "pending": True})
+
+# ---------- 管理员 API ----------
+@app.route("/api/admin/users")
+@admin_required
+def api_admin_users():
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, username, is_admin, created_at FROM users ORDER BY id"
+        ).fetchall()
+    users = [{"id": r[0], "username": r[1], "is_admin": bool(r[2]), "created_at": r[3]} for r in rows]
+    return jsonify(users)
+
+@app.route("/api/admin/users/<int:uid>/toggle-admin", methods=["POST"])
+@admin_required
+def api_admin_toggle(uid):
+    current = session.get("user")
+    if current["id"] == uid:
+        return jsonify({"error": "不能给自己切换管理员"}), 400
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute("SELECT is_admin FROM users WHERE id = ?", (uid,)).fetchone()
+        if not row:
+            return jsonify({"error": "用户不存在"}), 404
+        new_val = 0 if row[0] else 1
+        conn.execute("UPDATE users SET is_admin = ? WHERE id = ?", (new_val, uid))
+    return jsonify({"ok": True, "is_admin": bool(new_val)})
+
+@app.route("/api/admin/users/<int:uid>/delete", methods=["POST"])
+@admin_required
+def api_admin_delete_user(uid):
+    current = session.get("user")
+    if current["id"] == uid:
+        return jsonify({"error": "不能删除自己"}), 400
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM users WHERE id = ?", (uid,))
+    return jsonify({"ok": True})
+
+@app.route("/api/admin/pending")
+@admin_required
+def api_admin_pending():
+    apps = [a for a in load_community_apps() if a.get("status") == "pending"]
+    uploads = [u for u in load_uploads() if u.get("status") == "pending"]
+    return jsonify({"apps": apps, "uploads": uploads})
+
+@app.route("/api/admin/approve/<item_type>/<item_id>", methods=["POST"])
+@admin_required
+def api_admin_approve(item_type, item_id):
+    if item_type == "app":
+        items = load_community_apps()
+        for item in items:
+            if item["id"] == item_id:
+                item["status"] = "approved"
+                save_community_apps(items)
+                return jsonify({"ok": True})
+    elif item_type == "upload":
+        items = load_uploads()
+        for item in items:
+            if item["id"] == item_id:
+                item["status"] = "approved"
+                save_uploads(items)
+                return jsonify({"ok": True})
+    return jsonify({"error": "未找到"}), 404
+
+@app.route("/api/admin/reject/<item_type>/<item_id>", methods=["POST"])
+@admin_required
+def api_admin_reject(item_type, item_id):
+    if item_type == "app":
+        items = load_community_apps()
+        items = [i for i in items if i["id"] != item_id]
+        save_community_apps(items)
+    elif item_type == "upload":
+        items = load_uploads()
+        for item in items:
+            if item["id"] == item_id:
+                # 删除文件
+                fpath = os.path.join(UPLOAD_DIR, item.get("stored", ""))
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+        items = [i for i in items if i["id"] != item_id]
+        save_uploads(items)
+    return jsonify({"ok": True})
 
 @app.route("/uploads/<path:name>")
 def serve_uploads(name):

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理面板 · HZ Lab</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: rgba(255,255,255,0.03);
+  --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent: #6c5ce7;
+  --green: #00d2a0;
+  --red: #ff6b6b;
+  --orange: #ff922b;
+  --radius: 16px;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 900px; margin: 0 auto;
+  padding: 36px 24px 60px;
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; margin-bottom: 36px; flex-wrap: wrap;
+}
+.topbar h1 { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+.topbar .links { display: flex; gap: 14px; align-items: center; }
+.topbar .links a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+.topbar .links a:hover { color: var(--text); }
+
+/* 标签切换 */
+.tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.tab {
+  padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--text-dim); border: none; background: none; font-family: inherit;
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* 面板 */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* 统计卡片 */
+.stats { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.stat-card {
+  flex: 1; min-width: 140px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+}
+.stat-card .sv { font-size: 28px; font-weight: 800; }
+.stat-card .sl { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 表格 */
+.table {
+  width: 100%; border-collapse: collapse;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.table th {
+  text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim);
+  background: var(--surface2);
+}
+.table td {
+  padding: 12px 16px; font-size: 13px;
+  border-top: 1px solid var(--border);
+}
+.table tr:hover td { background: var(--surface2); }
+
+/* 按钮 */
+.btn-sm {
+  padding: 5px 12px; border-radius: 7px; font-size: 11px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+}
+.btn-ok { background: rgba(0,210,160,0.15); color: var(--green); }
+.btn-ok:hover { background: rgba(0,210,160,0.25); }
+.btn-warn { background: rgba(255,146,43,0.15); color: var(--orange); }
+.btn-warn:hover { background: rgba(255,146,43,0.25); }
+.btn-del { background: rgba(255,107,107,0.12); color: var(--red); }
+.btn-del:hover { background: rgba(255,107,107,0.22); }
+.btn-admin { background: rgba(108,92,231,0.15); color: var(--accent); }
+.btn-admin:hover { background: rgba(108,92,231,0.25); }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 700;
+}
+.badge-admin { background: rgba(108,92,231,0.2); color: var(--accent); }
+.badge-user { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+.badge-pending { background: rgba(255,146,43,0.15); color: var(--orange); }
+
+.pending-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+}
+.pending-item .pi-icon { font-size: 22px; flex-shrink: 0; }
+.pending-item .pi-info { flex: 1; min-width: 0; }
+.pending-item .pi-title { font-size: 14px; font-weight: 700; }
+.pending-item .pi-meta { font-size: 12px; color: var(--text-dim); }
+.pending-item .pi-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.empty { text-align: center; padding: 48px; color: var(--text-dim); }
+
+@media (max-width: 600px) {
+  .app { padding: 24px 14px 50px; }
+  .pending-item { flex-direction: column; align-items: flex-start; }
+  .pending-item .pi-actions { width: 100%; justify-content: flex-end; }
+  .table { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="app">
+  <div class="topbar">
+    <h1>🛡️ 管理面板</h1>
+    <div class="links">
+      <a href="/">← 首页</a>
+      <a href="/api/logout" onclick="event.preventDefault();fetch('/api/logout',{method:'POST'}).then(()=>location.href='/login')">登出</a>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('review')">待审核</button>
+    <button class="tab" onclick="switchTab('users')">用户管理</button>
+  </div>
+
+  <!-- 待审核 -->
+  <div class="panel active" id="panel-review">
+    <div class="stats" id="reviewStats"></div>
+    <div id="reviewList"></div>
+  </div>
+
+  <!-- 用户管理 -->
+  <div class="panel" id="panel-users">
+    <div class="stats" id="userStats"></div>
+    <table class="table">
+      <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>注册时间</th><th>操作</th></tr></thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let currentTab = "review";
+
+// 检查管理员权限
+(async function() {
+  try {
+    const me = await fetch("/api/me").then(r => r.json());
+    if (!me.user || !me.user.is_admin) { location.href = "/"; return; }
+  } catch(e) { location.href = "/login"; }
+  loadReview();
+  loadUsers();
+})();
+
+function switchTab(t) {
+  currentTab = t;
+  document.querySelectorAll(".tab").forEach(el => el.classList.toggle("active", el.textContent.includes(t === "review" ? "审核" : "用户")));
+  document.querySelectorAll(".panel").forEach(el => el.classList.toggle("active", el.id === "panel-" + t));
+}
+
+// ===== 审核 =====
+async function loadReview() {
+  try {
+    const data = await fetch("/api/admin/pending").then(r => r.json());
+    const total = data.apps.length + data.uploads.length;
+    document.getElementById("reviewStats").innerHTML = `
+      <div class="stat-card"><div class="sv" style="color:var(--orange);">${total}</div><div class="sl">待审核项目</div></div>
+      <div class="stat-card"><div class="sv">${data.apps.length}</div><div class="sl">作品提交</div></div>
+      <div class="stat-card"><div class="sv">${data.uploads.length}</div><div class="sl">文件上传</div></div>`;
+
+    const list = document.getElementById("reviewList");
+    if (!total) { list.innerHTML = `<div class="empty">✅ 没有待审核项</div>`; return; }
+
+    list.innerHTML = "";
+
+    // 作品
+    data.apps.forEach(app => {
+      list.appendChild(createPendingItem("app", app));
+    });
+    // 文件
+    data.uploads.forEach(u => {
+      list.appendChild(createPendingItem("upload", u));
+    });
+  } catch(e) {}
+}
+
+function createPendingItem(type, item) {
+  const div = document.createElement("div");
+  div.className = "pending-item";
+  const isUpload = type === "upload";
+  div.innerHTML = `
+    <div class="pi-icon">${isUpload ? "📁" : item.icon}</div>
+    <div class="pi-info">
+      <div class="pi-title">${esc(item.title)} <span class="badge badge-pending">待审核</span></div>
+      <div class="pi-meta">${esc(item.author||"")} · ${new Date(item.time*1000).toLocaleDateString("zh-CN")} · ${isUpload ? (item.filename||"") : item.desc}</div>
+    </div>
+    <div class="pi-actions">
+      <button class="btn-sm btn-ok" onclick="approve('${type}','${item.id}',this)">✅ 通过</button>
+      <button class="btn-sm btn-del" onclick="reject('${type}','${item.id}',this)">❌ 拒绝</button>
+    </div>`;
+  return div;
+}
+
+async function approve(type, id, btn) {
+  btn.disabled = true; btn.textContent = "…";
+  try {
+    const resp = await fetch(`/api/admin/approve/${type}/${id}`, { method: "POST" });
+    if (resp.status === 403) { location.href = "/"; return; }
+    const data = await resp.json();
+    if (data.ok) {
+      btn.closest(".pending-item").style.opacity = "0.3";
+      setTimeout(() => { btn.closest(".pending-item").remove(); updateReviewCount(); }, 300);
+    }
+  } catch(e) {}
+}
+
+async function reject(type, id, btn) {
+  if (!confirm("确定拒绝并删除？")) return;
+  btn.disabled = true; btn.textContent = "…";
+  try {
+    const resp = await fetch(`/api/admin/reject/${type}/${id}`, { method: "POST" });
+    if (resp.status === 403) { location.href = "/"; return; }
+    const data = await resp.json();
+    if (data.ok) {
+      btn.closest(".pending-item").remove();
+      updateReviewCount();
+    }
+  } catch(e) {}
+}
+
+function updateReviewCount() {
+  const items = document.querySelectorAll("#reviewList .pending-item");
+  const sv = document.querySelector("#reviewStats .stat-card:first-child .sv");
+  if (sv) sv.textContent = items.length;
+  if (!items.length) {
+    document.getElementById("reviewList").innerHTML = `<div class="empty">✅ 没有待审核项</div>`;
+  }
+}
+
+// ===== 用户管理 =====
+async function loadUsers() {
+  try {
+    const users = await fetch("/api/admin/users").then(r => r.json());
+    document.getElementById("userStats").innerHTML = `
+      <div class="stat-card"><div class="sv">${users.length}</div><div class="sl">总用户</div></div>
+      <div class="stat-card"><div class="sv" style="color:var(--accent);">${users.filter(u=>u.is_admin).length}</div><div class="sl">管理员</div></div>`;
+
+    document.getElementById("userTable").innerHTML = users.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td>${esc(u.username)}</td>
+        <td><span class="badge ${u.is_admin?'badge-admin':'badge-user'}">${u.is_admin?'管理员':'用户'}</span></td>
+        <td>${new Date(u.created_at*1000).toLocaleDateString("zh-CN")}</td>
+        <td>
+          <button class="btn-sm btn-admin" onclick="toggleAdmin(${u.id},this)">${u.is_admin?'取消管理':'设为管理'}</button>
+          <button class="btn-sm btn-del" onclick="deleteUser(${u.id},this)">删除</button>
+        </td>
+      </tr>`).join("");
+  } catch(e) {}
+}
+
+async function toggleAdmin(uid, btn) {
+  if (!confirm("确定切换该用户的管理员权限？")) return;
+  btn.disabled = true;
+  try {
+    const data = await fetch(`/api/admin/users/${uid}/toggle-admin`, { method: "POST" }).then(r => r.json());
+    if (data.ok) loadUsers();
+    else if (data.error) alert(data.error);
+  } catch(e) {} finally { btn.disabled = false; }
+}
+
+async function deleteUser(uid, btn) {
+  if (!confirm("确定删除该用户？此操作不可恢复。")) return;
+  btn.disabled = true;
+  try {
+    const data = await fetch(`/api/admin/users/${uid}/delete`, { method: "POST" }).then(r => r.json());
+    if (data.ok) loadUsers();
+    else if (data.error) alert(data.error);
+  } catch(e) {} finally { btn.disabled = false; }
+}
+
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+</script>
+</body>
+</html>
