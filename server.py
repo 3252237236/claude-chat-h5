@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """HZ Lab - Flask"""
-import json, os, io, time, uuid, zipfile
-from flask import Flask, request, send_file, jsonify
+import json, os, io, time, uuid, zipfile, sqlite3, secrets
+from flask import Flask, request, send_file, jsonify, session
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, static_folder=".")
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB 上限
+app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 PORT = int(os.environ.get("PORT", 8765))
 TIMEOUT = int(os.environ.get("TIMEOUT", 180))
@@ -18,7 +20,43 @@ DATA_DIR = os.environ.get("DATA_DIR", os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 META_FILE = os.path.join(DATA_DIR, "uploads.json")
 COMMUNITY_APPS_FILE = os.path.join(DATA_DIR, "community_apps.json")
+DB_PATH = os.path.join(DATA_DIR, "users.db")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ---------- 用户数据库 ----------
+def init_db():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at INTEGER NOT NULL
+            )
+        """)
+
+def create_user(username, password):
+    with sqlite3.connect(DB_PATH) as conn:
+        try:
+            conn.execute(
+                "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
+                (username, generate_password_hash(password), int(time.time()))
+            )
+            return True, None
+        except sqlite3.IntegrityError:
+            return False, "用户名已存在"
+
+def verify_user(username, password):
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT id, username, password_hash FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+        if row and check_password_hash(row[2], password):
+            return {"id": row[0], "username": row[1]}
+    return None
+
+init_db()
 
 # ---------- 加载平台 ----------
 def _load_providers():
@@ -118,6 +156,50 @@ def submit_page():
 def files_page():
     return send_file("files.html")
 
+# ---------- 用户认证 API ----------
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    data = request.get_json(force=True)
+    username = (data.get("username") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    if len(username) < 2 or len(username) > 20:
+        return jsonify({"error": "用户名需要 2-20 个字符"}), 400
+    if len(password) < 4:
+        return jsonify({"error": "密码至少 4 位"}), 400
+
+    ok, err = create_user(username, password)
+    if not ok:
+        return jsonify({"error": err}), 409
+
+    # 注册成功直接登录
+    user = verify_user(username, password)
+    session["user"] = user
+    return jsonify({"ok": True, "user": user})
+
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    data = request.get_json(force=True)
+    username = (data.get("username") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    user = verify_user(username, password)
+    if not user:
+        return jsonify({"error": "用户名或密码错误"}), 401
+
+    session["user"] = user
+    return jsonify({"ok": True, "user": user})
+
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
+    session.pop("user", None)
+    return jsonify({"ok": True})
+
+@app.route("/api/me")
+def api_me():
+    user = session.get("user")
+    return jsonify({"user": user})
+
 # ---------- 社区作品 API ----------
 @app.route("/api/community-apps")
 def api_community_apps():
@@ -134,6 +216,11 @@ def api_submit_app():
     icon = request.form.get("icon", "🎯").strip()
     color = request.form.get("color", "#6c5ce7").strip()
     file = request.files.get("file")
+
+    # 已登录用户自动用其用户名
+    user = session.get("user")
+    if user and not author:
+        author = user["username"]
 
     if not title:
         return jsonify({"error": "请输入标题"}), 400

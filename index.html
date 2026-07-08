@@ -80,9 +80,80 @@ html, body {
   display: flex; flex-direction: column;
 }
 
+/* ===== 用户栏 ===== */
+.user-bar {
+  display: flex; justify-content: flex-end; align-items: center; gap: 12px;
+  padding: 12px 0 0;
+}
+.user-bar .ub-user {
+  font-size: 13px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 8px;
+}
+.user-bar .ub-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green-glow);
+}
+.ub-btn {
+  font-size: 12px; font-weight: 600; padding: 6px 14px;
+  border-radius: 16px; cursor: pointer; border: none;
+  font-family: inherit; transition: all 0.2s;
+  background: rgba(255,255,255,0.06); color: var(--text-dim);
+}
+.ub-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+.ub-btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+.ub-btn-primary:hover { filter: brightness(1.15); color: #fff; }
+.ub-btn-logout { font-size: 11px; background: transparent; color: var(--text-dim); padding: 4px 8px; }
+
+/* ===== 认证弹窗 ===== */
+.auth-overlay {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.auth-modal {
+  background: #14141f; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px 28px;
+  width: 100%; max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.auth-modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.auth-modal .auth-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 22px; }
+.auth-field { margin-bottom: 14px; }
+.auth-field label {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+}
+.auth-field input {
+  width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text);
+  font-family: inherit; outline: none; transition: border-color 0.2s;
+}
+.auth-field input:focus { border-color: var(--accent); }
+.auth-btn {
+  width: 100%; padding: 12px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit; margin-top: 4px;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  transition: all 0.2s;
+}
+.auth-btn:hover { filter: brightness(1.15); }
+.auth-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
+.auth-switch {
+  text-align: center; margin-top: 14px; font-size: 13px; color: var(--text-dim);
+}
+.auth-switch a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 600; }
+.auth-switch a:hover { text-decoration: underline; }
+.auth-msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; display: none; }
+.auth-msg-err { background: rgba(255,107,107,0.1); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.2); }
+
 /* ===== 头部 ===== */
 .hero {
-  text-align: center; padding: 80px 0 60px;
+  text-align: center; padding: 60px 0 60px;
 }
 .hero .logo {
   display: inline-flex; align-items: center; gap: 12px;
@@ -185,6 +256,12 @@ html, body {
 <div class="bg-grid"></div>
 
 <div class="app">
+  <!-- 用户栏 -->
+  <div class="user-bar" id="userBar">
+    <button class="ub-btn" onclick="showAuth('login')">登录</button>
+    <button class="ub-btn ub-btn-primary" onclick="showAuth('register')">注册</button>
+  </div>
+
   <header class="hero">
     <div class="logo">
       <div class="logo-icon">⚡</div>
@@ -202,7 +279,122 @@ html, body {
   <footer class="footer">&copy; 2026 HZ Lab · Built with ❤️</footer>
 </div>
 
+<!-- 认证弹窗 -->
+<div class="auth-overlay" id="authOverlay" style="display:none;">
+  <div class="auth-modal">
+    <h2 id="authTitle">登录</h2>
+    <p class="auth-sub" id="authSub">欢迎回来</p>
+    <div class="auth-field">
+      <label>用户名</label>
+      <input type="text" id="authUsername" placeholder="输入用户名" maxlength="20">
+    </div>
+    <div class="auth-field">
+      <label>密码</label>
+      <input type="password" id="authPassword" placeholder="输入密码" maxlength="50">
+    </div>
+    <button class="auth-btn" id="authBtn" onclick="doAuth()">登录</button>
+    <div class="auth-switch" id="authSwitch">
+      没有账号？<a onclick="switchAuth()">去注册</a>
+    </div>
+    <div class="auth-msg auth-msg-err" id="authMsg"></div>
+  </div>
+</div>
+
 <script>
+// ===== 用户认证 =====
+let authMode = "login";
+
+async function checkAuth() {
+  try {
+    const data = await fetch("/api/me").then(r => r.json());
+    if (data.user) renderLoggedIn(data.user);
+  } catch(e) {}
+}
+
+function renderLoggedIn(user) {
+  document.getElementById("userBar").innerHTML = `
+    <span class="ub-user">
+      <span class="ub-dot"></span>
+      ${esc(user.username)}
+      <button class="ub-btn ub-btn-logout" onclick="doLogout()">登出</button>
+    </span>`;
+}
+
+async function doLogout() {
+  await fetch("/api/logout", { method: "POST" });
+  document.getElementById("userBar").innerHTML = `
+    <button class="ub-btn" onclick="showAuth('login')">登录</button>
+    <button class="ub-btn ub-btn-primary" onclick="showAuth('register')">注册</button>`;
+}
+
+function showAuth(mode) {
+  authMode = mode;
+  document.getElementById("authOverlay").style.display = "flex";
+  document.getElementById("authTitle").textContent = mode === "login" ? "登录" : "注册";
+  document.getElementById("authSub").textContent = mode === "login" ? "欢迎回来" : "创建一个新账号";
+  document.getElementById("authBtn").textContent = mode === "login" ? "登录" : "注册";
+  document.getElementById("authSwitch").innerHTML = mode === "login"
+    ? '没有账号？<a onclick="switchAuth()">去注册</a>'
+    : '已有账号？<a onclick="switchAuth()">去登录</a>';
+  document.getElementById("authMsg").style.display = "none";
+  document.getElementById("authUsername").value = "";
+  document.getElementById("authPassword").value = "";
+}
+
+function switchAuth() {
+  showAuth(authMode === "login" ? "register" : "login");
+}
+
+async function doAuth() {
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authPassword").value.trim();
+
+  if (!username || !password) {
+    document.getElementById("authMsg").textContent = "请填写用户名和密码";
+    document.getElementById("authMsg").style.display = "block";
+    return;
+  }
+
+  const btn = document.getElementById("authBtn");
+  btn.disabled = true;
+  btn.textContent = "处理中…";
+
+  const url = authMode === "login" ? "/api/login" : "/api/register";
+  try {
+    const data = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    }).then(r => r.json());
+
+    if (data.ok) {
+      document.getElementById("authOverlay").style.display = "none";
+      renderLoggedIn(data.user);
+    } else {
+      document.getElementById("authMsg").textContent = data.error;
+      document.getElementById("authMsg").style.display = "block";
+    }
+  } catch(e) {
+    document.getElementById("authMsg").textContent = "网络错误";
+    document.getElementById("authMsg").style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === "login" ? "登录" : "注册";
+  }
+}
+
+// 点击遮罩关闭
+document.getElementById("authOverlay").addEventListener("click", function(e) {
+  if (e.target === this) this.style.display = "none";
+});
+
+// Enter 键提交
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && document.getElementById("authOverlay").style.display === "flex") {
+    doAuth();
+  }
+});
+
 // ===== 加载内置应用 (apps.json) =====
 (async function loadApps() {
   const container = document.getElementById("builtinCards");
@@ -273,6 +465,9 @@ html, body {
 })();
 
 function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+// 初始检查登录状态
+checkAuth();
 </script>
 </body>
 </html>

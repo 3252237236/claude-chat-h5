@@ -177,11 +177,13 @@ textarea { resize: vertical; min-height: 70px; }
 <div class="bg-grid"></div>
 
 <div class="app">
-  <a href="/" class="back">← 返回首页</a>
+  <div class="user-bar" id="userBar" style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:16px;">
+    <a href="/" style="font-size:12px;color:var(--text-dim);text-decoration:none;">← 首页</a>
+  </div>
 
   <div class="form-card" id="formCard">
     <h1>提交作品</h1>
-    <p class="subtitle">发布你的工具、游戏、网站，所有人都会在首页看到它。</p>
+    <p class="subtitle">发布你的工具、游戏、网站，所有人都会在首页看到它。<br><span id="loginHint" style="color:var(--text-dim);font-size:12px;">💡 登录后发布，作品会自动署名</span></p>
 
     <div class="form-group">
       <label>标题</label>
@@ -234,6 +236,20 @@ textarea { resize: vertical; min-height: 70px; }
 </div>
 
 <script>
+// 检查登录状态
+(async function() {
+  try {
+    const data = await fetch("/api/me").then(r=>r.json());
+    if (data.user) {
+      document.getElementById("loginHint").innerHTML = "✅ 已登录 <b>" + data.user.username + "</b>，作品将自动署名";
+      document.getElementById("loginHint").style.color = "#00d2a0";
+      // 隐藏名字输入框
+      const authorEl = document.getElementById("author");
+      if (authorEl) { authorEl.value = data.user.username; authorEl.readOnly = true; authorEl.style.opacity = "0.5"; }
+    }
+  } catch(e) {}
+})();
+
 const COLORS = ["#6c5ce7","#00d2a0","#4dabf7","#ff922b","#f06595","#ff6b6b","#ffd43b","#20c997"];
 const EMOJIS = ["🎮","🎯","🧩","🎨","🎵","📝","🔧","🧮","🗺️","🎲","📊","🤖","🛠️","🎬","📸","🌐","💡","⚡","🔥","💎","🌈","🎪","🎭","🕹️"];
 
