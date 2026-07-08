@@ -250,13 +250,14 @@ select { cursor: pointer; appearance: none; }
 
     <!-- HTML文件上传 -->
     <div class="form-group">
-      <label>上传 HTML 文件 <span class="optional">(可选)</span></label>
+      <label>上传项目文件 <span class="optional">(可选)</span></label>
       <div class="file-zone" id="fileZone" onclick="document.getElementById('fileInput').click()">
-        <div class="file-icon">📄</div>
-        <div class="file-text">点击上传 HTML 文件（会自动获得链接）</div>
+        <div class="file-icon">📦</div>
+        <div class="file-text">点击上传 HTML 文件 或 ZIP 压缩包</div>
         <div class="file-name" id="fileName" style="display:none"></div>
       </div>
       <input type="file" id="fileInput" accept=".html,.htm,.zip">
+      <div class="hint">单个 HTML 文件 → 直接上传 · 文件夹项目（HTML+CSS+JS+图片）→ 打成 ZIP 上传</div>
     </div>
 
     <!-- 作者 -->
@@ -332,10 +333,13 @@ document.getElementById("fileInput").addEventListener("change", function() {
   const file = this.files[0];
   if (!file) return;
   uploadedFile = file;
-  document.getElementById("fileName").textContent = "📎 " + file.name + " (" + formatSize(file.size) + ")";
+  const isZip = file.name.toLowerCase().endsWith(".zip");
+  const tag = isZip ? "📦" : "📄";
+  const hint = isZip ? " (ZIP 项目包，将自动解压)" : "";
+  document.getElementById("fileName").textContent = tag + " " + file.name + " (" + formatSize(file.size) + ")" + hint;
   document.getElementById("fileName").style.display = "";
   if (!document.getElementById("url").value) {
-    document.getElementById("url").placeholder = "上传后自动获得链接";
+    document.getElementById("url").placeholder = isZip ? "解压后自动获得链接" : "上传后自动获得链接";
   }
 });
 

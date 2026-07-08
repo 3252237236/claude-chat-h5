@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """HZ Lab - Flask"""
-import json, os, io, time, uuid
+import json, os, io, time, uuid, zipfile
 from flask import Flask, request, send_file, jsonify
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -57,6 +57,46 @@ def save_community_apps(data):
     with open(COMMUNITY_APPS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# ---------- ZIP 项目解压 ----------
+def extract_zip_project(zip_path, extract_to):
+    """安全解压 ZIP 项目包，返回入口文件相对路径（如 index.html）"""
+    MAX_TOTAL = 100 * 1024 * 1024  # 100MB 上限
+
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        total = sum(m.file_size for m in zf.infolist())
+        if total > MAX_TOTAL:
+            raise ValueError("ZIP 项目太大（上限 100MB）")
+
+        candidates = []  # [(depth, path)]
+        for member in zf.infolist():
+            # 防止路径穿越
+            safe = os.path.normpath(member.filename)
+            if safe.startswith("..") or os.path.isabs(safe):
+                continue
+            if member.is_dir():
+                continue
+
+            target = os.path.join(extract_to, safe)
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with zf.open(member) as src:
+                content = src.read()
+            with open(target, "wb") as dst:
+                dst.write(content)
+
+            basename = os.path.basename(safe).lower()
+            if basename == "index.html":
+                depth = safe.count("/")
+                candidates.append((depth, safe))
+            elif basename.endswith(".html") and not any(c[1].lower().endswith("index.html") for c in candidates):
+                candidates.append((safe.count("/"), safe))
+
+        if not candidates:
+            raise ValueError("ZIP 中没有 HTML 文件，至少需要一个入口页面（index.html）")
+
+        # 选最浅层的 index.html，同层优先 index.html
+        candidates.sort(key=lambda x: (x[0], not x[1].lower().endswith("index.html")))
+        return candidates[0][1]
+
 # ---------- 路由 ----------
 @app.route("/")
 def index():
@@ -99,10 +139,29 @@ def api_submit_app():
     # 如果上传了文件，保存并生成 URL
     if file and file.filename != "":
         filename = secure_filename(file.filename)
-        unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
-        filepath = os.path.join(UPLOAD_DIR, unique_name)
-        file.save(filepath)
-        url = f"/uploads/{unique_name}"
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+        if ext == "zip":
+            # ZIP 项目 → 解压到子目录
+            dir_name = uuid.uuid4().hex[:8]
+            extract_to = os.path.join(UPLOAD_DIR, dir_name)
+            os.makedirs(extract_to, exist_ok=True)
+            zip_path = os.path.join(UPLOAD_DIR, f"{dir_name}.zip")
+            file.save(zip_path)
+            try:
+                entry = extract_zip_project(zip_path, extract_to)
+                url = f"/uploads/{dir_name}/{entry}"
+            except ValueError as e:
+                return jsonify({"error": str(e)}), 400
+            finally:
+                if os.path.exists(zip_path):
+                    os.remove(zip_path)
+        else:
+            # 单文件
+            unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
+            filepath = os.path.join(UPLOAD_DIR, unique_name)
+            file.save(filepath)
+            url = f"/uploads/{unique_name}"
 
     if not url:
         return jsonify({"error": "请填写链接或上传文件"}), 400
@@ -164,11 +223,24 @@ def api_upload():
     return jsonify({"ok": True, "item": item})
 
 @app.route("/uploads/<path:name>")
-def download_file(name):
-    """下载/查看上传的文件"""
-    path = os.path.join(UPLOAD_DIR, secure_filename(name))
-    if os.path.exists(path):
-        return send_file(path, as_attachment=True)
+def serve_uploads(name):
+    """提供上传目录内的文件（HTML/CSS/JS 正常渲染，其他下载）"""
+    # 安全处理：将路径逐段用 secure_filename 处理
+    parts = name.replace("\\", "/").split("/")
+    safe_parts = [secure_filename(p) for p in parts]
+    path = os.path.join(UPLOAD_DIR, *safe_parts)
+    if os.path.isfile(path):
+        # 网页文件不强制下载，直接渲染
+        ext = os.path.splitext(path)[1].lower()
+        download = ext not in (".html", ".htm", ".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".woff", ".woff2", ".ttf")
+        return send_file(path, as_attachment=download)
+    elif os.path.isdir(path):
+        # 目录→自动找 index.html
+        for entry in ["index.html", "index.htm"]:
+            idx = os.path.join(path, entry)
+            if os.path.isfile(idx):
+                return send_file(idx)
+        return jsonify({"error": "目录中没有 index.html"}), 404
     return "文件不存在", 404
 
 @app.route("/<path:path>")
