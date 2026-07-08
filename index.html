@@ -275,37 +275,44 @@ html, body {
   }
 })();
 
-// ========== 加载社区上传的作品 ==========
+// ========== 加载社区提交的作品 ==========
 (async function loadCommunity() {
   try {
-    const resp = await fetch("/api/uploads");
+    const resp = await fetch("/api/community-apps");
     const items = await resp.json();
     if (!items.length) return;
 
     document.getElementById("communityTitle").style.display = "";
     const container = document.getElementById("communityCards");
-    const colors = ["#6c5ce7","#4dabf7","#00d2a0","#ff922b","#f06595"];
 
-    items.forEach((item, i) => {
-      const ext = (item.filename || "").split(".").pop().toLowerCase();
-      const icon = { html:"🌐", zip:"📦", png:"🖼️", jpg:"🖼️", jpeg:"🖼️", pdf:"📄", txt:"📝", py:"🐍", js:"📜" }[ext] || "📁";
-      const color = colors[i % colors.length];
-      const time = new Date(item.time * 1000);
-      const timeStr = time.toLocaleDateString("zh-CN");
-      const sizeStr = item.size > 1024*1024 ? (item.size/1024/1024).toFixed(1)+"MB" : (item.size/1024).toFixed(0)+"KB";
-
+    items.forEach(item => {
       const card = document.createElement("a");
       card.className = "card";
-      card.href = "/uploads/" + item.stored;
-      card.style.cssText = `--card-accent:${color};--card-glow:${color}44;`;
+      card.href = item.url;
+      card.style.cssText = `--card-accent:${item.color};--card-glow:${item.color}44;`;
+
+      const time = new Date(item.time * 1000);
+      const timeStr = time.toLocaleDateString("zh-CN");
+
       card.innerHTML = `
-        <div class="card-icon" style="background:${color}22;color:${color};">${icon}</div>
+        <div class="card-icon" style="background:${item.color}22;color:${item.color};">${escapeHtml(item.icon)}</div>
         <h3>${escapeHtml(item.title)}</h3>
-        <p>${escapeHtml(item.desc || "暂无简介")}</p>
-        <span class="card-badge">⬇️ ${sizeStr} · ${timeStr}</span>
-      `;
+        <p>${escapeHtml(item.desc)}</p>
+        <span class="card-badge">👤 ${escapeHtml(item.author)} · ${timeStr}</span>`;
       container.appendChild(card);
     });
+
+    // 加载更多提示
+    const tip = document.createElement("a");
+    tip.className = "card";
+    tip.href = "/submit";
+    tip.style.cssText = "--card-accent:#8888a0;--card-glow:transparent;border-style:dashed;";
+    tip.innerHTML = `
+      <div class="card-icon" style="background:rgba(255,255,255,0.04);color:#8888a0;">➕</div>
+      <h3>提交你的作品</h3>
+      <p>发布工具、游戏、网站，让所有人看到</p>
+      <span class="card-badge">🚀 立即发布</span>`;
+    container.appendChild(tip);
   } catch (e) { /* 加载失败不影响主页 */ }
 })();
 

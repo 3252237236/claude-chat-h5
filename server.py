@@ -17,6 +17,7 @@ GENERIC_KEY = ""
 DATA_DIR = os.environ.get("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 META_FILE = os.path.join(DATA_DIR, "uploads.json")
+COMMUNITY_APPS_FILE = os.path.join(DATA_DIR, "community_apps.json")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ---------- 加载平台 ----------
@@ -45,6 +46,17 @@ def save_uploads(data):
     with open(META_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# ---------- 社区作品数据 ----------
+def load_community_apps():
+    if os.path.exists(COMMUNITY_APPS_FILE):
+        with open(COMMUNITY_APPS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_community_apps(data):
+    with open(COMMUNITY_APPS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
 # ---------- 路由 ----------
 @app.route("/")
 def index():
@@ -57,6 +69,60 @@ def chat():
 @app.route("/upload")
 def upload_page():
     return send_file("upload.html")
+
+@app.route("/submit")
+def submit_page():
+    return send_file("submit.html")
+
+# ---------- 社区作品 API ----------
+@app.route("/api/community-apps")
+def api_community_apps():
+    """返回所有社区提交的作品"""
+    return jsonify(load_community_apps())
+
+@app.route("/api/submit-app", methods=["POST"])
+def api_submit_app():
+    """接收社区作品提交"""
+    title = request.form.get("title", "").strip()
+    desc = request.form.get("desc", "").strip()
+    url = request.form.get("url", "").strip()
+    author = request.form.get("author", "").strip()
+    icon = request.form.get("icon", "🎯").strip()
+    color = request.form.get("color", "#6c5ce7").strip()
+    file = request.files.get("file")
+
+    if not title:
+        return jsonify({"error": "请输入标题"}), 400
+    if not desc:
+        return jsonify({"error": "请输入简介"}), 400
+
+    # 如果上传了文件，保存并生成 URL
+    if file and file.filename != "":
+        filename = secure_filename(file.filename)
+        unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
+        filepath = os.path.join(UPLOAD_DIR, unique_name)
+        file.save(filepath)
+        url = f"/uploads/{unique_name}"
+
+    if not url:
+        return jsonify({"error": "请填写链接或上传文件"}), 400
+
+    item = {
+        "id": uuid.uuid4().hex[:8],
+        "title": title,
+        "desc": desc,
+        "url": url,
+        "icon": icon,
+        "color": color,
+        "author": author or "匿名",
+        "time": int(time.time()),
+    }
+
+    apps = load_community_apps()
+    apps.insert(0, item)  # 最新的排前面
+    save_community_apps(apps)
+
+    return jsonify({"ok": True, "item": item})
 
 @app.route("/api/uploads")
 def api_uploads():

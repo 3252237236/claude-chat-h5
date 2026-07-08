@@ -16,10 +16,10 @@
     "badge": "🎮 来玩"
   },
   {
-    "title": "分享作品",
-    "desc": "上传你做的工具、游戏、网站，让所有人看到",
-    "icon": "📤",
-    "url": "/upload",
+    "title": "提交作品",
+    "desc": "发布你的工具、游戏、网站，让所有人看到你的作品",
+    "icon": "🚀",
+    "url": "/submit",
     "color": "#ff922b",
     "badge": "➕ 发布",
     "dashed": true
