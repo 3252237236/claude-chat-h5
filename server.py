@@ -145,10 +145,40 @@ def extract_zip_project(zip_path, extract_to):
         candidates.sort(key=lambda x: (x[0], not x[1].lower().endswith("index.html")))
         return candidates[0][1]
 
+# ---------- 门禁 ----------
+AUTH_WHITELIST = {"/login", "/api/login", "/api/register", "/api/logout", "/api/me", "/api/health"}
+
+@app.before_request
+def require_login():
+    if request.path in AUTH_WHITELIST:
+        return None
+    if request.path.startswith("/api/"):
+        if not session.get("user"):
+            return jsonify({"error": "请先登录"}), 401
+        return None
+    # 页面访问：未登录跳转登录页
+    if not session.get("user"):
+        # 排除静态资源请求（浏览器自动发起的 favicon 等）
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "请先登录"}), 401
+        # 允许 login 页面自身
+        if request.path == "/login":
+            return None
+        return send_file("login.html")
+    return None
+
 # ---------- 路由 ----------
 @app.route("/")
 def index():
+    if not session.get("user"):
+        return send_file("login.html")
     return send_file("index.html")
+
+@app.route("/login")
+def login_page():
+    if session.get("user"):
+        return send_file("index.html")
+    return send_file("login.html")
 
 @app.route("/chat")
 def chat():

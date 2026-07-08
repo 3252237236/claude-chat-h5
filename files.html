@@ -16,13 +16,12 @@
   --text-dim: #8888a0;
   --accent: #6c5ce7;
   --accent-glow: rgba(108,92,231,0.3);
-  --blue: #4dabf7;
   --green: #00d2a0;
   --radius: 20px;
 }
 
-html, body {
-  height: 100%;
+html, body { height: 100%; }
+body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -37,11 +36,11 @@ html, body {
 }
 .bg-orb:nth-child(1) {
   width: 500px; height: 500px; background: var(--accent);
-  top: -150px; right: -100px; animation-delay: 0s;
+  top: -150px; right: -100px;
 }
 .bg-orb:nth-child(2) {
   width: 350px; height: 350px; background: var(--green);
-  bottom: -100px; left: -100px; animation-delay: -7s;
+  bottom: -100px; left: -100px; animation-direction: reverse;
 }
 @keyframes orbFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -87,7 +86,6 @@ html, body {
 }
 .btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
 
-/* 文件网格 */
 .file-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -96,15 +94,11 @@ html, body {
 
 .file-card {
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px 20px;
-  cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px 20px;
+  cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none; color: inherit;
-  display: flex; flex-direction: column; gap: 10px;
-  overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px; overflow: hidden;
 }
 .file-card::before {
   content: "";
@@ -138,12 +132,8 @@ html, body {
 }
 .file-card .fc-meta { font-size: 12px; color: var(--text-dim); }
 
-.empty {
-  text-align: center; padding: 60px 20px; color: var(--text-dim);
-  grid-column: 1 / -1;
-}
+.empty { text-align: center; padding: 60px 20px; color: var(--text-dim); grid-column: 1/-1; }
 .empty .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
-.empty p { font-size: 14px; line-height: 1.6; }
 
 /* 弹窗 */
 .overlay {
@@ -225,7 +215,7 @@ html, body {
       <h1>文件仓库</h1>
       <div class="count" id="fileCount">加载中…</div>
     </div>
-    <button class="btn" id="uploadBtn" onclick="checkAndUpload()">上传文件</button>
+    <button class="btn" onclick="showUpload()">上传文件</button>
   </div>
 
   <div class="file-grid" id="fileGrid"></div>
@@ -257,89 +247,7 @@ html, body {
   </div>
 </div>
 
-<!-- 登录弹窗 -->
-<div class="overlay" id="authOverlay" style="display:none;">
-  <div class="modal">
-    <h2 id="authTitle">登录</h2>
-    <div class="form-group">
-      <label>用户名</label>
-      <input type="text" id="authUsername" placeholder="输入用户名" maxlength="20">
-    </div>
-    <div class="form-group">
-      <label>密码</label>
-      <input type="password" id="authPassword" placeholder="输入密码" maxlength="50">
-    </div>
-    <div class="btn-row">
-      <button class="btn-cancel" onclick="document.getElementById('authOverlay').style.display='none'">取消</button>
-      <button class="btn-submit" id="authBtn" onclick="doAuth()">登录</button>
-    </div>
-    <div class="msg msg-err" id="authMsg"></div>
-    <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-dim);">
-      <span id="authSwitch">没有账号？<a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;">去注册</a></span>
-    </div>
-  </div>
-</div>
-
 <script>
-// ===== 权限检查 =====
-let authMode = "login";
-
-async function checkAndUpload() {
-  try {
-    const data = await fetch("/api/me").then(r => r.json());
-    if (data.user) { showUpload(); return; }
-  } catch(e) {}
-  showAuth("login");
-}
-
-function showAuth(mode) {
-  authMode = mode;
-  document.getElementById("authOverlay").style.display = "flex";
-  document.getElementById("authTitle").textContent = mode === "login" ? "登录" : "注册";
-  document.getElementById("authBtn").textContent = mode === "login" ? "登录" : "注册";
-  document.getElementById("authSwitch").innerHTML = mode === "login"
-    ? '没有账号？<a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;">去注册</a>'
-    : '已有账号？<a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;">去登录</a>';
-  document.getElementById("authMsg").style.display = "none";
-  document.getElementById("authUsername").value = "";
-  document.getElementById("authPassword").value = "";
-}
-
-function switchAuth() { showAuth(authMode === "login" ? "register" : "login"); }
-
-async function doAuth() {
-  const username = document.getElementById("authUsername").value.trim();
-  const password = document.getElementById("authPassword").value.trim();
-  if (!username || !password) {
-    document.getElementById("authMsg").textContent = "请填写用户名和密码";
-    document.getElementById("authMsg").style.display = "block";
-    return;
-  }
-  const btn = document.getElementById("authBtn");
-  btn.disabled = true; btn.textContent = "处理中…";
-
-  const url = authMode === "login" ? "/api/login" : "/api/register";
-  try {
-    const data = await fetch(url, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    }).then(r => r.json());
-    if (data.ok) {
-      document.getElementById("authOverlay").style.display = "none";
-      showUpload();
-    } else {
-      document.getElementById("authMsg").textContent = data.error;
-      document.getElementById("authMsg").style.display = "block";
-    }
-  } catch(e) {
-    document.getElementById("authMsg").textContent = "网络错误";
-    document.getElementById("authMsg").style.display = "block";
-  } finally {
-    btn.disabled = false; btn.textContent = authMode === "login" ? "登录" : "注册";
-  }
-}
-
-// ===== 文件图标 =====
 const icons = {
   html:"🌐", htm:"🌐", zip:"📦", rar:"📦", "7z":"📦",
   png:"🖼️", jpg:"🖼️", jpeg:"🖼️", gif:"🖼️", svg:"🎨", webp:"🖼️",
@@ -354,7 +262,7 @@ function fmt(b) { return b>1024*1024?(b/1024/1024).toFixed(1)+" MB":(b/1024).toF
 async function loadFiles() {
   const grid = document.getElementById("fileGrid");
   try {
-    const items = await fetch("/api/uploads").then(r=>r.json());
+    const items = await fetch("/api/uploads").then(r => r.json());
     document.getElementById("fileCount").textContent = items.length + " 个文件";
     if (!items.length) {
       grid.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>仓库还是空的<br>点击上方按钮上传第一个文件</p></div>`;
@@ -364,17 +272,12 @@ async function loadFiles() {
       const ext = (item.filename||"").split(".").pop().toLowerCase();
       const time = new Date(item.time*1000);
       return `<a href="/uploads/${item.stored}" class="file-card" download>
-        <div class="fc-top">
-          <div class="fc-icon">${iconFor(item.filename)}</div>
-          <div class="fc-ext">.${ext}</div>
-        </div>
+        <div class="fc-top"><div class="fc-icon">${iconFor(item.filename)}</div><div class="fc-ext">.${ext}</div></div>
         <div class="fc-title" title="${esc(item.title)}">${esc(item.title)}</div>
         <div class="fc-meta">${fmt(item.size)} · ${time.toLocaleDateString("zh-CN")}</div>
       </a>`;
     }).join("");
-  } catch(e) {
-    grid.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>加载失败</p></div>`;
-  }
+  } catch(e) { grid.innerHTML = `<div class="empty"><p>加载失败</p></div>`; }
 }
 
 let uploadFile = null;
@@ -391,12 +294,8 @@ document.getElementById("uFile").addEventListener("change", function() {
 
 function showUpload() {
   document.getElementById("uploadModal").style.display = "flex";
-  ["uTitle","uDesc","uFileName","uMsgErr","uMsgOk"].forEach(id => {
-    const el = document.getElementById(id);
-    if (id === "uFileName") { el.style.display = "none"; return; }
-    if (id.startsWith("uMsg")) { el.style.display = "none"; return; }
-    el.value = "";
-  });
+  ["uTitle","uDesc","uMsgErr","uMsgOk"].forEach(id => { document.getElementById(id).value = ""; document.getElementById(id).style.display = "none"; });
+  document.getElementById("uFileName").style.display = "none";
   document.getElementById("uFile").value = "";
   uploadFile = null;
 }
@@ -411,12 +310,12 @@ async function doUpload() {
   btn.disabled = true; btn.textContent = "上传中…";
 
   const fd = new FormData();
-  fd.append("title", title);
-  fd.append("desc", document.getElementById("uDesc").value.trim());
-  fd.append("file", uploadFile);
+  fd.append("title", title); fd.append("desc", document.getElementById("uDesc").value.trim()); fd.append("file", uploadFile);
 
   try {
-    const data = await fetch("/api/upload",{method:"POST",body:fd}).then(r=>r.json());
+    const resp = await fetch("/api/upload", { method: "POST", body: fd });
+    if (resp.status === 401) { location.href = "/login"; return; }
+    const data = await resp.json();
     if (data.ok) { showMsg("上传成功","ok"); loadFiles(); setTimeout(hideUpload, 800); }
     else { showMsg(data.error||"上传失败","err"); }
   } catch(e) { showMsg("网络错误","err"); }
