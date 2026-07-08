@@ -8,22 +8,6 @@
     "badge": "🚀 已上线"
   },
   {
-    "title": "MiniCraft",
-    "desc": "简易我的世界 · 3D 体素沙盒，自由建造与探索",
-    "icon": "⛏️",
-    "url": "/minecraft.html",
-    "color": "#00d2a0",
-    "badge": "🎮 来玩"
-  },
-  {
-    "title": "五子棋",
-    "desc": "经典双人对弈 · 15路棋盘，五子连珠即胜",
-    "icon": "🎯",
-    "url": "/gomoku.html",
-    "color": "#ff922b",
-    "badge": "🎮 新游戏"
-  },
-  {
     "title": "文件仓库",
     "desc": "共享文件下载 · 图片、模组、文档随便传",
     "icon": "📁",

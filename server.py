@@ -141,6 +141,45 @@ def save_community_apps(data):
     with open(COMMUNITY_APPS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# ---------- 种子数据：默认社区作品 ----------
+DEFAULT_COMMUNITY = [
+    {
+        "id": "seed_mc",
+        "title": "MiniCraft",
+        "desc": "简易我的世界 · 3D 体素沙盒，自由建造与探索",
+        "url": "/minecraft.html",
+        "icon": "⛏️",
+        "color": "#00d2a0",
+        "author": "HZ Lab",
+        "time": int(time.time()),
+        "status": "approved",
+    },
+    {
+        "id": "seed_gomoku",
+        "title": "五子棋",
+        "desc": "经典双人对弈 · 15路棋盘，五子连珠即胜",
+        "url": "/gomoku.html",
+        "icon": "🎯",
+        "color": "#ff922b",
+        "author": "HZ Lab",
+        "time": int(time.time()),
+        "status": "approved",
+    },
+]
+
+def seed_community_apps():
+    apps = load_community_apps()
+    existing = {a.get("id", "") for a in apps}
+    changed = False
+    for item in DEFAULT_COMMUNITY:
+        if item["id"] not in existing:
+            apps.insert(0, item)
+            changed = True
+    if changed:
+        save_community_apps(apps)
+
+seed_community_apps()
+
 # ---------- ZIP 项目解压 ----------
 def extract_zip_project(zip_path, extract_to):
     """安全解压 ZIP 项目包，返回入口文件相对路径（如 index.html）"""
