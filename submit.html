@@ -8,160 +8,204 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f7f5f2;
-  --text: #1c1c1e;
-  --text-dim: #8e8e93;
-  --radius: 22px;
+  --sidebar-w: 212px;
+  --sidebar-bg: #1c1c1e;
+  --main-bg: #fafafa;
+  --text: #1a1a1a;
+  --text-dim: #6e6e73;
+  --border: #e8e8eb;
+  --hover: #f2f2f4;
 }
 
-html, body {
-  height: 100%;
+html, body { height: 100%; }
+body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
+  background: var(--main-bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  display: flex;
 }
 
-.app {
-  max-width: 540px; margin: 0 auto;
-  padding: 40px 20px 60px;
-  min-height: 100vh;
+/* ===== 侧边栏 ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  color: #fff;
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 10;
+  padding: 16px 12px;
+}
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px 20px;
+  font-size: 15px; font-weight: 680;
+  color: #fff; text-decoration: none;
+}
+.sidebar-brand .sb-icon {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: #fff; color: #1c1c1e;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
 }
 
-.back {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: var(--text-dim); text-decoration: none; font-size: 14px;
-  margin-bottom: 30px; transition: color 0.2s;
-}
-.back:hover { color: var(--text); }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 
-.form-card {
-  background: #fcfbf8;
-  border-radius: var(--radius);
-  padding: 34px 28px;
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 8px; border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  transition: all 0.12s;
 }
-.form-card h1 { font-size: 24px; font-weight: 750; letter-spacing: -0.5px; margin-bottom: 4px; }
-.form-card .subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.6; }
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+.nav-item .ni-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
 
-.form-group { margin-bottom: 18px; }
+/* ===== 主内容区 ===== */
+.main {
+  flex: 1; margin-left: var(--sidebar-w);
+  padding: 40px 36px 80px;
+  max-width: calc(560px + 72px);
+}
+
+.main-header { margin-bottom: 24px; }
+.main-header h1 { font-size: 22px; font-weight: 680; letter-spacing: -0.5px; margin-bottom: 3px; }
+.main-header .sub { font-size: 13px; color: var(--text-dim); }
+
+/* ===== 表单 ===== */
+.form-section {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 28px 24px;
+}
+
+.form-group { margin-bottom: 16px; }
 .form-group label {
-  display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+  display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  color: var(--text-dim); margin-bottom: 4px;
 }
-
-input, textarea {
-  width: 100%; background: #f0eee9; border: 1px solid transparent;
-  border-radius: 12px; padding: 11px 14px; font-size: 15px; color: var(--text);
+.form-group input, .form-group textarea {
+  width: 100%; background: var(--hover); border: 1px solid var(--border);
+  border-radius: 6px; padding: 9px 12px; font-size: 14px; color: var(--text);
   font-family: inherit; outline: none;
   transition: border-color 0.2s;
 }
-input:focus, textarea:focus { border-color: #ccc; }
-textarea { resize: vertical; min-height: 70px; }
+.form-group input:focus, .form-group textarea:focus { border-color: #aaa; }
+.form-group textarea { resize: vertical; min-height: 60px; }
 
-.color-picker { display: flex; gap: 9px; flex-wrap: wrap; }
+.color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
 .color-dot {
-  width: 34px; height: 34px; border-radius: 10px; cursor: pointer;
-  border: 2px solid transparent; transition: all 0.2s;
+  width: 30px; height: 30px; border-radius: 6px; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.15s;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: rgba(255,255,255,0.8);
+  font-size: 11px; color: rgba(255,255,255,0.7);
 }
 .color-dot:hover { transform: scale(1.1); }
-.color-dot.active { border-color: #1c1c1e; box-shadow: 0 0 0 3px rgba(0,0,0,0.04); }
-.color-dot .check { opacity: 0; transition: opacity 0.2s; }
+.color-dot.active { border-color: #1a1a1a; }
+.color-dot .check { opacity: 0; transition: opacity 0.15s; }
 .color-dot.active .check { opacity: 1; }
 
-.emoji-grid { display: flex; gap: 7px; flex-wrap: wrap; }
+.emoji-grid { display: flex; gap: 6px; flex-wrap: wrap; }
 .emoji-btn {
-  width: 38px; height: 38px; border-radius: 10px;
-  background: #f0eee9; border: 1px solid transparent;
-  font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+  width: 36px; height: 36px; border-radius: 6px;
+  background: var(--hover); border: 1px solid transparent;
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
 }
-.emoji-btn:hover { background: #e6e4df; }
-.emoji-btn.active { border-color: #1c1c1e; background: #e8e6e1; }
+.emoji-btn:hover { background: #e5e5e7; }
+.emoji-btn.active { border-color: #1a1a1a; background: #e8e8ea; }
 
 .file-zone {
-  border: 2px dashed rgba(0,0,0,0.1); border-radius: 14px;
-  padding: 22px; text-align: center; cursor: pointer;
-  transition: all 0.2s;
+  border: 1px dashed var(--border); border-radius: 6px;
+  padding: 18px; text-align: center; cursor: pointer;
+  transition: all 0.15s;
 }
-.file-zone:hover { border-color: #bbb; background: rgba(0,0,0,0.01); }
-.file-zone .file-icon { font-size: 30px; margin-bottom: 4px; opacity: 0.4; }
-.file-zone .file-text { font-size: 13px; color: var(--text-dim); }
-.file-zone .file-name { font-size: 13px; font-weight: 600; margin-top: 5px; }
+.file-zone:hover { border-color: #aaa; background: var(--hover); }
+.file-zone .file-icon { font-size: 26px; margin-bottom: 2px; opacity: 0.35; }
+.file-zone .file-text { font-size: 12px; color: var(--text-dim); }
+.file-zone .file-name { font-size: 12px; font-weight: 600; margin-top: 4px; }
 .file-zone input[type=file] { display: none; }
 
-.hint { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
+.hint { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 13px 28px; border-radius: 14px; font-size: 15px; font-weight: 650;
-  cursor: pointer; border: none; font-family: inherit;
-  width: 100%; margin-top: 6px;
-  background: #1c1c1e; color: #fff;
-  transition: all 0.25s;
+  width: 100%; padding: 10px; border-radius: 6px;
+  border: none; background: var(--text); color: #fff;
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  margin-top: 6px; transition: all 0.15s;
 }
-.btn:hover { filter: brightness(1.3); transform: scale(0.98); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; }
+.btn:hover { filter: brightness(1.3); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; }
 
-.msg { padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-top: 12px; display: none; }
-.msg-ok { background: rgba(107,155,109,0.08); color: #5a8a5e; }
-.msg-err { background: rgba(212,87,74,0.08); color: #d4574a; }
+.msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 10px; display: none; }
+.msg-ok { background: rgba(107,155,109,0.06); color: #5a8a5e; }
+.msg-err { background: rgba(212,87,74,0.06); color: #d4574a; }
 
-.preview-section { margin-top: 22px; }
-.preview-section h3 { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+.preview-section { margin-top: 20px; }
+.preview-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.5px; }
 .preview-card {
-  background: #fcfbf8; border-radius: var(--radius);
-  padding: 20px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px;
+  display: flex; align-items: center; gap: 14px;
 }
 .preview-card .pc-icon {
-  width: 40px; height: 40px; border-radius: 12px;
+  width: 36px; height: 36px; border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 19px; margin-bottom: 10px;
+  font-size: 17px; flex-shrink: 0;
 }
-.preview-card .pc-title { font-size: 16px; font-weight: 680; margin-bottom: 2px; }
-.preview-card .pc-desc { font-size: 13px; color: var(--text-dim); }
+.preview-card .pc-info { min-width: 0; }
+.preview-card .pc-title { font-size: 14px; font-weight: 580; }
+.preview-card .pc-desc { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-@media (max-width: 480px) {
-  .app { padding: 28px 14px 50px; }
-  .form-card { padding: 24px 18px; }
+@media (max-width: 640px) {
+  body { flex-direction: column; }
+  .sidebar { position: relative; width: 100%; flex-direction: row; padding: 10px 12px; overflow-x: auto; align-items: center; gap: 4px; }
+  .sidebar-brand { padding: 0 8px 0 0; }
+  .sidebar-nav { flex-direction: row; flex: 1; overflow-x: auto; }
+  .nav-item { white-space: nowrap; font-size: 12px; padding: 6px 10px; }
+  .main { margin-left: 0; padding: 24px 14px 60px; }
+  .form-section { padding: 20px 16px; }
 }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <a href="/" class="back">← 返回首页</a>
+<aside class="sidebar">
+  <a href="/" class="sidebar-brand">
+    <span class="sb-icon">HZ</span>
+    HZ Lab
+  </a>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+</aside>
 
-  <div class="form-card" id="formCard">
+<main class="main">
+  <div class="main-header">
     <h1>提交作品</h1>
-    <p class="subtitle">发布你的工具、游戏、网站，所有人都会在首页看到它。</p>
+    <p class="sub">发布你的工具、游戏、网站，所有人都会在首页看到它</p>
+  </div>
 
+  <div class="form-section" id="formCard">
     <div class="form-group">
       <label>标题</label>
       <input type="text" id="title" placeholder="给你的作品起个名字" maxlength="30">
     </div>
-
     <div class="form-group">
       <label>简介</label>
       <textarea id="desc" placeholder="一句话介绍你的作品" maxlength="80"></textarea>
     </div>
-
     <div class="form-group">
       <label>图标</label>
       <div class="emoji-grid" id="emojiPicker"></div>
     </div>
-
     <div class="form-group">
       <label>主题色</label>
       <div class="color-picker" id="colorPicker"></div>
     </div>
-
     <div class="form-group">
       <label>链接</label>
       <input type="text" id="url" placeholder="https://... 或上传后自动生成" maxlength="200">
     </div>
-
     <div class="form-group">
       <label>上传项目文件（可选）</label>
       <div class="file-zone" onclick="document.getElementById('fileInput').click()">
@@ -172,35 +216,51 @@ textarea { resize: vertical; min-height: 70px; }
       <input type="file" id="fileInput" accept=".html,.htm,.zip">
       <div class="hint">单个 HTML → 直接上传 · 文件夹项目 → 打成 ZIP</div>
     </div>
-
     <div class="form-group">
       <label>你的名字（可选）</label>
       <input type="text" id="author" placeholder="匿名" maxlength="20">
     </div>
-
     <button class="btn" id="submitBtn" onclick="submitApp()">发布到首页</button>
     <div class="msg msg-ok" id="msgOk"></div>
     <div class="msg msg-err" id="msgErr"></div>
   </div>
 
   <div class="preview-section">
-    <h3>卡片预览</h3>
+    <div class="preview-label">卡片预览</div>
     <div class="preview-card">
       <div class="pc-icon" id="pcIcon">🎯</div>
-      <div class="pc-title" id="pcTitle">作品标题</div>
-      <div class="pc-desc" id="pcDesc">作品简介…</div>
+      <div class="pc-info">
+        <div class="pc-title" id="pcTitle">作品标题</div>
+        <div class="pc-desc" id="pcDesc">作品简介…</div>
+      </div>
     </div>
   </div>
-</div>
+</main>
 
 <script>
-const COLORS = ["#e67e45","#6b9b6d","#7d8fa3","#c8893d","#d4574a","#8b7e6d","#5b8c85","#ba7a5a"];
+const COLORS = ["#5e6ad2","#4d7c5e","#7d8fa3","#c8893d","#d4574a","#8b7e6d","#5b8c85","#ba7a5a"];
 const EMOJIS = ["🎮","🎯","🧩","🎨","🎵","📝","🔧","🧮","🗺️","🎲","📊","🤖","🛠️","🎬","📸","🌐","💡","⚡","🔥","💎","🌈","🎪","🎭","🕹️"];
 
 let selectedColor = COLORS[0];
 let selectedEmoji = EMOJIS[0];
 let uploadedFile = null;
 
+// 侧边栏
+(async function loadSidebar() {
+  const nav = document.getElementById("sidebarNav");
+  try {
+    const apps = await fetch("/apps.json").then(r=>r.json());
+    apps.forEach(app => {
+      const item = document.createElement("a");
+      item.className = "nav-item" + (location.pathname === app.url ? " active" : "");
+      item.href = app.url;
+      item.innerHTML = `<span class="ni-icon">${app.icon}</span><span>${esc(app.title)}</span>`;
+      nav.appendChild(item);
+    });
+  } catch(e) {}
+})();
+
+// 颜色
 (function() {
   const p = document.getElementById("colorPicker");
   COLORS.forEach(c => {
@@ -210,13 +270,13 @@ let uploadedFile = null;
     d.innerHTML = '<span class="check">✓</span>';
     d.onclick = () => {
       document.querySelectorAll(".color-dot").forEach(x=>x.classList.remove("active"));
-      d.classList.add("active");
-      selectedColor = c; updatePreview();
+      d.classList.add("active"); selectedColor = c; updatePreview();
     };
     p.appendChild(d);
   });
 })();
 
+// Emoji
 (function() {
   const p = document.getElementById("emojiPicker");
   EMOJIS.forEach(e => {
@@ -225,13 +285,13 @@ let uploadedFile = null;
     b.textContent = e;
     b.onclick = () => {
       document.querySelectorAll(".emoji-btn").forEach(x=>x.classList.remove("active"));
-      b.classList.add("active");
-      selectedEmoji = e; updatePreview();
+      b.classList.add("active"); selectedEmoji = e; updatePreview();
     };
     p.appendChild(b);
   });
 })();
 
+// 文件
 document.getElementById("fileInput").addEventListener("change", function() {
   const f = this.files[0];
   if (!f) return;
@@ -272,25 +332,19 @@ async function submitApp() {
   btn.disabled = true; btn.textContent = "提交中…";
 
   const fd = new FormData();
-  fd.append("title", title);
-  fd.append("desc", desc);
-  fd.append("url", url);
-  fd.append("author", author);
-  fd.append("icon", selectedEmoji);
-  fd.append("color", selectedColor);
+  fd.append("title", title); fd.append("desc", desc); fd.append("url", url);
+  fd.append("author", author); fd.append("icon", selectedEmoji); fd.append("color", selectedColor);
   if (uploadedFile) fd.append("file", uploadedFile);
 
   try {
     const data = await fetch("/api/submit-app",{method:"POST",body:fd}).then(r=>r.json());
     if (data.ok) {
-      showMsg("✅ 发布成功！返回首页即可看到你的作品","ok");
+      showMsg("✅ 发布成功！返回首页即可看到","ok");
       document.getElementById("formCard").querySelectorAll("input[type=text], textarea").forEach(el=>el.value="");
       uploadedFile = null;
       document.getElementById("fileName").style.display = "none";
       document.getElementById("fileInput").value = "";
-    } else {
-      showMsg(data.error||"发布失败","err");
-    }
+    } else { showMsg(data.error||"发布失败","err"); }
   } catch(e) { showMsg("网络错误","err"); }
   finally { btn.disabled = false; btn.textContent = "发布到首页"; }
 }
@@ -301,6 +355,8 @@ function showMsg(text, type) {
   document.getElementById(type==="ok"?"msgErr":"msgOk").style.display = "none";
   if (type==="ok") setTimeout(()=>{el.style.display="none";}, 5000);
 }
+
+function esc(s) { const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 </script>
 </body>
 </html>

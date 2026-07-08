@@ -8,245 +8,233 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f7f5f2;
-  --text: #1c1c1e;
-  --text-dim: #8e8e93;
-  --radius: 28px;
-  --gap: 14px;
+  --sidebar-w: 212px;
+  --sidebar-bg: #1c1c1e;
+  --main-bg: #fafafa;
+  --text: #1a1a1a;
+  --text-dim: #6e6e73;
+  --border: #e8e8eb;
+  --hover: #f2f2f4;
+  --accent: #5e6ad2;
 }
 
-html, body {
-  min-height: 100%;
+html, body { height: 100%; }
+body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
+  background: var(--main-bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  display: flex;
 }
 
-/* ===== 主容器 ===== */
-.app {
-  max-width: 980px; margin: 0 auto;
-  padding: 48px 20px 80px;
-  min-height: 100vh;
-}
-
-/* ===== 头部 ===== */
-.hero {
-  padding: 40px 0 36px;
-}
-.hero h1 {
-  font-size: 38px; font-weight: 780; letter-spacing: -2px;
-  margin-bottom: 8px;
-}
-.hero .sub {
-  font-size: 16px; color: var(--text-dim); line-height: 1.6;
-}
-
-/* ===== Bento 网格 ===== */
-.bento {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 148px;
-  gap: var(--gap);
-}
-
-/* ===== Bento 块 ===== */
-.block {
-  position: relative;
-  border-radius: var(--radius);
-  padding: 24px;
-  cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
-  text-decoration: none; color: inherit;
+/* ===== 侧边栏 ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  color: #fff;
   display: flex; flex-direction: column;
-  overflow: hidden;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 10;
+  padding: 16px 12px;
 }
-.block:hover {
-  transform: scale(0.98);
-  filter: brightness(0.96);
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px 20px;
+  font-size: 15px; font-weight: 680;
+  letter-spacing: -0.3px;
+  color: #fff;
+  text-decoration: none;
 }
-
-/* 各块配色 */
-.block-chat  { background: #ebe6f5; }
-.block-mc    { background: #ddebe0; }
-.block-files { background: #e6eaf0; }
-.block-submit{ background: #f5efe6; border: 2px dashed rgba(0,0,0,0.1); }
-
-.block .b-icon {
-  font-size: 28px; margin-bottom: auto;
-  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
-  border-radius: 14px; background: rgba(255,255,255,0.5);
-}
-.block h3 { font-size: 19px; font-weight: 700; margin: 4px 0 3px; }
-.block .b-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
-.block .b-tag {
-  display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 600;
-  padding: 3px 10px; border-radius: 14px;
-  background: rgba(255,255,255,0.55); color: var(--text-dim);
-  width: fit-content;
-}
-
-/* 大块 - AI 聊天 */
-.block-chat {
-  grid-column: span 2; grid-row: span 2;
-  padding: 32px;
-}
-.block-chat .b-icon { font-size: 36px; width: 58px; height: 58px; border-radius: 18px; }
-.block-chat h3 { font-size: 24px; margin-top: 8px; }
-.block-chat .b-desc { font-size: 15px; max-width: 260px; }
-
-/* 中等块 */
-.block-mc, .block-files, .block-submit {
-  grid-column: span 1; grid-row: span 1;
-}
-
-/* ===== 社区区块 ===== */
-.community-section {
-  margin-top: 44px;
-}
-.community-section .sec-label {
-  font-size: 12px; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--text-dim);
-  margin-bottom: 14px;
-}
-.community-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--gap);
-}
-
-.comm-card {
-  background: #f0eee9;
-  border-radius: 20px;
-  padding: 20px; cursor: pointer;
-  transition: all 0.3s;
-  text-decoration: none; color: inherit;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.comm-card:hover {
-  background: #e8e6e1;
-  transform: scale(0.98);
-}
-.comm-card .cc-icon {
-  font-size: 24px; width: 40px; height: 40px; border-radius: 12px;
+.sidebar-brand .sb-icon {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: #fff; color: #1c1c1e;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.5);
-}
-.comm-card .cc-title { font-size: 15px; font-weight: 670; }
-.comm-card .cc-meta { font-size: 12px; color: var(--text-dim); }
-
-.comm-submit {
-  background: transparent; border: 2px dashed rgba(0,0,0,0.08);
-  align-items: center; justify-content: center; text-align: center;
-}
-.comm-submit:hover { background: rgba(0,0,0,0.02); }
-.comm-submit .cc-icon { background: rgba(0,0,0,0.03); font-size: 22px; }
-
-/* ===== 底部 ===== */
-.footer {
-  margin-top: 60px; font-size: 13px; color: var(--text-dim);
+  font-size: 13px; font-weight: 800;
 }
 
-/* ===== 响应式 ===== */
-@media (max-width: 768px) {
-  .bento { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
-  .block-chat { grid-column: span 2; grid-row: span 2; }
-  .community-grid { grid-template-columns: repeat(2, 1fr); }
+.sidebar-nav {
+  flex: 1; display: flex; flex-direction: column; gap: 2px;
 }
-@media (max-width: 480px) {
-  .app { padding: 32px 14px 60px; }
-  .hero { padding: 20px 0 24px; }
-  .hero h1 { font-size: 32px; }
-  .bento { grid-template-columns: 1fr; grid-auto-rows: auto; }
-  .block { min-height: 120px; }
-  .block-chat { grid-column: span 1; grid-row: span 1; min-height: 180px; }
-  .community-grid { grid-template-columns: 1fr; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 8px; border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  transition: all 0.12s;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+.nav-item .ni-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+
+/* ===== 主内容区 ===== */
+.main {
+  flex: 1; margin-left: var(--sidebar-w);
+  padding: 48px 40px 80px;
+  max-width: calc(780px + 80px);
+}
+
+.main-header { margin-bottom: 36px; }
+.main-header h1 { font-size: 26px; font-weight: 680; letter-spacing: -1px; margin-bottom: 6px; }
+.main-header .sub { font-size: 14px; color: var(--text-dim); }
+
+/* ===== App 列表 ===== */
+.app-list {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+
+.app-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  background: #fff;
+  text-decoration: none; color: inherit;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border);
+}
+.app-row:last-child { border-bottom: none; }
+.app-row:hover { background: var(--hover); }
+
+.app-row .ar-icon {
+  width: 32px; height: 32px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.app-row .ar-info { flex: 1; min-width: 0; }
+.app-row .ar-name { font-size: 14px; font-weight: 580; }
+.app-row .ar-desc { font-size: 12px; color: var(--text-dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-row .ar-badge {
+  font-size: 11px; font-weight: 500; color: var(--text-dim);
+  padding: 2px 8px; border-radius: 4px;
+  background: var(--hover);
+  white-space: nowrap; flex-shrink: 0;
+}
+.app-row .ar-arrow { font-size: 14px; color: var(--text-dim); flex-shrink: 0; }
+
+.app-row-dashed { border-style: dashed; border-color: #ddd; }
+
+/* ===== 侧边栏社区分组 ===== */
+.sidebar-section {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  padding: 16px 8px 4px;
+}
+
+.community-apps { border-top: 1px solid rgba(255,255,255,0.06); margin-top: 8px; padding-top: 8px; }
+
+/* ===== 移动端 ===== */
+@media (max-width: 640px) {
+  body { flex-direction: column; }
+  .sidebar {
+    position: relative; width: 100%; flex-direction: row;
+    padding: 10px 12px; overflow-x: auto;
+    align-items: center; gap: 4px;
+  }
+  .sidebar-brand { padding: 0 8px 0 0; }
+  .sidebar-nav { flex-direction: row; flex: 1; overflow-x: auto; }
+  .nav-item { white-space: nowrap; font-size: 12px; padding: 6px 10px; }
+  .sidebar-section, .community-apps { display: none; }
+  .main { margin-left: 0; padding: 28px 16px 60px; }
+  .main-header h1 { font-size: 22px; }
 }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <header class="hero">
-    <h1>HZ Lab</h1>
-    <p class="sub">探索 AI 与工具的无限可能 · 所有项目免费开放，点开即用</p>
-  </header>
+<!-- 侧边栏 -->
+<aside class="sidebar">
+  <a href="/" class="sidebar-brand">
+    <span class="sb-icon">HZ</span>
+    HZ Lab
+  </a>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+</aside>
 
-  <!-- Bento 主区域 -->
-  <div class="bento" id="bentoGrid"></div>
-
-  <!-- 社区作品 -->
-  <div class="community-section" id="communitySection" style="display:none;">
-    <div class="sec-label">社区作品</div>
-    <div class="community-grid" id="communityGrid"></div>
+<!-- 主内容 -->
+<main class="main">
+  <div class="main-header">
+    <h1>所有项目</h1>
+    <p class="sub">点开即用，无需安装</p>
   </div>
 
-  <footer class="footer">&copy; 2026 HZ Lab</footer>
-</div>
+  <div class="app-list" id="appList"></div>
+
+  <div style="margin-top:40px;" id="communitySection" hidden>
+    <div class="main-header" style="margin-bottom:16px;">
+      <h1 style="font-size:20px;">社区作品</h1>
+    </div>
+    <div class="app-list" id="communityList"></div>
+  </div>
+</main>
 
 <script>
-// ===== 内置块映射 =====
-const blockClass = {
-  "AI 聊天": "block-chat",
-  "MiniCraft": "block-mc",
-  "文件仓库": "block-files",
-  "提交作品": "block-submit",
-};
+(async function init() {
+  const sidebarNav = document.getElementById("sidebarNav");
+  const appList = document.getElementById("appList");
+  let currentPath = location.pathname;
 
-(async function loadBento() {
-  const grid = document.getElementById("bentoGrid");
   try {
     const resp = await fetch("apps.json");
     if (!resp.ok) throw new Error();
     const apps = await resp.json();
-    if (!apps.length) return;
 
-    apps.forEach(app => {
-      const el = document.createElement("a");
-      el.className = "block " + (blockClass[app.title] || "");
-      el.href = app.url;
-      el.innerHTML = `
-        <div class="b-icon">${app.icon}</div>
-        <h3>${esc(app.title)}</h3>
-        <div class="b-desc">${esc(app.desc)}</div>
-        <span class="b-tag">${esc(app.badge||"")}</span>`;
-      grid.appendChild(el);
+    // 侧边栏导航
+    apps.forEach((app, i) => {
+      const item = document.createElement("a");
+      item.className = "nav-item" + (currentPath === app.url ? " active" : "");
+      item.href = app.url;
+      item.innerHTML = `<span class="ni-icon">${app.icon}</span><span>${esc(app.title)}</span>`;
+      sidebarNav.appendChild(item);
     });
+
+    // 主内容列表
+    apps.forEach((app, i) => {
+      const row = document.createElement("a");
+      row.className = "app-row" + (app.dashed ? " app-row-dashed" : "");
+      row.href = app.url;
+      row.innerHTML = `
+        <div class="ar-icon" style="background:${app.color}14;color:${app.color};">${app.icon}</div>
+        <div class="ar-info">
+          <div class="ar-name">${esc(app.title)}</div>
+          <div class="ar-desc">${esc(app.desc)}</div>
+        </div>
+        <span class="ar-badge">${esc(app.badge||"")}</span>
+        <span class="ar-arrow">→</span>`;
+      appList.appendChild(row);
+    });
+
   } catch(e) {
-    grid.innerHTML = `<a href="/chat" class="block block-chat" style="grid-column:span 2;grid-row:span 2;padding:32px;">
-      <div class="b-icon" style="font-size:36px;width:58px;height:58px;border-radius:18px;">💬</div>
-      <h3 style="font-size:24px;margin-top:8px;">AI 聊天</h3><div class="b-desc" style="font-size:15px;max-width:260px;">智能对话，Agent 工具调用</div><span class="b-tag">🚀 已上线</span></a>`;
+    sidebarNav.innerHTML = `<a href="/chat" class="nav-item active"><span class="ni-icon">💬</span>AI 聊天</a>`;
+    appList.innerHTML = `<a href="/chat" class="app-row">
+      <div class="ar-icon" style="background:#5e6ad214;color:#5e6ad2;">💬</div>
+      <div class="ar-info"><div class="ar-name">AI 聊天</div><div class="ar-desc">智能对话，Agent 工具调用</div></div>
+      <span class="ar-badge">🚀 已上线</span><span class="ar-arrow">→</span></a>`;
   }
-})();
 
-// ===== 社区作品 =====
-(async function loadCommunity() {
+  // 社区作品
   try {
-    const resp = await fetch("/api/community-apps");
-    const items = await resp.json();
+    const items = await fetch("/api/community-apps").then(r => r.json());
     if (!items.length) return;
-
-    document.getElementById("communitySection").style.display = "";
-    const grid = document.getElementById("communityGrid");
+    document.getElementById("communitySection").hidden = false;
+    const list = document.getElementById("communityList");
 
     items.forEach(item => {
-      const el = document.createElement("a");
-      el.className = "comm-card";
-      el.href = item.url;
+      const row = document.createElement("a");
+      row.className = "app-row";
+      row.href = item.url;
       const time = new Date(item.time*1000);
-      el.innerHTML = `
-        <div class="cc-icon" style="background:${item.color}18;color:${item.color};">${esc(item.icon)}</div>
-        <div class="cc-title">${esc(item.title)}</div>
-        <div class="cc-meta">${esc(item.author)} · ${time.toLocaleDateString("zh-CN")}</div>`;
-      grid.appendChild(el);
+      row.innerHTML = `
+        <div class="ar-icon" style="background:${item.color}14;color:${item.color};">${esc(item.icon)}</div>
+        <div class="ar-info">
+          <div class="ar-name">${esc(item.title)}</div>
+          <div class="ar-desc">${esc(item.author)} · ${time.toLocaleDateString("zh-CN")}</div>
+        </div>
+        <span class="ar-arrow">→</span>`;
+      list.appendChild(row);
     });
-
-    // 提交入口
-    const tip = document.createElement("a");
-    tip.className = "comm-card comm-submit";
-    tip.href = "/submit";
-    tip.innerHTML = `<div class="cc-icon">➕</div><div class="cc-title">提交作品</div><div class="cc-meta">发布到首页</div>`;
-    grid.appendChild(tip);
   } catch(e) {}
 })();
 
