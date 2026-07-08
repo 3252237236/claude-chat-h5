@@ -150,6 +150,7 @@ body {
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('review')">待审核</button>
+    <button class="tab" onclick="switchTab('all')">全部内容</button>
     <button class="tab" onclick="switchTab('users')">用户管理</button>
   </div>
 
@@ -160,6 +161,12 @@ body {
   </div>
 
   <!-- 用户管理 -->
+  <!-- 全部内容 -->
+  <div class="panel" id="panel-all">
+    <div class="stats" id="allStats"></div>
+    <div id="allList"></div>
+  </div>
+
   <div class="panel" id="panel-users">
     <div class="stats" id="userStats"></div>
     <table class="table">
@@ -184,8 +191,12 @@ let currentTab = "review";
 
 function switchTab(t) {
   currentTab = t;
-  document.querySelectorAll(".tab").forEach(el => el.classList.toggle("active", el.textContent.includes(t === "review" ? "审核" : "用户")));
+  document.querySelectorAll(".tab").forEach(el => {
+    const labels = { review: "审核", all: "全部", users: "用户" };
+    el.classList.toggle("active", el.textContent.includes(labels[t]));
+  });
   document.querySelectorAll(".panel").forEach(el => el.classList.toggle("active", el.id === "panel-" + t));
+  if (t === "all") loadAll();
 }
 
 // ===== 审核 =====
@@ -307,6 +318,67 @@ async function deleteUser(uid, btn) {
     if (data.ok) loadUsers();
     else if (data.error) alert(data.error);
   } catch(e) {} finally { btn.disabled = false; }
+}
+
+// ===== 全部内容管理 =====
+async function loadAll() {
+  try {
+    const data = await fetch("/api/admin/all").then(r => r.json());
+    const total = data.apps.length + data.uploads.length;
+    document.getElementById("allStats").innerHTML = `
+      <div class="stat-card"><div class="sv">${total}</div><div class="sl">全部项目</div></div>
+      <div class="stat-card"><div class="sv">${data.apps.length}</div><div class="sl">社区作品</div></div>
+      <div class="stat-card"><div class="sv">${data.uploads.length}</div><div class="sl">文件仓库</div></div>`;
+
+    const list = document.getElementById("allList");
+    if (!total) { list.innerHTML = `<div class="empty">暂无内容</div>`; return; }
+    list.innerHTML = "";
+
+    data.apps.forEach(item => {
+      list.appendChild(createAllItem("app", item));
+    });
+    data.uploads.forEach(item => {
+      list.appendChild(createAllItem("upload", item));
+    });
+  } catch(e) {}
+}
+
+function createAllItem(type, item) {
+  const div = document.createElement("div");
+  div.className = "pending-item";
+  const isUpload = type === "upload";
+  const isPending = item.status === "pending";
+  const statusBadge = isPending ? '<span class="badge badge-pending">待审核</span>' : '<span class="badge badge-admin" style="background:rgba(0,210,160,0.15);color:var(--green);">已发布</span>';
+  div.innerHTML = `
+    <div class="pi-icon">${isUpload ? "📁" : item.icon}</div>
+    <div class="pi-info">
+      <div class="pi-title">${esc(item.title)} ${statusBadge}</div>
+      <div class="pi-meta">${esc(item.author||"")} · ${new Date(item.time*1000).toLocaleDateString("zh-CN")} · ${isUpload ? (item.filename||"") : item.desc}</div>
+    </div>
+    <div class="pi-actions">
+      ${isPending ? `<button class="btn-sm btn-ok" onclick="approve('${type}','${item.id}',this)">✅ 通过</button>` : ""}
+      <button class="btn-sm btn-del" onclick="deleteItem('${type}','${item.id}',this)">🗑 删除</button>
+    </div>`;
+  return div;
+}
+
+async function deleteItem(type, id, btn) {
+  if (!confirm("确定删除？此操作不可恢复。")) return;
+  btn.disabled = true; btn.textContent = "…";
+  try {
+    const data = await fetch(`/api/admin/delete/${type}/${id}`, { method: "POST" }).then(r => r.json());
+    if (data.ok) {
+      btn.closest(".pending-item").style.opacity = "0.3";
+      setTimeout(() => { btn.closest(".pending-item").remove(); updateAllCount(); }, 300);
+    }
+  } catch(e) {} finally { btn.disabled = false; }
+}
+
+function updateAllCount() {
+  const items = document.querySelectorAll("#allList .pending-item");
+  const sv = document.querySelector("#allStats .stat-card:first-child .sv");
+  if (sv) sv.textContent = items.length;
+  if (!items.length) document.getElementById("allList").innerHTML = `<div class="empty">暂无内容</div>`;
 }
 
 function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }

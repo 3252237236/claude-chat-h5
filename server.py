@@ -518,6 +518,33 @@ def api_admin_reject(item_type, item_id):
         save_uploads(items)
     return jsonify({"ok": True})
 
+@app.route("/api/admin/all")
+@admin_required
+def api_admin_all():
+    """返回全部社区作品和文件（含已审核和待审核）"""
+    return jsonify({
+        "apps": load_community_apps(),
+        "uploads": load_uploads(),
+    })
+
+@app.route("/api/admin/delete/<item_type>/<item_id>", methods=["POST"])
+@admin_required
+def api_admin_delete(item_type, item_id):
+    """删除任意项目（已审核或待审核）"""
+    if item_type == "app":
+        items = [i for i in load_community_apps() if i["id"] != item_id]
+        save_community_apps(items)
+    elif item_type == "upload":
+        items = load_uploads()
+        for item in items:
+            if item["id"] == item_id:
+                fpath = os.path.join(UPLOAD_DIR, item.get("stored", ""))
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+        items = [i for i in items if i["id"] != item_id]
+        save_uploads(items)
+    return jsonify({"ok": True})
+
 @app.route("/uploads/<path:name>")
 def serve_uploads(name):
     """提供上传目录内的文件（HTML/CSS/JS 正常渲染，其他下载）"""
