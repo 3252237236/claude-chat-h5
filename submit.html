@@ -309,6 +309,16 @@ function updatePreview() {
 updatePreview();
 
 async function submitApp() {
+  // 检查登录状态
+  try {
+    const me = await fetch("/api/me").then(r => r.json());
+    if (!me.user) {
+      showMsg("请先登录后再提交作品", "err");
+      document.getElementById("author").placeholder = "请先登录";
+      return;
+    }
+  } catch(e) { return showMsg("网络错误", "err"); }
+
   const title = document.getElementById("title").value.trim();
   const desc = document.getElementById("desc").value.trim();
   let url = document.getElementById("url").value.trim();

@@ -58,6 +58,16 @@ def verify_user(username, password):
 
 init_db()
 
+# ---------- 权限检查 ----------
+from functools import wraps
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not session.get("user"):
+            return jsonify({"error": "请先登录"}), 401
+        return f(*args, **kwargs)
+    return wrapper
+
 # ---------- 加载平台 ----------
 def _load_providers():
     for fn in ["providers.json", "providers.example.json"]:
@@ -207,6 +217,7 @@ def api_community_apps():
     return jsonify(load_community_apps())
 
 @app.route("/api/submit-app", methods=["POST"])
+@login_required
 def api_submit_app():
     """接收社区作品提交"""
     title = request.form.get("title", "").strip()
@@ -280,6 +291,7 @@ def api_uploads():
     return jsonify(load_uploads())
 
 @app.route("/api/upload", methods=["POST"])
+@login_required
 def api_upload():
     """接收文件上传"""
     title = request.form.get("title", "").strip()

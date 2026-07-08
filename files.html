@@ -225,7 +225,7 @@ html, body {
       <h1>文件仓库</h1>
       <div class="count" id="fileCount">加载中…</div>
     </div>
-    <button class="btn" onclick="showUpload()">上传文件</button>
+    <button class="btn" id="uploadBtn" onclick="checkAndUpload()">上传文件</button>
   </div>
 
   <div class="file-grid" id="fileGrid"></div>
@@ -257,7 +257,89 @@ html, body {
   </div>
 </div>
 
+<!-- 登录弹窗 -->
+<div class="overlay" id="authOverlay" style="display:none;">
+  <div class="modal">
+    <h2 id="authTitle">登录</h2>
+    <div class="form-group">
+      <label>用户名</label>
+      <input type="text" id="authUsername" placeholder="输入用户名" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="authPassword" placeholder="输入密码" maxlength="50">
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="document.getElementById('authOverlay').style.display='none'">取消</button>
+      <button class="btn-submit" id="authBtn" onclick="doAuth()">登录</button>
+    </div>
+    <div class="msg msg-err" id="authMsg"></div>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-dim);">
+      <span id="authSwitch">没有账号？<a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;">去注册</a></span>
+    </div>
+  </div>
+</div>
+
 <script>
+// ===== 权限检查 =====
+let authMode = "login";
+
+async function checkAndUpload() {
+  try {
+    const data = await fetch("/api/me").then(r => r.json());
+    if (data.user) { showUpload(); return; }
+  } catch(e) {}
+  showAuth("login");
+}
+
+function showAuth(mode) {
+  authMode = mode;
+  document.getElementById("authOverlay").style.display = "flex";
+  document.getElementById("authTitle").textContent = mode === "login" ? "登录" : "注册";
+  document.getElementById("authBtn").textContent = mode === "login" ? "登录" : "注册";
+  document.getElementById("authSwitch").innerHTML = mode === "login"
+    ? '没有账号？<a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;">去注册</a>'
+    : '已有账号？<a onclick="switchAuth()" style="color:var(--accent);cursor:pointer;font-weight:600;">去登录</a>';
+  document.getElementById("authMsg").style.display = "none";
+  document.getElementById("authUsername").value = "";
+  document.getElementById("authPassword").value = "";
+}
+
+function switchAuth() { showAuth(authMode === "login" ? "register" : "login"); }
+
+async function doAuth() {
+  const username = document.getElementById("authUsername").value.trim();
+  const password = document.getElementById("authPassword").value.trim();
+  if (!username || !password) {
+    document.getElementById("authMsg").textContent = "请填写用户名和密码";
+    document.getElementById("authMsg").style.display = "block";
+    return;
+  }
+  const btn = document.getElementById("authBtn");
+  btn.disabled = true; btn.textContent = "处理中…";
+
+  const url = authMode === "login" ? "/api/login" : "/api/register";
+  try {
+    const data = await fetch(url, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    }).then(r => r.json());
+    if (data.ok) {
+      document.getElementById("authOverlay").style.display = "none";
+      showUpload();
+    } else {
+      document.getElementById("authMsg").textContent = data.error;
+      document.getElementById("authMsg").style.display = "block";
+    }
+  } catch(e) {
+    document.getElementById("authMsg").textContent = "网络错误";
+    document.getElementById("authMsg").style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = authMode === "login" ? "登录" : "注册";
+  }
+}
+
+// ===== 文件图标 =====
 const icons = {
   html:"🌐", htm:"🌐", zip:"📦", rar:"📦", "7z":"📦",
   png:"🖼️", jpg:"🖼️", jpeg:"🖼️", gif:"🖼️", svg:"🎨", webp:"🖼️",
