@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五子棋 · HZ Lab</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent: #6c5ce7;
+  --green: #00d2a0;
+  --red: #ff6b6b;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.container {
+  position: relative; z-index: 1;
+  height: 100%; display: flex; flex-direction: column; align-items: center;
+  padding: 20px;
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; max-width: 560px; margin-bottom: 16px;
+}
+.topbar a {
+  font-size: 13px; color: var(--text-dim); text-decoration: none;
+  transition: color 0.2s;
+}
+.topbar a:hover { color: var(--text); }
+.topbar h1 { font-size: 18px; font-weight: 700; }
+
+/* 状态栏 */
+.status {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 16px; font-size: 15px; font-weight: 600;
+}
+.stone-indicator {
+  width: 20px; height: 20px; border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+.stone-black { background: radial-gradient(circle at 35% 35%, #555, #111); }
+.stone-white { background: radial-gradient(circle at 35% 35%, #fff, #ccc); }
+
+/* 棋盘容器 */
+.board-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  touch-action: none;
+}
+
+canvas {
+  display: block;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 按钮 */
+.actions {
+  display: flex; gap: 10px; margin-top: 16px;
+}
+.btn {
+  padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-restart { background: var(--accent); color: #fff; }
+.btn-restart:hover { filter: brightness(1.15); }
+.btn-undo { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.btn-undo:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+
+.win-overlay {
+  position: fixed; inset: 0; z-index: 10;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.win-card {
+  background: #14141f; border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px 48px; text-align: center;
+}
+.win-card .win-icon { font-size: 56px; margin-bottom: 12px; }
+.win-card .win-text { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+.win-card .btn { display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+  <div class="topbar">
+    <a href="/">← 返回首页</a>
+    <h1>五子棋</h1>
+    <div style="width:60px;"></div>
+  </div>
+
+  <div class="status">
+    <div class="stone-indicator" id="stoneIndicator"></div>
+    <span id="statusText">黑方回合</span>
+  </div>
+
+  <div class="board-wrap">
+    <canvas id="board"></canvas>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-undo" onclick="undo()">↩ 悔棋</button>
+    <button class="btn btn-restart" onclick="restart()">重新开始</button>
+  </div>
+</div>
+
+<script>
+const SIZE = 15;
+const CELL = 32;
+const MARGIN = 24;
+const RADIUS = CELL / 2 - 2;
+
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+const W = MARGIN * 2 + CELL * (SIZE - 1);
+canvas.width = W;
+canvas.height = W;
+canvas.style.width = Math.min(W, window.innerWidth - 80) + "px";
+canvas.style.height = Math.min(W, window.innerHeight - 280) + "px";
+
+// 游戏状态
+let board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0)); // 0=空,1=黑,2=白
+let current = 1; // 1=黑
+let history = [];
+let gameOver = false;
+
+// 棋盘颜色
+const BOARD_COLOR = "#d4a76a";
+const LINE_COLOR = "#5a3e28";
+
+function drawBoard() {
+  ctx.clearRect(0, 0, W, W);
+
+  // 棋盘底色
+  ctx.fillStyle = BOARD_COLOR;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, W, W, 6);
+  ctx.fill();
+
+  // 网格线
+  ctx.strokeStyle = LINE_COLOR;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < SIZE; i++) {
+    const pos = MARGIN + i * CELL;
+    ctx.beginPath();
+    ctx.moveTo(MARGIN, pos);
+    ctx.lineTo(MARGIN + (SIZE - 1) * CELL, pos);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pos, MARGIN);
+    ctx.lineTo(pos, MARGIN + (SIZE - 1) * CELL);
+    ctx.stroke();
+  }
+
+  // 星位点
+  const stars = [[3,3],[3,7],[3,11],[7,3],[7,7],[7,11],[11,3],[11,7],[11,11]];
+  stars.forEach(([r, c]) => {
+    ctx.fillStyle = LINE_COLOR;
+    ctx.beginPath();
+    ctx.arc(MARGIN + c * CELL, MARGIN + r * CELL, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 棋子
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (board[r][c] === 0) continue;
+      const x = MARGIN + c * CELL;
+      const y = MARGIN + r * CELL;
+
+      if (board[r][c] === 1) {
+        // 黑子
+        const grad = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, RADIUS);
+        grad.addColorStop(0, "#555");
+        grad.addColorStop(1, "#111");
+        ctx.fillStyle = grad;
+      } else {
+        // 白子
+        const grad = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, RADIUS);
+        grad.addColorStop(0, "#fff");
+        grad.addColorStop(1, "#c0c0c0");
+        ctx.fillStyle = grad;
+      }
+
+      ctx.beginPath();
+      ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  // 最后一手的标记
+  if (history.length > 0) {
+    const last = history[history.length - 1];
+    const lx = MARGIN + last.col * CELL;
+    const ly = MARGIN + last.row * CELL;
+    ctx.strokeStyle = "#ff4444";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(lx, ly, RADIUS - 2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function updateStatus() {
+  const ind = document.getElementById("stoneIndicator");
+  const txt = document.getElementById("statusText");
+
+  if (gameOver) {
+    const winner = current === 1 ? 2 : 1; // current already switched
+    ind.className = "stone-indicator " + (winner === 1 ? "stone-black" : "stone-white");
+    txt.textContent = (winner === 1 ? "黑方" : "白方") + " 获胜！🎉";
+  } else {
+    ind.className = "stone-indicator " + (current === 1 ? "stone-black" : "stone-white");
+    txt.textContent = (current === 1 ? "黑方" : "白方") + "回合";
+  }
+}
+
+function checkWin(r, c) {
+  const player = board[r][c];
+  if (!player) return false;
+
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+
+  for (const [dr, dc] of dirs) {
+    let count = 1;
+    // 正方向
+    for (let i = 1; i < 5; i++) {
+      const nr = r + dr * i, nc = c + dc * i;
+      if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && board[nr][nc] === player) count++;
+      else break;
+    }
+    // 反方向
+    for (let i = 1; i < 5; i++) {
+      const nr = r - dr * i, nc = c - dc * i;
+      if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && board[nr][nc] === player) count++;
+      else break;
+    }
+    if (count >= 5) return true;
+  }
+  return false;
+}
+
+function isDraw() {
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      if (board[r][c] === 0) return false;
+  return true;
+}
+
+canvas.addEventListener("click", function(e) {
+  if (gameOver) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = W / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+
+  const col = Math.round((mx - MARGIN) / CELL);
+  const row = Math.round((my - MARGIN) / CELL);
+
+  if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) return;
+  if (board[row][col] !== 0) return;
+
+  // 落子
+  board[row][col] = current;
+  history.push({ row, col, player: current });
+
+  if (checkWin(row, col)) {
+    gameOver = true;
+    drawBoard();
+    updateStatus();
+    showWin(current);
+    return;
+  }
+
+  if (isDraw()) {
+    gameOver = true;
+    drawBoard();
+    document.getElementById("statusText").textContent = "平局！";
+    document.getElementById("stoneIndicator").className = "stone-indicator";
+    document.getElementById("stoneIndicator").style.background = "#888";
+    return;
+  }
+
+  current = current === 1 ? 2 : 1;
+  drawBoard();
+  updateStatus();
+});
+
+function showWin(player) {
+  const icon = player === 1 ? "⚫" : "⚪";
+  const text = player === 1 ? "黑方获胜！" : "白方获胜！";
+
+  const ov = document.createElement("div");
+  ov.className = "win-overlay";
+  ov.innerHTML = `
+    <div class="win-card">
+      <div class="win-icon">${icon}</div>
+      <div class="win-text">${text}</div>
+      <button class="btn btn-restart" onclick="this.closest('.win-overlay').remove();restart();">再来一局</button>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+function restart() {
+  board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+  current = 1;
+  history = [];
+  gameOver = false;
+  document.querySelectorAll(".win-overlay").forEach(el => el.remove());
+  drawBoard();
+  updateStatus();
+}
+
+function undo() {
+  if (gameOver || history.length === 0) return;
+  // 撤回两步（对手+自己）
+  const steps = Math.min(history.length, current === 1 ? 2 : 1);
+  for (let i = 0; i < steps; i++) {
+    const last = history.pop();
+    board[last.row][last.col] = 0;
+    current = last.player;
+  }
+  drawBoard();
+  updateStatus();
+}
+
+// 触摸事件
+canvas.addEventListener("touchstart", function(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = W / rect.height;
+  const mx = (touch.clientX - rect.left) * scaleX;
+  const my = (touch.clientY - rect.top) * scaleY;
+
+  const col = Math.round((mx - MARGIN) / CELL);
+  const row = Math.round((my - MARGIN) / CELL);
+
+  if (row < 0 || row >= SIZE || col < 0 || col >= SIZE || gameOver) return;
+  if (board[row][col] !== 0) return;
+
+  board[row][col] = current;
+  history.push({ row, col, player: current });
+
+  if (checkWin(row, col)) {
+    gameOver = true;
+    drawBoard();
+    updateStatus();
+    showWin(current);
+    return;
+  }
+
+  if (isDraw()) {
+    gameOver = true;
+    drawBoard();
+    document.getElementById("statusText").textContent = "平局！";
+    return;
+  }
+
+  current = current === 1 ? 2 : 1;
+  drawBoard();
+  updateStatus();
+}, { passive: false });
+
+// 初始化
+drawBoard();
+updateStatus();
+</script>
+</body>
+</html>
