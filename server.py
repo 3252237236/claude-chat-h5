@@ -103,6 +103,13 @@ def init_db():
             )
         """)
 
+        # 迁移：给旧表加 content 和 image_url 列
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(activities)").fetchall()]
+        if "content" not in cols:
+            conn.execute("ALTER TABLE activities ADD COLUMN content TEXT")
+        if "image_url" not in cols:
+            conn.execute("ALTER TABLE activities ADD COLUMN image_url TEXT")
+
 def create_user(username, password):
     with sqlite3.connect(DB_PATH) as conn:
         # 管理员判定：第一个注册 或 在 ADMIN_USER 列表中
