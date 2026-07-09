@@ -839,7 +839,7 @@ async function loadMessages(userId) {
     const container = document.getElementById("chatMessages");
 
     // 只在消息数量变化时更新DOM，避免闪烁
-    if (messages.length === lastMessageCount && messages.length > 0) {
+    if (messages.length === lastMessageCount) {
       return;
     }
     lastMessageCount = messages.length;
@@ -905,7 +905,12 @@ function startMessagePolling() {
   // 每2秒检查一次新消息
   messagePollingTimer = setInterval(async () => {
     if (currentChatUser) {
-      await loadMessages(currentChatUser.id);
+      // 强制检查新消息
+      const messages = await fetch(`/api/messages/${currentChatUser.id}`).then(r => r.json());
+      if (messages.length !== lastMessageCount) {
+        lastMessageCount = messages.length;
+        await loadMessages(currentChatUser.id);
+      }
       await loadUnreadMessages();
     }
   }, 2000);
