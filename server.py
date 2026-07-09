@@ -96,6 +96,8 @@ def init_db():
                 action TEXT NOT NULL,
                 target_id TEXT,
                 target_title TEXT,
+                content TEXT,
+                image_url TEXT,
                 created_at INTEGER NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
@@ -929,7 +931,7 @@ def api_activities():
         # 获取动态
         placeholders = ",".join(["?" for _ in friend_ids])
         activities = conn.execute(f"""
-            SELECT a.id, u.username, a.action, a.target_title, a.created_at
+            SELECT a.id, u.username, a.action, a.target_title, a.content, a.image_url, a.created_at
             FROM activities a
             JOIN users u ON a.user_id = u.id
             WHERE a.user_id IN ({placeholders})
@@ -944,7 +946,9 @@ def api_activities():
             "username": act[1],
             "action": act[2],
             "target_title": act[3],
-            "created_at": act[4]
+            "content": act[4],
+            "image_url": act[5],
+            "created_at": act[6]
         })
 
     return jsonify(result)
@@ -956,6 +960,28 @@ def api_heartbeat():
     """心跳接口，更新在线状态"""
     user = session.get("user")
     online_users[user["id"]] = time.time()
+    return jsonify({"ok": True})
+
+# ---------- 发布动态 API ----------
+@app.route("/api/activities/post", methods=["POST"])
+@login_required
+def api_activity_post():
+    """发布新动态"""
+    data = request.get_json(force=True)
+    content = data.get("content", "").strip()
+    image_url = data.get("image_url", "").strip()
+
+    if not content and not image_url:
+        return jsonify({"error": "请输入内容"}), 400
+
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO activities (user_id, action, content, image_url, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user["id"], "post", content, image_url, int(time.time()))
+        )
+
     return jsonify({"ok": True})
 
 @app.route("/uploads/<path:name>")

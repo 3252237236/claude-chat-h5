@@ -361,12 +361,40 @@ html, body {
   background: #5a4bd6;
 }
 
+/* ===== 发布动态 ===== */
+.post-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.post-box textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+.post-box textarea:focus {
+  border-color: var(--accent);
+}
+.post-actions {
+  display: flex; justify-content: flex-end;
+  margin-top: 12px;
+}
+
 /* ===== 好友动态 ===== */
 .activities-list {
   display: grid; gap: 12px;
 }
 .activity-card {
-  display: flex; align-items: center; gap: 16px;
   padding: 20px; background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius);
   transition: all var(--transition);
@@ -374,15 +402,33 @@ html, body {
 .activity-card:hover {
   background: var(--surface-hover);
 }
-.activity-icon {
-  width: 48px; height: 48px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
+.activity-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
 }
-.activity-info { flex: 1; }
-.activity-text { font-size: 14px; margin-bottom: 4px; }
-.activity-time { font-size: 12px; color: var(--text-dim); }
+.activity-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: white;
+}
 .activity-user { font-weight: 600; color: var(--accent); }
+.activity-time { font-size: 12px; color: var(--text-dim); }
+.activity-content {
+  font-size: 14px; line-height: 1.6;
+  margin-bottom: 8px;
+}
+.activity-content img {
+  max-width: 100%; border-radius: 12px;
+  margin-top: 8px;
+}
+.activity-action {
+  font-size: 13px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 8px;
+}
+.activity-action .icon {
+  font-size: 16px;
+}
 
 /* ===== 空状态 ===== */
 .empty-state {
@@ -497,6 +543,12 @@ html, body {
 
     <!-- 好友动态 -->
     <div id="activitiesTab" class="tab-content" style="display:none;">
+      <div class="post-box">
+        <textarea id="postContent" placeholder="分享你的动态..." rows="3"></textarea>
+        <div class="post-actions">
+          <button class="btn btn-primary" onclick="postActivity()">发布动态</button>
+        </div>
+      </div>
       <div class="activities-list" id="activitiesList"></div>
     </div>
   </div>
@@ -897,43 +949,71 @@ async function loadActivities() {
         <div class="empty-state">
           <div class="empty-icon">📢</div>
           <h3>暂无动态</h3>
-          <p>好友的活动会显示在这里</p>
+          <p>发布你的第一条动态吧</p>
         </div>`;
       return;
     }
 
     container.innerHTML = activities.map(a => {
-      let icon = "📌";
-      let actionText = "";
+      let actionHtml = "";
 
       if (a.action === "submit_app") {
-        icon = "🎯";
-        actionText = `提交了作品「${esc(a.target_title)}」`;
+        actionHtml = `
+          <div class="activity-action">
+            <span class="icon">🎯</span>
+            提交了作品「${esc(a.target_title)}」
+          </div>`;
       } else if (a.action === "upload_file") {
-        icon = "📁";
-        actionText = `上传了文件「${esc(a.target_title)}」`;
-      } else if (a.action === "add_friend") {
-        icon = "👥";
-        actionText = `添加了新好友`;
+        actionHtml = `
+          <div class="activity-action">
+            <span class="icon">📁</span>
+            上传了文件「${esc(a.target_title)}」
+          </div>`;
+      } else if (a.action === "post") {
+        // 手动发布的动态
       }
+
+      const contentHtml = a.content ? `<div class="activity-content">${esc(a.content)}</div>` : "";
+      const imageHtml = a.image_url ? `<div class="activity-content"><img src="${esc(a.image_url)}" alt="动态图片"></div>` : "";
 
       return `
         <div class="activity-card">
-          <div class="activity-icon" style="background:${icon === '🎯' ? 'var(--accent-glow)' : icon === '📁' ? 'var(--blue-glow)' : 'var(--green-glow)'}">
-            ${icon}
-          </div>
-          <div class="activity-info">
-            <div class="activity-text">
-              <span class="activity-user">${esc(a.username)}</span>
-              ${actionText}
+          <div class="activity-header">
+            <div class="activity-avatar">${a.username[0]}</div>
+            <div>
+              <div class="activity-user">${esc(a.username)}</div>
+              <div class="activity-time">${formatTime(a.created_at)}</div>
             </div>
-            <div class="activity-time">${formatTime(a.created_at)}</div>
           </div>
+          ${actionHtml}
+          ${contentHtml}
+          ${imageHtml}
         </div>
       `;
     }).join("");
   } catch(e) {
     console.error("加载动态失败:", e);
+  }
+}
+
+async function postActivity() {
+  const content = document.getElementById("postContent").value.trim();
+  if (!content) {
+    alert("请输入内容");
+    return;
+  }
+
+  try {
+    await fetch("/api/activities/post", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ content: content })
+    });
+
+    document.getElementById("postContent").value = "";
+    await loadActivities();
+  } catch(e) {
+    alert("发布失败");
   }
 }
 
