@@ -838,12 +838,6 @@ async function loadMessages(userId) {
     const messages = await fetch(`/api/messages/${userId}`).then(r => r.json());
     const container = document.getElementById("chatMessages");
 
-    // 只在消息数量变化时更新DOM，避免闪烁
-    if (messages.length === lastMessageCount) {
-      return;
-    }
-    lastMessageCount = messages.length;
-
     if (messages.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -851,6 +845,7 @@ async function loadMessages(userId) {
           <h3>开始聊天</h3>
           <p>发送第一条消息吧</p>
         </div>`;
+      lastMessageCount = 0;
       return;
     }
 
@@ -866,6 +861,9 @@ async function loadMessages(userId) {
         </div>
       </div>
     `).join("");
+
+    // 更新消息计数
+    lastMessageCount = messages.length;
 
     // 如果之前在底部，自动滚动到新消息
     if (wasAtBottom) {
@@ -905,12 +903,7 @@ function startMessagePolling() {
   // 每2秒检查一次新消息
   messagePollingTimer = setInterval(async () => {
     if (currentChatUser) {
-      // 强制检查新消息
-      const messages = await fetch(`/api/messages/${currentChatUser.id}`).then(r => r.json());
-      if (messages.length !== lastMessageCount) {
-        lastMessageCount = messages.length;
-        await loadMessages(currentChatUser.id);
-      }
+      await loadMessages(currentChatUser.id);
       await loadUnreadMessages();
     }
   }, 2000);
