@@ -34,6 +34,9 @@ DB_PATH = os.path.join(DATA_DIR, "users.db")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ---------- 用户数据库 ----------
+# 在线状态存储（内存）
+online_users = {}  # {user_id: last_heartbeat_time}
+
 def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
@@ -55,6 +58,48 @@ def init_db():
             conn.execute("UPDATE users SET is_admin = 1 WHERE username = ?", (admin_user,))
         # 指定用户提权
         conn.execute("UPDATE users SET is_admin = 1 WHERE username = ?", ("3252237236",))
+
+        # 好友关系表
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS friendships (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                friend_id INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                created_at INTEGER NOT NULL,
+                message TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (friend_id) REFERENCES users(id),
+                UNIQUE(user_id, friend_id)
+            )
+        """)
+
+        # 私信表
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                from_user_id INTEGER NOT NULL,
+                to_user_id INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                FOREIGN KEY (from_user_id) REFERENCES users(id),
+                FOREIGN KEY (to_user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 用户动态表
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS activities (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                action TEXT NOT NULL,
+                target_id TEXT,
+                target_title TEXT,
+                created_at INTEGER NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
 
 def create_user(username, password):
     with sqlite3.connect(DB_PATH) as conn:
@@ -394,6 +439,13 @@ def api_submit_app():
     apps.insert(0, item)
     save_community_apps(apps)
 
+    # 记录用户动态
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO activities (user_id, action, target_id, target_title, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user["id"], "submit_app", item["id"], title, int(time.time()))
+        )
+
     return jsonify({"ok": True, "item": item, "pending": True})
 
 @app.route("/api/uploads")
@@ -435,6 +487,13 @@ def api_upload():
     uploads = load_uploads()
     uploads.insert(0, item)
     save_uploads(uploads)
+
+    # 记录用户动态
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO activities (user_id, action, target_id, target_title, created_at) VALUES (?, ?, ?, ?, ?)",
+            (user["id"], "upload_file", item["id"], title, int(time.time()))
+        )
 
     return jsonify({"ok": True, "item": item, "pending": True})
 
@@ -543,6 +602,356 @@ def api_admin_delete(item_type, item_id):
                     os.remove(fpath)
         items = [i for i in items if i["id"] != item_id]
         save_uploads(items)
+    return jsonify({"ok": True})
+
+# ---------- 好友系统 API ----------
+@app.route("/api/friends/request", methods=["POST"])
+@login_required
+def api_friend_request():
+    """发送好友请求"""
+    data = request.get_json(force=True)
+    to_user_id = data.get("to_user_id")
+    message = data.get("message", "").strip()
+
+    if not to_user_id:
+        return jsonify({"error": "缺少目标用户ID"}), 400
+
+    user = session.get("user")
+    from_user_id = user["id"]
+
+    if from_user_id == to_user_id:
+        return jsonify({"error": "不能添加自己为好友"}), 400
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 检查目标用户是否存在
+        target = conn.execute("SELECT id, username FROM users WHERE id = ?", (to_user_id,)).fetchone()
+        if not target:
+            return jsonify({"error": "用户不存在"}), 404
+
+        # 检查是否已经是好友
+        existing = conn.execute(
+            "SELECT id, status FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
+            (from_user_id, to_user_id, to_user_id, from_user_id)
+        ).fetchone()
+
+        if existing:
+            if existing[1] == "accepted":
+                return jsonify({"error": "已经是好友了"}), 400
+            elif existing[1] == "pending":
+                return jsonify({"error": "已经发送过好友请求"}), 400
+
+        # 创建好友请求
+        conn.execute(
+            "INSERT INTO friendships (user_id, friend_id, status, created_at, message) VALUES (?, ?, 'pending', ?, ?)",
+            (from_user_id, to_user_id, int(time.time()), message)
+        )
+
+    return jsonify({"ok": True})
+
+@app.route("/api/friends/accept/<int:request_id>", methods=["POST"])
+@login_required
+def api_friend_accept(request_id):
+    """接受好友请求"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 查找好友请求
+        request = conn.execute(
+            "SELECT id, user_id, friend_id, status FROM friendships WHERE id = ? AND friend_id = ? AND status = 'pending'",
+            (request_id, user["id"])
+        ).fetchone()
+
+        if not request:
+            return jsonify({"error": "好友请求不存在"}), 404
+
+        # 更新状态为已接受
+        conn.execute("UPDATE friendships SET status = 'accepted' WHERE id = ?", (request_id,))
+
+        # 创建双向好友关系
+        conn.execute(
+            "INSERT OR IGNORE INTO friendships (user_id, friend_id, status, created_at) VALUES (?, ?, 'accepted', ?)",
+            (user["id"], request[1], int(time.time()))
+        )
+
+    return jsonify({"ok": True})
+
+@app.route("/api/friends/reject/<int:request_id>", methods=["POST"])
+@login_required
+def api_friend_reject(request_id):
+    """拒绝好友请求"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 查找并删除好友请求
+        result = conn.execute(
+            "DELETE FROM friendships WHERE id = ? AND friend_id = ? AND status = 'pending'",
+            (request_id, user["id"])
+        )
+
+        if result.rowcount == 0:
+            return jsonify({"error": "好友请求不存在"}), 404
+
+    return jsonify({"ok": True})
+
+@app.route("/api/friends")
+@login_required
+def api_friends_list():
+    """获取好友列表"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 获取所有已接受的好友
+        friends = conn.execute("""
+            SELECT u.id, u.username, u.created_at
+            FROM friendships f
+            JOIN users u ON (f.friend_id = u.id)
+            WHERE f.user_id = ? AND f.status = 'accepted'
+            ORDER BY u.username
+        """, (user["id"],)).fetchall()
+
+    result = []
+    for friend in friends:
+        is_online = friend[0] in online_users and (time.time() - online_users[friend[0]]) < 300  # 5分钟内活跃
+        result.append({
+            "id": friend[0],
+            "username": friend[1],
+            "is_online": is_online,
+            "last_active": online_users.get(friend[0], 0)
+        })
+
+    return jsonify(result)
+
+@app.route("/api/friends/requests")
+@login_required
+def api_friend_requests():
+    """获取收到的好友请求"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        requests = conn.execute("""
+            SELECT f.id, u.username, f.message, f.created_at, u.id as from_user_id
+            FROM friendships f
+            JOIN users u ON f.user_id = u.id
+            WHERE f.friend_id = ? AND f.status = 'pending'
+            ORDER BY f.created_at DESC
+        """, (user["id"],)).fetchall()
+
+    result = []
+    for req in requests:
+        result.append({
+            "id": req[0],
+            "from_username": req[1],
+            "message": req[2],
+            "created_at": req[3],
+            "from_user_id": req[4]
+        })
+
+    return jsonify(result)
+
+@app.route("/api/friends/<int:friend_id>", methods=["DELETE"])
+@login_required
+def api_friend_delete(friend_id):
+    """删除好友"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 删除双向好友关系
+        conn.execute(
+            "DELETE FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
+            (user["id"], friend_id, friend_id, user["id"])
+        )
+
+    return jsonify({"ok": True})
+
+@app.route("/api/friends/search")
+@login_required
+def api_friend_search():
+    """搜索用户"""
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify([])
+
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        users = conn.execute(
+            "SELECT id, username FROM users WHERE username LIKE ? AND id != ? LIMIT 20",
+            (f"%{query}%", user["id"])
+        ).fetchall()
+
+        # 获取当前用户的好友列表
+        friends = conn.execute(
+            "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'accepted'",
+            (user["id"],)
+        ).fetchall()
+        friend_ids = {f[0] for f in friends}
+
+        # 获取待发送的请求
+        sent_requests = conn.execute(
+            "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'pending'",
+            (user["id"],)
+        ).fetchall()
+        sent_request_ids = {r[0] for r in sent_requests}
+
+        # 获取收到的请求
+        received_requests = conn.execute(
+            "SELECT user_id FROM friendships WHERE friend_id = ? AND status = 'pending'",
+            (user["id"],)
+        ).fetchall()
+        received_request_ids = {r[0] for r in received_requests}
+
+    result = []
+    for u in users:
+        is_friend = u[0] in friend_ids
+        has_sent_request = u[0] in sent_request_ids
+        has_received_request = u[0] in received_request_ids
+
+        result.append({
+            "id": u[0],
+            "username": u[1],
+            "is_friend": is_friend,
+            "has_sent_request": has_sent_request,
+            "has_received_request": has_received_request
+        })
+
+    return jsonify(result)
+
+# ---------- 私信 API ----------
+@app.route("/api/messages/send", methods=["POST"])
+@login_required
+def api_message_send():
+    """发送私信"""
+    data = request.get_json(force=True)
+    to_user_id = data.get("to_user_id")
+    content = data.get("content", "").strip()
+
+    if not to_user_id:
+        return jsonify({"error": "缺少目标用户ID"}), 400
+    if not content:
+        return jsonify({"error": "消息内容不能为空"}), 400
+
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 检查是否是好友
+        friendship = conn.execute(
+            "SELECT id FROM friendships WHERE user_id = ? AND friend_id = ? AND status = 'accepted'",
+            (user["id"], to_user_id)
+        ).fetchone()
+
+        if not friendship:
+            return jsonify({"error": "只能给好友发送私信"}), 400
+
+        # 发送消息
+        conn.execute(
+            "INSERT INTO messages (from_user_id, to_user_id, content, created_at) VALUES (?, ?, ?, ?)",
+            (user["id"], to_user_id, content, int(time.time()))
+        )
+
+    return jsonify({"ok": True})
+
+@app.route("/api/messages/<int:other_user_id>")
+@login_required
+def api_messages_list(other_user_id):
+    """获取与某用户的聊天记录"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        messages = conn.execute("""
+            SELECT m.id, m.from_user_id, m.to_user_id, m.content, m.created_at, m.is_read
+            FROM messages m
+            WHERE (m.from_user_id = ? AND m.to_user_id = ?) OR (m.from_user_id = ? AND m.to_user_id = ?)
+            ORDER BY m.created_at ASC
+            LIMIT 100
+        """, (user["id"], other_user_id, other_user_id, user["id"])).fetchall()
+
+    result = []
+    for msg in messages:
+        result.append({
+            "id": msg[0],
+            "from_user_id": msg[1],
+            "to_user_id": msg[2],
+            "content": msg[3],
+            "created_at": msg[4],
+            "is_read": bool(msg[5])
+        })
+
+    return jsonify(result)
+
+@app.route("/api/messages/unread")
+@login_required
+def api_messages_unread():
+    """获取未读消息数"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND is_read = 0",
+            (user["id"],)
+        ).fetchone()[0]
+
+    return jsonify({"count": count})
+
+@app.route("/api/messages/read/<int:other_user_id>", methods=["POST"])
+@login_required
+def api_messages_read(other_user_id):
+    """标记消息为已读"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "UPDATE messages SET is_read = 1 WHERE from_user_id = ? AND to_user_id = ? AND is_read = 0",
+            (other_user_id, user["id"])
+        )
+
+    return jsonify({"ok": True})
+
+# ---------- 动态 API ----------
+@app.route("/api/activities")
+@login_required
+def api_activities():
+    """获取好友动态"""
+    user = session.get("user")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        # 获取好友ID列表
+        friend_ids = conn.execute(
+            "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'accepted'",
+            (user["id"],)
+        ).fetchall()
+        friend_ids = [f[0] for f in friend_ids]
+        friend_ids.append(user["id"])  # 包含自己的动态
+
+        # 获取动态
+        placeholders = ",".join(["?" for _ in friend_ids])
+        activities = conn.execute(f"""
+            SELECT a.id, u.username, a.action, a.target_title, a.created_at
+            FROM activities a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.user_id IN ({placeholders})
+            ORDER BY a.created_at DESC
+            LIMIT 50
+        """, friend_ids).fetchall()
+
+    result = []
+    for act in activities:
+        result.append({
+            "id": act[0],
+            "username": act[1],
+            "action": act[2],
+            "target_title": act[3],
+            "created_at": act[4]
+        })
+
+    return jsonify(result)
+
+# ---------- 心跳 API ----------
+@app.route("/api/heartbeat", methods=["POST"])
+@login_required
+def api_heartbeat():
+    """心跳接口，更新在线状态"""
+    user = session.get("user")
+    online_users[user["id"]] = time.time()
     return jsonify({"ok": True})
 
 @app.route("/uploads/<path:name>")
