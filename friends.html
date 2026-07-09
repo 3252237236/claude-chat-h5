@@ -903,6 +903,8 @@ function startMessagePolling() {
   // 每2秒检查一次新消息
   messagePollingTimer = setInterval(async () => {
     if (currentChatUser) {
+      // 标记当前聊天对象的消息为已读
+      await fetch(`/api/messages/read/${currentChatUser.id}`, { method: "POST" });
       await loadMessages(currentChatUser.id);
       await loadUnreadMessages();
     }
