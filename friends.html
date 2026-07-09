@@ -397,15 +397,28 @@ html, body {
 }
 .empty-state p { font-size: 14px; }
 
+/* ===== 移动端切换按钮 ===== */
+.mobile-open-sidebar,
+.mobile-close-sidebar {
+  padding: 8px 12px; font-size: 16px;
+}
+
 /* ===== 响应式 ===== */
 @media (max-width: 768px) {
   .app { padding: 40px 16px 60px; }
   .tabs { flex-wrap: wrap; }
   .tab { flex: none; padding: 10px 12px; font-size: 12px; }
-  .chat-container { grid-template-columns: 1fr; }
-  .chat-sidebar { display: none; }
+  .chat-container { grid-template-columns: 1fr; position: relative; }
+  .chat-sidebar {
+    display: none;
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10; background: var(--bg);
+  }
   .chat-sidebar.active { display: flex; }
   .header h1 { font-size: 24px; }
+  .mobile-open-sidebar { display: inline-flex !important; }
+  .mobile-close-sidebar { display: inline-flex !important; }
+  .chat-header { display: flex; align-items: center; gap: 12px; }
 }
 </style>
 </head>
@@ -456,11 +469,17 @@ html, body {
     <div id="chatTab" class="tab-content" style="display:none;">
       <div class="chat-container">
         <div class="chat-sidebar" id="chatSidebar">
-          <div class="chat-sidebar-header">对话列表</div>
+          <div class="chat-sidebar-header">
+            <span>对话列表</span>
+            <button class="btn btn-secondary mobile-close-sidebar" onclick="toggleSidebar()" style="display:none;">✕</button>
+          </div>
           <div class="chat-list" id="chatList"></div>
         </div>
         <div class="chat-main" id="chatMain">
-          <div class="chat-header" id="chatHeader">选择一个好友开始聊天</div>
+          <div class="chat-header" id="chatHeader">
+            <button class="btn btn-secondary mobile-open-sidebar" onclick="toggleSidebar()" style="display:none;">☰</button>
+            <span>选择一个好友开始聊天</span>
+          </div>
           <div class="chat-messages" id="chatMessages">
             <div class="empty-state">
               <div class="empty-icon">💬</div>
@@ -734,7 +753,10 @@ async function startChat(userId, username) {
   currentChatUser = { id: userId, username: username };
   lastMessageCount = 0;  // 重置消息计数
 
-  document.getElementById("chatHeader").textContent = `与 ${username} 的对话`;
+  document.getElementById("chatHeader").innerHTML = `
+    <button class="btn btn-secondary mobile-open-sidebar" onclick="toggleSidebar()" style="display:none;">☰</button>
+    <span>与 ${esc(username)} 的对话</span>
+  `;
   document.getElementById("chatInput").style.display = "";
 
   // 标记消息为已读
@@ -749,6 +771,12 @@ async function startChat(userId, username) {
 
   // 启动实时消息轮询
   startMessagePolling();
+
+  // 移动端自动关闭侧边栏
+  const sidebar = document.getElementById("chatSidebar");
+  if (sidebar.classList.contains("active")) {
+    sidebar.classList.remove("active");
+  }
 }
 
 let lastMessageCount = 0;  // 记录上次消息数量
@@ -850,6 +878,12 @@ async function loadUnreadMessages() {
       badge.style.display = "none";
     }
   } catch(e) {}
+}
+
+// ===== 移动端切换对话列表 =====
+function toggleSidebar() {
+  const sidebar = document.getElementById("chatSidebar");
+  sidebar.classList.toggle("active");
 }
 
 // ===== 好友动态 =====
