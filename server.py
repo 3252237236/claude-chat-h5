@@ -316,6 +316,10 @@ def submit_page():
 def files_page():
     return send_file("files.html")
 
+@app.route("/friends")
+def friends_page():
+    return send_file("friends.html")
+
 @app.route("/admin")
 def admin_page():
     return send_file("admin.html")
