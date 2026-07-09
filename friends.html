@@ -488,6 +488,7 @@ let currentUser = null;
 let currentChatUser = null;
 let friends = [];
 let chatMessages = {};
+let messagePollingTimer = null;  // 消息轮询定时器
 
 // ===== 初始化 =====
 async function init() {
@@ -514,6 +515,12 @@ function switchTab(tab) {
 
   document.getElementById(tab + "Tab").style.display = "";
   event.target.classList.add("active");
+
+  // 如果离开聊天标签，停止轮询
+  if (tab !== "chat") {
+    stopMessagePolling();
+    currentChatUser = null;
+  }
 
   if (tab === "friends") loadFriends();
   else if (tab === "requests") loadRequests();
@@ -725,6 +732,7 @@ async function loadChatList() {
 
 async function startChat(userId, username) {
   currentChatUser = { id: userId, username: username };
+  lastMessageCount = 0;  // 重置消息计数
 
   document.getElementById("chatHeader").textContent = `与 ${username} 的对话`;
   document.getElementById("chatInput").style.display = "";
@@ -738,12 +746,23 @@ async function startChat(userId, username) {
 
   // 刷新聊天列表高亮
   loadChatList();
+
+  // 启动实时消息轮询
+  startMessagePolling();
 }
+
+let lastMessageCount = 0;  // 记录上次消息数量
 
 async function loadMessages(userId) {
   try {
     const messages = await fetch(`/api/messages/${userId}`).then(r => r.json());
     const container = document.getElementById("chatMessages");
+
+    // 只在消息数量变化时更新DOM，避免闪烁
+    if (messages.length === lastMessageCount && messages.length > 0) {
+      return;
+    }
+    lastMessageCount = messages.length;
 
     if (messages.length === 0) {
       container.innerHTML = `
@@ -755,6 +774,9 @@ async function loadMessages(userId) {
       return;
     }
 
+    // 检查是否在底部，如果是则自动滚动
+    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+
     container.innerHTML = messages.map(m => `
       <div class="message ${m.from_user_id === currentUser.id ? 'sent' : 'received'}">
         <div class="message-avatar">${m.from_user_id === currentUser.id ? currentUser.username[0] : currentChatUser.username[0]}</div>
@@ -765,8 +787,10 @@ async function loadMessages(userId) {
       </div>
     `).join("");
 
-    // 滚动到底部
-    container.scrollTop = container.scrollHeight;
+    // 如果之前在底部，自动滚动到新消息
+    if (wasAtBottom) {
+      container.scrollTop = container.scrollHeight;
+    }
   } catch(e) {
     console.error("加载消息失败:", e);
   }
@@ -788,6 +812,29 @@ async function sendMessage() {
     await loadMessages(currentChatUser.id);
   } catch(e) {
     alert("发送失败");
+  }
+}
+
+// ===== 实时消息轮询 =====
+function startMessagePolling() {
+  // 清除之前的轮询
+  if (messagePollingTimer) {
+    clearInterval(messagePollingTimer);
+  }
+
+  // 每2秒检查一次新消息
+  messagePollingTimer = setInterval(async () => {
+    if (currentChatUser) {
+      await loadMessages(currentChatUser.id);
+      await loadUnreadMessages();
+    }
+  }, 2000);
+}
+
+function stopMessagePolling() {
+  if (messagePollingTimer) {
+    clearInterval(messagePollingTimer);
+    messagePollingTimer = null;
   }
 }
 
