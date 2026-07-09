@@ -962,11 +962,22 @@ async function deleteFriend(friendId, username) {
 
 // ===== 心跳 =====
 function startHeartbeat() {
+  // 立即发送一次心跳
+  fetch("/api/heartbeat", { method: "POST" }).catch(() => {});
+
+  // 每30秒发送一次心跳
   setInterval(async () => {
     try {
       await fetch("/api/heartbeat", { method: "POST" });
     } catch(e) {}
-  }, 60000); // 每分钟发送一次心跳
+  }, 30000);
+
+  // 每10秒刷新好友在线状态
+  setInterval(async () => {
+    if (document.getElementById("friendsTab").style.display !== "none") {
+      await loadFriends();
+    }
+  }, 10000);
 }
 
 // ===== 工具函数 =====

@@ -715,7 +715,7 @@ def api_friends_list():
 
     result = []
     for friend in friends:
-        is_online = friend[0] in online_users and (time.time() - online_users[friend[0]]) < 300  # 5分钟内活跃
+        is_online = friend[0] in online_users and (time.time() - online_users[friend[0]]) < 120  # 2分钟内活跃
         result.append({
             "id": friend[0],
             "username": friend[1],
