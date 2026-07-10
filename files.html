@@ -330,6 +330,42 @@ body {
   border: 1px solid var(--border);
 }
 
+/* 上传进度 */
+.upload-loading {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(10px);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.upload-loading.show {
+  display: flex;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.upload-loading p {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
 /* 响应式 */
 @media (max-width: 640px) {
   .app {
@@ -372,6 +408,12 @@ body {
       <p>暂无文件</p>
     </div>
   </div>
+</div>
+
+<!-- 上传中提示 -->
+<div class="upload-loading" id="uploadLoading">
+  <div class="spinner"></div>
+  <p>上传中...</p>
 </div>
 
 <!-- 上传弹窗 -->
@@ -454,17 +496,27 @@ async function doUpload() {
   formData.append('desc', desc);
   formData.append('file', input.files[0]);
 
-  const res = await fetch('/api/upload', {
-    method: 'POST',
-    body: formData
-  });
-  const data = await res.json();
-  if (data.ok) {
-    alert('文件已上传，等待审核');
-  }
-
+  // 显示上传中提示
+  const loading = document.getElementById('uploadLoading');
+  loading.classList.add('show');
   closeUpload();
-  loadFiles();
+
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert('文件已上传，等待审核');
+    }
+  } catch(e) {
+    alert('上传失败，请重试');
+    console.error(e);
+  } finally {
+    loading.classList.remove('show');
+    loadFiles();
+  }
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
