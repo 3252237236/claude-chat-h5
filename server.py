@@ -555,6 +555,23 @@ def api_uploads():
     items = [i for i in load_uploads() if i.get("status", "approved") == "approved"]
     return jsonify(items)
 
+@app.route("/api/debug/qiniu")
+def debug_qiniu():
+    """调试七牛云配置"""
+    has_sdk = False
+    try:
+        import qiniu
+        has_sdk = True
+    except ImportError:
+        pass
+    return jsonify({
+        "sdk_installed": has_sdk,
+        "access_key_set": bool(QINIU_ACCESS_KEY),
+        "secret_key_set": bool(QINIU_SECRET_KEY),
+        "bucket": QINIU_BUCKET,
+        "domain": QINIU_DOMAIN,
+    })
+
 @app.route("/api/upload", methods=["POST"])
 @login_required
 def api_upload():
