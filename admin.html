@@ -422,26 +422,28 @@ async function doLogout() {
 // 加载统计
 async function loadStats() {
   try {
-    const data = await fetch('/api/admin/stats').then(r => r.json());
+    const users = await fetch('/api/admin/users').then(r => r.json());
+    const pending = await fetch('/api/admin/pending').then(r => r.json());
+    const all = await fetch('/api/admin/all').then(r => r.json());
     document.getElementById('stats').innerHTML = `
       <div class="stat-card">
-        <div class="stat-value">${data.users || 0}</div>
+        <div class="stat-value">${Array.isArray(users) ? users.length : 0}</div>
         <div class="stat-label">用户总数</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${data.apps || 0}</div>
+        <div class="stat-value">${all.apps ? all.apps.length : 0}</div>
         <div class="stat-label">社区应用</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${data.files || 0}</div>
+        <div class="stat-value">${all.uploads ? all.uploads.length : 0}</div>
         <div class="stat-label">文件数量</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${data.pending || 0}</div>
+        <div class="stat-value">${(pending.apps ? pending.apps.length : 0) + (pending.uploads ? pending.uploads.length : 0)}</div>
         <div class="stat-label">待审核</div>
       </div>
     `;
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 // 加载待审核
@@ -449,11 +451,17 @@ async function loadReview() {
   try {
     const data = await fetch('/api/admin/pending').then(r => r.json());
     const tbody = document.getElementById('reviewBody');
-    if (data.items && data.items.length > 0) {
-      tbody.innerHTML = data.items.map(item => `
+    const apps = data.apps || [];
+    const uploads = data.uploads || [];
+    const items = [
+      ...apps.map(a => ({...a, type: 'app'})),
+      ...uploads.map(u => ({...u, type: 'upload'}))
+    ];
+    if (items.length > 0) {
+      tbody.innerHTML = items.map(item => `
         <tr>
           <td>${esc(item.title)}</td>
-          <td>${esc(item.author)}</td>
+          <td>${esc(item.author || item.uploader || '-')}</td>
           <td>${item.type === 'app' ? '应用' : '文件'}</td>
           <td>${new Date(item.time * 1000).toLocaleDateString('zh-CN')}</td>
           <td>
@@ -465,7 +473,7 @@ async function loadReview() {
     } else {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:40px;">暂无待审核内容</td></tr>';
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 // 加载全部内容
@@ -473,11 +481,17 @@ async function loadAll() {
   try {
     const data = await fetch('/api/admin/all').then(r => r.json());
     const tbody = document.getElementById('allBody');
-    if (data.items && data.items.length > 0) {
-      tbody.innerHTML = data.items.map(item => `
+    const apps = data.apps || [];
+    const uploads = data.uploads || [];
+    const items = [
+      ...apps.map(a => ({...a, type: 'app'})),
+      ...uploads.map(u => ({...u, type: 'upload'}))
+    ];
+    if (items.length > 0) {
+      tbody.innerHTML = items.map(item => `
         <tr>
           <td>${esc(item.title)}</td>
-          <td>${esc(item.author)}</td>
+          <td>${esc(item.author || item.uploader || '-')}</td>
           <td><span class="badge badge-${item.status}">${item.status === 'pending' ? '待审核' : item.status === 'approved' ? '已通过' : '已拒绝'}</span></td>
           <td>${new Date(item.time * 1000).toLocaleDateString('zh-CN')}</td>
           <td><button class="btn-sm danger" onclick="remove('${item.id}', '${item.type}')">删除</button></td>
@@ -486,7 +500,7 @@ async function loadAll() {
     } else {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:40px;">暂无内容</td></tr>';
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 // 加载用户
@@ -494,8 +508,8 @@ async function loadUsers() {
   try {
     const data = await fetch('/api/admin/users').then(r => r.json());
     const tbody = document.getElementById('usersBody');
-    if (data.users && data.users.length > 0) {
-      tbody.innerHTML = data.users.map(u => `
+    if (Array.isArray(data) && data.length > 0) {
+      tbody.innerHTML = data.map(u => `
         <tr>
           <td>${esc(u.username)}</td>
           <td style="color:var(--text-3);font-size:12px;">${u.id}</td>
@@ -506,42 +520,43 @@ async function loadUsers() {
           </td>
         </tr>
       `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:40px;">暂无用户</td></tr>';
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 async function approve(id, type) {
-  await fetch(`/api/admin/approve/${id}`, { method: 'POST' });
+  await fetch(`/api/admin/approve/${type}/${id}`, { method: 'POST' });
   loadReview();
   loadAll();
   loadStats();
 }
 
 async function reject(id, type) {
-  await fetch(`/api/admin/reject/${id}`, { method: 'POST' });
+  await fetch(`/api/admin/reject/${type}/${id}`, { method: 'POST' });
   loadReview();
   loadAll();
 }
 
 async function remove(id, type) {
   if (!confirm('确定删除？')) return;
-  await fetch(`/api/admin/delete/${id}`, { method: 'DELETE' });
+  await fetch(`/api/admin/delete/${type}/${id}`, { method: 'POST' });
   loadAll();
   loadStats();
 }
 
 async function toggleAdmin(id, isAdmin) {
-  await fetch(`/api/admin/users/${id}/admin`, {
+  await fetch(`/api/admin/users/${id}/toggle-admin`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ is_admin: !isAdmin })
+    headers: { 'Content-Type': 'application/json' }
   });
   loadUsers();
 }
 
 async function deleteUser(id) {
   if (!confirm('确定删除该用户？')) return;
-  await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+  await fetch(`/api/admin/users/${id}/delete`, { method: 'POST' });
   loadUsers();
   loadStats();
 }

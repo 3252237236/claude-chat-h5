@@ -378,6 +378,8 @@ body {
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
     <h3>上传文件</h3>
+    <input type="text" id="fileTitle" placeholder="文件标题" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;">
+    <input type="text" id="fileDesc" placeholder="文件描述（可选）" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;">
     <input type="file" id="fileInput" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);">
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeUpload()">取消</button>
@@ -390,14 +392,14 @@ body {
 // 加载文件列表
 async function loadFiles() {
   try {
-    const data = await fetch('/api/files').then(r => r.json());
+    const items = await fetch('/api/uploads').then(r => r.json());
     const grid = document.getElementById('fileGrid');
     const count = document.getElementById('fileCount');
 
-    if (data.files && data.files.length > 0) {
-      count.textContent = `${data.files.length} 个文件`;
-      grid.innerHTML = data.files.map(f => {
-        const ext = f.name.split('.').pop().toLowerCase();
+    if (items && items.length > 0) {
+      count.textContent = `${items.length} 个文件`;
+      grid.innerHTML = items.map(f => {
+        const ext = (f.filename || '').split('.').pop().toLowerCase();
         const icons = {
           'pdf': '📄', 'doc': '📝', 'docx': '📝', 'txt': '📃',
           'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'webp': '🖼️',
@@ -412,11 +414,10 @@ async function loadFiles() {
               <div class="file-icon">${icon}</div>
               <span class="file-ext">${ext}</span>
             </div>
-            <div class="file-title" title="${esc(f.name)}">${esc(f.name)}</div>
+            <div class="file-title" title="${esc(f.title)}">${esc(f.title)}</div>
             <div class="file-meta">${formatSize(f.size)} · ${new Date(f.time * 1000).toLocaleDateString('zh-CN')}</div>
             <div class="file-actions">
-              <a href="/api/files/download/${f.id}" class="file-btn">下载</a>
-              <button class="file-btn" onclick="deleteFile('${f.id}')">删除</button>
+              <a href="/uploads/${f.stored}" class="file-btn" download="${esc(f.filename)}">下载</a>
             </div>
           </div>
         `;
@@ -424,7 +425,7 @@ async function loadFiles() {
     } else {
       count.textContent = '0 个文件';
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 function formatSize(bytes) {
@@ -442,24 +443,27 @@ function closeUpload() {
 }
 
 async function doUpload() {
+  const title = document.getElementById('fileTitle').value.trim();
+  const desc = document.getElementById('fileDesc').value.trim();
   const input = document.getElementById('fileInput');
-  if (!input.files[0]) return;
+  if (!title) { alert('请输入文件标题'); return; }
+  if (!input.files[0]) { alert('请选择文件'); return; }
 
   const formData = new FormData();
+  formData.append('title', title);
+  formData.append('desc', desc);
   formData.append('file', input.files[0]);
 
-  await fetch('/api/files/upload', {
+  const res = await fetch('/api/upload', {
     method: 'POST',
     body: formData
   });
+  const data = await res.json();
+  if (data.ok) {
+    alert('文件已上传，等待审核');
+  }
 
   closeUpload();
-  loadFiles();
-}
-
-async function deleteFile(id) {
-  if (!confirm('确定删除该文件？')) return;
-  await fetch(`/api/files/${id}`, { method: 'DELETE' });
   loadFiles();
 }
 
