@@ -4,445 +4,466 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>文件仓库 · HZ Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 :root {
-  /* 颜色系统 */
-  --bg: #09090b;
-  --surface: rgba(255,255,255,0.04);
-  --surface-hover: rgba(255,255,255,0.07);
-  --border: rgba(255,255,255,0.08);
-  --border-hover: rgba(255,255,255,0.15);
-  --text: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --accent: #7c3aed;
-  --accent-glow: rgba(124,58,237,0.25);
-  --green: #10b981;
-
-  /* 间距系统 */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-
-  /* 圆角系统 */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
-
-  /* 阴影系统 */
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3);
-  --shadow-glow: 0 0 40px var(--accent-glow);
-
-  /* 过渡系统 */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* 字体系统 */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --bg: #050505;
+  --surface: #0a0a0a;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --text-2: #a0a0a0;
+  --text-3: #666666;
+  --accent: #6366f1;
+  --green: #22c55e;
+  --orange: #f97316;
 }
 
-html, body { height: 100%; }
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
 body {
-  font-family: var(--font-sans);
+  font-family: 'Inter', -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
-  overflow-x: hidden;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
-.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
-.bg-orb {
-  position: absolute; border-radius: 50%;
-  filter: blur(120px); opacity: 0.10;
-  animation: orbFloat 20s ease-in-out infinite;
-}
-.bg-orb:nth-child(1) {
-  width: 500px; height: 500px; background: var(--accent);
-  top: -150px; right: -100px;
-}
-.bg-orb:nth-child(2) {
-  width: 350px; height: 350px; background: var(--green);
-  bottom: -100px; left: -100px; animation-direction: reverse;
-}
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, -40px) scale(1.1); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* 背景 */
+.bg-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
 }
 
-.bg-grid {
-  position: fixed; inset: 0; z-index: 0; opacity: 0.03;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-/* ===== 噪点纹理 ===== */
-.bg-noise {
-  position: fixed; inset: 0; z-index: 0;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
+.light {
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.06;
   pointer-events: none;
 }
+.light-1 { background: var(--accent); top: -100px; right: 20%; }
+.light-2 { background: var(--green); bottom: -100px; left: 15%; }
 
-/* ===== 自定义滚动条 ===== */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.02);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
 }
 
-/* ===== 页面动画 ===== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* 主容器 */
 .app {
-  position: relative; z-index: 1;
-  max-width: 800px; margin: 0 auto;
-  padding: var(--space-10) var(--space-6) var(--space-16);
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
   min-height: 100vh;
-  animation: fadeIn 0.6s ease-out;
 }
 
-.back {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  color: var(--text-secondary); text-decoration: none; font-size: 14px;
-  margin-bottom: var(--space-7); transition: all var(--transition-fast);
-  font-weight: 500;
-}
-.back:hover { color: var(--text); transform: translateX(-2px); }
-
+/* 头部 */
 .header {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-6);
-  animation: fadeInUp 0.6s ease-out 0.1s both;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 16px;
 }
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
 .header h1 {
-  font-size: 28px; font-weight: 800; letter-spacing: -1px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
-.header .count { font-size: 14px; color: var(--text-secondary); font-weight: 400; }
+
+.header .count {
+  font-size: 14px;
+  color: var(--text-3);
+}
 
 .btn {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-3) var(--space-5); border-radius: var(--radius-lg); font-size: 14px; font-weight: 600;
-  cursor: pointer; border: none; font-family: inherit;
-  background: var(--accent); color: #fff;
-  box-shadow: var(--shadow-glow);
-  transition: all var(--transition-base);
-  letter-spacing: 0.3px;
-}
-.btn:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 0 50px var(--accent-glow);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
 }
 
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+}
+
+/* 文件网格 */
 .file-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-4);
-  animation: fadeInUp 0.6s ease-out 0.2s both;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
 }
 
 .file-card {
-  position: relative;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-xl); padding: var(--space-5) var(--space-5);
-  cursor: pointer; transition: all var(--transition-base);
-  text-decoration: none; color: inherit;
-  display: flex; flex-direction: column; gap: var(--space-3); overflow: hidden;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  animation: fadeInUp 0.6s ease-out both;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
 }
-.file-card:nth-child(1) { animation-delay: 0.3s; }
-.file-card:nth-child(2) { animation-delay: 0.4s; }
-.file-card:nth-child(3) { animation-delay: 0.5s; }
-.file-card:nth-child(4) { animation-delay: 0.6s; }
-.file-card:nth-child(5) { animation-delay: 0.7s; }
-.file-card:nth-child(6) { animation-delay: 0.8s; }
 
-.file-card::before {
-  content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0; transition: opacity var(--transition-base);
-}
 .file-card:hover {
-  background: var(--surface-hover);
+  background: rgba(255,255,255,0.04);
   border-color: var(--border-hover);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-xl);
 }
-.file-card:hover::before { opacity: 1; }
-.file-card .fc-top { display: flex; align-items: flex-start; justify-content: space-between; }
-.file-card .fc-icon {
-  width: 44px; height: 44px; border-radius: var(--radius-md);
-  background: var(--surface-hover);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  transition: all var(--transition-base);
+
+.file-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
-.file-card:hover .fc-icon {
-  transform: scale(1.05);
+
+.file-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
 }
-.file-card .fc-ext {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
-  text-transform: uppercase; color: var(--text-muted);
-  padding: 3px 10px; border-radius: var(--radius-sm);
-  background: var(--surface);
+
+.file-ext {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
 }
-.file-card .fc-title {
-  font-size: 15px; font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: -0.2px;
-}
-.file-card .fc-meta { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
 
-.empty {
-  text-align: center; padding: var(--space-16) var(--space-5);
-  color: var(--text-muted); grid-column: 1/-1;
+.file-title {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.empty .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+
+.file-meta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.file-btn {
+  flex: 1;
+  padding: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.file-btn:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-3);
+  grid-column: 1 / -1;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
 
 /* 弹窗 */
-.overlay {
-  position: fixed; inset: 0; z-index: 10;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
 }
+
+.modal-overlay.show {
+  display: flex;
+}
+
 .modal {
-  background: #14141f; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 32px 28px;
-  width: 100%; max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  animation: modalIn 0.2s ease-out;
 }
-.modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 18px; }
 
-.form-group { margin-bottom: 15px; }
-.form-group label {
-  display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
-.form-group input, .form-group textarea {
-  width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-  border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text);
-  font-family: inherit; outline: none; transition: border-color 0.2s;
-}
-.form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
-.form-group textarea { resize: vertical; min-height: 50px; }
 
-.file-zone {
-  border: 2px dashed var(--border); border-radius: 12px;
-  padding: 24px; text-align: center; cursor: pointer;
+.modal h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
   transition: all 0.2s;
 }
-.file-zone:hover { border-color: var(--accent); background: rgba(108,92,231,0.05); }
-.file-zone .fz-icon { font-size: 32px; margin-bottom: 6px; opacity: 0.4; }
-.file-zone .fz-text { font-size: 13px; color: var(--text-dim); }
-.file-zone .fz-name { font-size: 13px; color: var(--accent); margin-top: 6px; font-weight: 600; }
-.file-zone input[type=file] { display: none; }
 
-.btn-row { display: flex; gap: 10px; margin-top: 8px; }
-.btn-cancel {
-  flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
-  background: transparent; color: var(--text); font-size: 14px; cursor: pointer;
-  font-family: inherit;
+.modal-btn.primary {
+  background: var(--accent);
+  color: white;
+  border: none;
 }
-.btn-submit {
-  flex: 2; padding: 12px; border-radius: 10px; border: none;
-  background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
-  cursor: pointer; font-family: inherit;
-  box-shadow: 0 4px 16px var(--accent-glow);
+
+.modal-btn.secondary {
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
 }
-.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; display: none; }
-.msg-err { background: rgba(255,107,107,0.1); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.2); }
-.msg-ok { background: rgba(0,210,160,0.1); color: var(--green); border: 1px solid rgba(0,210,160,0.2); }
+/* 响应式 */
+@media (max-width: 640px) {
+  .app {
+    padding: 20px 16px 60px;
+  }
 
-@media (max-width: 500px) {
-  .app { padding: 28px 16px 50px; }
-  .header { flex-direction: column; align-items: flex-start; }
-  .file-grid { grid-template-columns: 1fr; }
-  .modal { padding: 24px 20px; }
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .file-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
 <body>
 
-<div class="bg">
-  <div class="bg-orb"></div>
-  <div class="bg-orb"></div>
+<div class="bg-anim">
+  <div class="light light-1"></div>
+  <div class="light light-2"></div>
 </div>
-<div class="bg-grid"></div>
-<div class="bg-noise"></div>
+<div class="grid-overlay"></div>
 
 <div class="app">
-  <a href="/" class="back">← 返回首页</a>
-
   <div class="header">
-    <div>
-      <h1>文件仓库</h1>
-      <div class="count" id="fileCount">加载中…</div>
+    <div class="header-left">
+      <a href="/" class="back-btn">←</a>
+      <div>
+        <h1>📁 文件仓库</h1>
+        <span class="count" id="fileCount">加载中...</span>
+      </div>
     </div>
     <button class="btn" onclick="showUpload()">上传文件</button>
   </div>
 
-  <div class="file-grid" id="fileGrid"></div>
+  <div class="file-grid" id="fileGrid">
+    <div class="empty">
+      <div class="empty-icon">📁</div>
+      <p>暂无文件</p>
+    </div>
+  </div>
 </div>
 
-<div class="overlay" id="uploadModal" style="display:none;">
+<!-- 上传弹窗 -->
+<div class="modal-overlay" id="uploadModal">
   <div class="modal">
-    <h2>上传文件</h2>
-    <div class="form-group">
-      <label>标题</label>
-      <input type="text" id="uTitle" placeholder="给文件起个名字" maxlength="30">
+    <h3>上传文件</h3>
+    <input type="file" id="fileInput" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);">
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeUpload()">取消</button>
+      <button class="modal-btn primary" onclick="doUpload()">上传</button>
     </div>
-    <div class="form-group">
-      <label>简介（可选）</label>
-      <textarea id="uDesc" placeholder="一句话描述" maxlength="60"></textarea>
-    </div>
-    <div class="file-zone" onclick="document.getElementById('uFile').click()">
-      <div class="fz-icon">📂</div>
-      <div class="fz-text">点击选择文件</div>
-      <div class="fz-name" id="uFileName" style="display:none"></div>
-    </div>
-    <input type="file" id="uFile">
-    <div class="btn-row">
-      <button class="btn-cancel" onclick="hideUpload()">取消</button>
-      <button class="btn-submit" id="uSubmit" onclick="doUpload()">上传</button>
-    </div>
-    <div class="msg msg-err" id="uMsgErr"></div>
-    <div class="msg msg-ok" id="uMsgOk"></div>
   </div>
 </div>
 
 <script>
-const icons = {
-  html:"🌐", htm:"🌐", zip:"📦", rar:"📦", "7z":"📦",
-  png:"🖼️", jpg:"🖼️", jpeg:"🖼️", gif:"🖼️", svg:"🎨", webp:"🖼️",
-  pdf:"📄", txt:"📝", doc:"📝", docx:"📝",
-  py:"🐍", js:"📜", ts:"📜", java:"☕", jar:"☕",
-  mp3:"🎵", wav:"🎵", mp4:"🎬", mov:"🎬",
-  json:"📋", csv:"📊",
-};
-function iconFor(n) { return icons[(n||"").split(".").pop().toLowerCase()] || "📁"; }
-function fmt(b) { return b>1024*1024?(b/1024/1024).toFixed(1)+" MB":(b/1024).toFixed(0)+" KB"; }
-
+// 加载文件列表
 async function loadFiles() {
-  const grid = document.getElementById("fileGrid");
   try {
-    const items = await fetch("/api/uploads").then(r => r.json());
-    document.getElementById("fileCount").textContent = items.length + " 个文件";
-    if (!items.length) {
-      grid.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>仓库还是空的<br>点击上方按钮上传第一个文件</p></div>`;
-      return;
+    const data = await fetch('/api/files').then(r => r.json());
+    const grid = document.getElementById('fileGrid');
+    const count = document.getElementById('fileCount');
+
+    if (data.files && data.files.length > 0) {
+      count.textContent = `${data.files.length} 个文件`;
+      grid.innerHTML = data.files.map(f => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        const icons = {
+          'pdf': '📄', 'doc': '📝', 'docx': '📝', 'txt': '📃',
+          'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'webp': '🖼️',
+          'mp4': '🎬', 'mp3': '🎵', 'zip': '📦', 'rar': '📦',
+          'html': '🌐', 'css': '🎨', 'js': '⚡', 'py': '🐍'
+        };
+        const icon = icons[ext] || '📄';
+
+        return `
+          <div class="file-card">
+            <div class="file-card-header">
+              <div class="file-icon">${icon}</div>
+              <span class="file-ext">${ext}</span>
+            </div>
+            <div class="file-title" title="${esc(f.name)}">${esc(f.name)}</div>
+            <div class="file-meta">${formatSize(f.size)} · ${new Date(f.time * 1000).toLocaleDateString('zh-CN')}</div>
+            <div class="file-actions">
+              <a href="/api/files/download/${f.id}" class="file-btn">下载</a>
+              <button class="file-btn" onclick="deleteFile('${f.id}')">删除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      count.textContent = '0 个文件';
     }
-    grid.innerHTML = items.map(item => {
-      const ext = (item.filename||"").split(".").pop().toLowerCase();
-      const time = new Date(item.time*1000);
-      return `<a href="/uploads/${item.stored}" class="file-card" download>
-        <div class="fc-top"><div class="fc-icon">${iconFor(item.filename)}</div><div class="fc-ext">.${ext}</div></div>
-        <div class="fc-title" title="${esc(item.title)}">${esc(item.title)}</div>
-        <div class="fc-meta">${fmt(item.size)} · ${time.toLocaleDateString("zh-CN")}</div>
-      </a>`;
-    }).join("");
-  } catch(e) { grid.innerHTML = `<div class="empty"><p>加载失败</p></div>`; }
+  } catch(e) {}
 }
 
-let uploadFile = null;
-document.getElementById("uFile").addEventListener("change", function() {
-  const f = this.files[0];
-  if (!f) return;
-  uploadFile = f;
-  document.getElementById("uFileName").textContent = f.name + " (" + fmt(f.size) + ")";
-  document.getElementById("uFileName").style.display = "";
-  if (!document.getElementById("uTitle").value) {
-    document.getElementById("uTitle").value = f.name.replace(/\.[^.]+$/, "");
-  }
-});
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
 
 function showUpload() {
-  document.getElementById("uploadModal").style.display = "flex";
-  ["uTitle","uDesc","uMsgErr","uMsgOk"].forEach(id => { document.getElementById(id).value = ""; document.getElementById(id).style.display = "none"; });
-  document.getElementById("uFileName").style.display = "none";
-  document.getElementById("uFile").value = "";
-  uploadFile = null;
+  document.getElementById('uploadModal').classList.add('show');
 }
-function hideUpload() { document.getElementById("uploadModal").style.display = "none"; }
+
+function closeUpload() {
+  document.getElementById('uploadModal').classList.remove('show');
+}
 
 async function doUpload() {
-  const title = document.getElementById("uTitle").value.trim();
-  if (!title) { showMsg("请输入标题","err"); return; }
-  if (!uploadFile) { showMsg("请选择文件","err"); return; }
+  const input = document.getElementById('fileInput');
+  if (!input.files[0]) return;
 
-  const btn = document.getElementById("uSubmit");
-  btn.disabled = true; btn.textContent = "上传中…";
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
 
-  const fd = new FormData();
-  fd.append("title", title); fd.append("desc", document.getElementById("uDesc").value.trim()); fd.append("file", uploadFile);
+  await fetch('/api/files/upload', {
+    method: 'POST',
+    body: formData
+  });
 
-  try {
-    const resp = await fetch("/api/upload", { method: "POST", body: fd });
-    if (resp.status === 401) { location.href = "/login"; return; }
-    const data = await resp.json();
-    if (data.ok) { showMsg("上传成功，等待管理员审核","ok"); loadFiles(); setTimeout(hideUpload, 800); }
-    else { showMsg(data.error||"上传失败","err"); }
-  } catch(e) { showMsg("网络错误","err"); }
-  finally { btn.disabled = false; btn.textContent = "上传"; }
+  closeUpload();
+  loadFiles();
 }
 
-function showMsg(text, type) {
-  const el = document.getElementById(type==="ok"?"uMsgOk":"uMsgErr");
-  el.textContent = text; el.style.display = "block";
-  document.getElementById(type==="ok"?"uMsgErr":"uMsgOk").style.display = "none";
+async function deleteFile(id) {
+  if (!confirm('确定删除该文件？')) return;
+  await fetch(`/api/files/${id}`, { method: 'DELETE' });
+  loadFiles();
 }
 
-function esc(s) { const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 loadFiles();
 </script>

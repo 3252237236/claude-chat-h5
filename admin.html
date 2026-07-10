@@ -4,260 +4,344 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>管理面板 · HZ Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 :root {
-  /* 颜色系统 */
-  --bg: #09090b;
-  --surface: rgba(255,255,255,0.04);
-  --surface-hover: rgba(255,255,255,0.07);
-  --border: rgba(255,255,255,0.08);
-  --border-hover: rgba(255,255,255,0.15);
-  --text: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --accent: #7c3aed;
-  --accent-glow: rgba(124,58,237,0.25);
-  --green: #10b981;
+  --bg: #050505;
+  --surface: #0a0a0a;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --text-2: #a0a0a0;
+  --text-3: #666666;
+  --accent: #6366f1;
+  --green: #22c55e;
+  --orange: #f97316;
   --red: #ef4444;
-  --orange: #f59e0b;
-
-  /* 间距系统 */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-
-  /* 圆角系统 */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
-
-  /* 阴影系统 */
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3);
-
-  /* 过渡系统 */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* 字体系统 */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --blue: #3b82f6;
 }
 
-html, body { height: 100%; }
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
 body {
-  font-family: var(--font-sans);
+  font-family: 'Inter', -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
-.bg {
-  position: fixed; inset: 0; z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* 背景 */
+.bg-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
 }
 
-/* ===== 噪点纹理 ===== */
-.bg-noise {
-  position: fixed; inset: 0; z-index: 0;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
+.light {
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.04;
   pointer-events: none;
 }
+.light-1 { background: var(--orange); top: -100px; left: 30%; }
+.light-2 { background: var(--blue); bottom: -100px; right: 20%; }
 
-/* ===== 自定义滚动条 ===== */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.02);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
 }
 
-/* ===== 页面动画 ===== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* 主容器 */
 .app {
-  position: relative; z-index: 1;
-  max-width: 900px; margin: 0 auto;
-  padding: var(--space-10) var(--space-6) var(--space-16);
-  animation: fadeIn 0.6s ease-out;
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  min-height: 100vh;
 }
 
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-4); margin-bottom: var(--space-10); flex-wrap: wrap;
-  animation: fadeInUp 0.6s ease-out 0.1s both;
+/* 头部 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 16px;
 }
-.topbar h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-.topbar .links { display: flex; gap: var(--space-4); align-items: center; }
-.topbar .links a {
-  font-size: 14px; color: var(--text-secondary); text-decoration: none;
-  transition: all var(--transition-fast); font-weight: 500;
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
-.topbar .links a:hover { color: var(--text); }
+
+.header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-links {
+  display: flex;
+  gap: 16px;
+}
+
+.header-links a {
+  font-size: 14px;
+  color: var(--text-2);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.header-links a:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
 
 /* 标签切换 */
 .tabs {
-  display: flex; gap: 0; margin-bottom: var(--space-6);
-  border-bottom: 1px solid var(--border);
-  animation: fadeInUp 0.6s ease-out 0.2s both;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border: 1px solid var(--border);
 }
-.tab {
-  padding: var(--space-3) var(--space-5); font-size: 14px; font-weight: 500; cursor: pointer;
-  color: var(--text-secondary); border: none; background: none; font-family: inherit;
-  border-bottom: 2px solid transparent; transition: all var(--transition-fast);
-}
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-/* 面板 */
-.panel { display: none; }
-.panel.active { display: block; }
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: white;
+}
+
+.tab:hover:not(.active) {
+  color: var(--text-2);
+  background: rgba(255,255,255,0.03);
+}
 
 /* 统计卡片 */
 .stats {
-  display: flex; gap: var(--space-4); margin-bottom: var(--space-6); flex-wrap: wrap;
-  animation: fadeInUp 0.6s ease-out 0.3s both;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
 }
+
 .stat-card {
-  flex: 1; min-width: 140px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: var(--space-5) var(--space-5);
-  transition: all var(--transition-base);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s;
 }
+
 .stat-card:hover {
-  background: var(--surface-hover);
+  background: rgba(255,255,255,0.04);
   border-color: var(--border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
 }
-.stat-card .sv { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
-.stat-card .sl { font-size: 13px; color: var(--text-secondary); margin-top: var(--space-1); font-weight: 400; }
+
+.stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* 内容区 */
+.content {
+  display: none;
+}
+.content.active {
+  display: block;
+}
 
 /* 表格 */
+.table-wrap {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
 .table {
-  width: 100%; border-collapse: collapse;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); overflow: hidden;
-  animation: fadeInUp 0.6s ease-out 0.4s both;
+  width: 100%;
+  border-collapse: collapse;
 }
+
 .table th {
-  text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700;
-  letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim);
-  background: var(--surface2);
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--border);
 }
+
 .table td {
-  padding: 12px 16px; font-size: 13px;
-  border-top: 1px solid var(--border);
-  transition: background 0.2s ease;
+  padding: 14px 20px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
 }
-.table tr {
-  transition: all 0.2s ease;
+
+.table tr:last-child td {
+  border-bottom: none;
 }
+
 .table tr:hover td {
-  background: var(--surface2);
-}
-.table tr:hover {
-  transform: scale(1.01);
+  background: rgba(255,255,255,0.02);
 }
 
 /* 按钮 */
 .btn-sm {
-  padding: 5px 12px; border-radius: 7px; font-size: 11px; font-weight: 700;
-  cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
 }
-.btn-ok { background: rgba(0,210,160,0.15); color: var(--green); }
-.btn-ok:hover { background: rgba(0,210,160,0.25); }
-.btn-warn { background: rgba(255,146,43,0.15); color: var(--orange); }
-.btn-warn:hover { background: rgba(255,146,43,0.25); }
-.btn-del { background: rgba(255,107,107,0.12); color: var(--red); }
-.btn-del:hover { background: rgba(255,107,107,0.22); }
-.btn-admin { background: rgba(108,92,231,0.15); color: var(--accent); }
-.btn-admin:hover { background: rgba(108,92,231,0.25); }
+
+.btn-sm:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.btn-sm.success {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.3);
+  color: var(--green);
+}
+
+.btn-sm.danger {
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.2);
+  color: #fca5a5;
+}
+
+.btn-sm.orange {
+  background: rgba(249,115,22,0.1);
+  border-color: rgba(249,115,22,0.3);
+  color: var(--orange);
+}
 
 .badge {
-  display: inline-block; padding: 2px 8px; border-radius: 10px;
-  font-size: 10px; font-weight: 700;
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
 }
-.badge-admin { background: rgba(108,92,231,0.2); color: var(--accent); }
-.badge-user { background: rgba(255,255,255,0.05); color: var(--text-dim); }
-.badge-pending { background: rgba(255,146,43,0.15); color: var(--orange); }
 
-.pending-item {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px 20px;
-  margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
-}
-.pending-item .pi-icon { font-size: 22px; flex-shrink: 0; }
-.pending-item .pi-info { flex: 1; min-width: 0; }
-.pending-item .pi-title { font-size: 14px; font-weight: 700; }
-.pending-item .pi-meta { font-size: 12px; color: var(--text-dim); }
-.pending-item .pi-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.badge-pending { background: rgba(249,115,22,0.1); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+.badge-approved { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.badge-rejected { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+.badge-admin { background: rgba(99,102,241,0.1); color: var(--accent); border: 1px solid rgba(99,102,241,0.2); }
 
-.empty { text-align: center; padding: 48px; color: var(--text-dim); }
+/* 响应式 */
+@media (max-width: 768px) {
+  .app {
+    padding: 20px 16px 60px;
+  }
 
-@media (max-width: 600px) {
-  .app { padding: 24px 14px 50px; }
-  .pending-item { flex-direction: column; align-items: flex-start; }
-  .pending-item .pi-actions { width: 100%; justify-content: flex-end; }
-  .table { font-size: 11px; }
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  .table th, .table td {
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
 }
 </style>
 </head>
 <body>
 
-<div class="bg"></div>
-<div class="bg-noise"></div>
+<div class="bg-anim">
+  <div class="light light-1"></div>
+  <div class="light light-2"></div>
+</div>
+<div class="grid-overlay"></div>
 
 <div class="app">
-  <div class="topbar">
+  <div class="header">
     <h1>🛡️ 管理面板</h1>
-    <div class="links">
+    <div class="header-links">
       <a href="/">← 首页</a>
-      <a href="/api/logout" onclick="event.preventDefault();fetch('/api/logout',{method:'POST'}).then(()=>location.href='/login')">登出</a>
+      <a href="#" onclick="doLogout()">登出</a>
     </div>
   </div>
+
+  <!-- 统计卡片 -->
+  <div class="stats" id="stats"></div>
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('review')">待审核</button>
@@ -266,233 +350,208 @@ body {
   </div>
 
   <!-- 待审核 -->
-  <div class="panel active" id="panel-review">
-    <div class="stats" id="reviewStats"></div>
-    <div id="reviewList"></div>
+  <div class="content active" id="tabReview">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>作者</th>
+            <th>类型</th>
+            <th>时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="reviewBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 全部内容 -->
+  <div class="content" id="tabAll">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>作者</th>
+            <th>状态</th>
+            <th>时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="allBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- 用户管理 -->
-  <!-- 全部内容 -->
-  <div class="panel" id="panel-all">
-    <div class="stats" id="allStats"></div>
-    <div id="allList"></div>
-  </div>
-
-  <div class="panel" id="panel-users">
-    <div class="stats" id="userStats"></div>
-    <table class="table">
-      <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>注册时间</th><th>操作</th></tr></thead>
-      <tbody id="userTable"></tbody>
-    </table>
+  <div class="content" id="tabUsers">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>用户名</th>
+            <th>ID</th>
+            <th>身份</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
-let currentTab = "review";
+let currentTab = 'review';
 
-// 检查管理员权限
-(async function() {
-  try {
-    const me = await fetch("/api/me").then(r => r.json());
-    if (!me.user || !me.user.is_admin) { location.href = "/"; return; }
-  } catch(e) { location.href = "/login"; }
-  loadReview();
-  loadUsers();
-})();
-
-function switchTab(t) {
-  currentTab = t;
-  document.querySelectorAll(".tab").forEach(el => {
-    const labels = { review: "审核", all: "全部", users: "用户" };
-    el.classList.toggle("active", el.textContent.includes(labels[t]));
-  });
-  document.querySelectorAll(".panel").forEach(el => el.classList.toggle("active", el.id === "panel-" + t));
-  if (t === "all") loadAll();
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
 }
 
-// ===== 审核 =====
+async function doLogout() {
+  await fetch('/api/logout', { method: 'POST' });
+  location.href = '/login';
+}
+
+// 加载统计
+async function loadStats() {
+  try {
+    const data = await fetch('/api/admin/stats').then(r => r.json());
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-value">${data.users || 0}</div>
+        <div class="stat-label">用户总数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${data.apps || 0}</div>
+        <div class="stat-label">社区应用</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${data.files || 0}</div>
+        <div class="stat-label">文件数量</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${data.pending || 0}</div>
+        <div class="stat-label">待审核</div>
+      </div>
+    `;
+  } catch(e) {}
+}
+
+// 加载待审核
 async function loadReview() {
   try {
-    const data = await fetch("/api/admin/pending").then(r => r.json());
-    const total = data.apps.length + data.uploads.length;
-    document.getElementById("reviewStats").innerHTML = `
-      <div class="stat-card"><div class="sv" style="color:var(--orange);">${total}</div><div class="sl">待审核项目</div></div>
-      <div class="stat-card"><div class="sv">${data.apps.length}</div><div class="sl">作品提交</div></div>
-      <div class="stat-card"><div class="sv">${data.uploads.length}</div><div class="sl">文件上传</div></div>`;
-
-    const list = document.getElementById("reviewList");
-    if (!total) { list.innerHTML = `<div class="empty">✅ 没有待审核项</div>`; return; }
-
-    list.innerHTML = "";
-
-    // 作品
-    data.apps.forEach(app => {
-      list.appendChild(createPendingItem("app", app));
-    });
-    // 文件
-    data.uploads.forEach(u => {
-      list.appendChild(createPendingItem("upload", u));
-    });
-  } catch(e) {}
-}
-
-function createPendingItem(type, item) {
-  const div = document.createElement("div");
-  div.className = "pending-item";
-  const isUpload = type === "upload";
-  div.innerHTML = `
-    <div class="pi-icon">${isUpload ? "📁" : item.icon}</div>
-    <div class="pi-info">
-      <div class="pi-title">${esc(item.title)} <span class="badge badge-pending">待审核</span></div>
-      <div class="pi-meta">${esc(item.author||"")} · ${new Date(item.time*1000).toLocaleDateString("zh-CN")} · ${isUpload ? (item.filename||"") : item.desc}</div>
-    </div>
-    <div class="pi-actions">
-      <button class="btn-sm btn-ok" onclick="approve('${type}','${item.id}',this)">✅ 通过</button>
-      <button class="btn-sm btn-del" onclick="reject('${type}','${item.id}',this)">❌ 拒绝</button>
-    </div>`;
-  return div;
-}
-
-async function approve(type, id, btn) {
-  btn.disabled = true; btn.textContent = "…";
-  try {
-    const resp = await fetch(`/api/admin/approve/${type}/${id}`, { method: "POST" });
-    if (resp.status === 403) { location.href = "/"; return; }
-    const data = await resp.json();
-    if (data.ok) {
-      btn.closest(".pending-item").style.opacity = "0.3";
-      setTimeout(() => { btn.closest(".pending-item").remove(); updateReviewCount(); }, 300);
+    const data = await fetch('/api/admin/pending').then(r => r.json());
+    const tbody = document.getElementById('reviewBody');
+    if (data.items && data.items.length > 0) {
+      tbody.innerHTML = data.items.map(item => `
+        <tr>
+          <td>${esc(item.title)}</td>
+          <td>${esc(item.author)}</td>
+          <td>${item.type === 'app' ? '应用' : '文件'}</td>
+          <td>${new Date(item.time * 1000).toLocaleDateString('zh-CN')}</td>
+          <td>
+            <button class="btn-sm success" onclick="approve('${item.id}', '${item.type}')">通过</button>
+            <button class="btn-sm danger" onclick="reject('${item.id}', '${item.type}')">拒绝</button>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:40px;">暂无待审核内容</td></tr>';
     }
   } catch(e) {}
 }
 
-async function reject(type, id, btn) {
-  if (!confirm("确定拒绝并删除？")) return;
-  btn.disabled = true; btn.textContent = "…";
-  try {
-    const resp = await fetch(`/api/admin/reject/${type}/${id}`, { method: "POST" });
-    if (resp.status === 403) { location.href = "/"; return; }
-    const data = await resp.json();
-    if (data.ok) {
-      btn.closest(".pending-item").remove();
-      updateReviewCount();
-    }
-  } catch(e) {}
-}
-
-function updateReviewCount() {
-  const items = document.querySelectorAll("#reviewList .pending-item");
-  const sv = document.querySelector("#reviewStats .stat-card:first-child .sv");
-  if (sv) sv.textContent = items.length;
-  if (!items.length) {
-    document.getElementById("reviewList").innerHTML = `<div class="empty">✅ 没有待审核项</div>`;
-  }
-}
-
-// ===== 用户管理 =====
-async function loadUsers() {
-  try {
-    const users = await fetch("/api/admin/users").then(r => r.json());
-    document.getElementById("userStats").innerHTML = `
-      <div class="stat-card"><div class="sv">${users.length}</div><div class="sl">总用户</div></div>
-      <div class="stat-card"><div class="sv" style="color:var(--accent);">${users.filter(u=>u.is_admin).length}</div><div class="sl">管理员</div></div>`;
-
-    document.getElementById("userTable").innerHTML = users.map(u => `
-      <tr>
-        <td>${u.id}</td>
-        <td>${esc(u.username)}</td>
-        <td><span class="badge ${u.is_admin?'badge-admin':'badge-user'}">${u.is_admin?'管理员':'用户'}</span></td>
-        <td>${new Date(u.created_at*1000).toLocaleDateString("zh-CN")}</td>
-        <td>
-          <button class="btn-sm btn-admin" onclick="toggleAdmin(${u.id},this)">${u.is_admin?'取消管理':'设为管理'}</button>
-          <button class="btn-sm btn-del" onclick="deleteUser(${u.id},this)">删除</button>
-        </td>
-      </tr>`).join("");
-  } catch(e) {}
-}
-
-async function toggleAdmin(uid, btn) {
-  if (!confirm("确定切换该用户的管理员权限？")) return;
-  btn.disabled = true;
-  try {
-    const data = await fetch(`/api/admin/users/${uid}/toggle-admin`, { method: "POST" }).then(r => r.json());
-    if (data.ok) loadUsers();
-    else if (data.error) alert(data.error);
-  } catch(e) {} finally { btn.disabled = false; }
-}
-
-async function deleteUser(uid, btn) {
-  if (!confirm("确定删除该用户？此操作不可恢复。")) return;
-  btn.disabled = true;
-  try {
-    const data = await fetch(`/api/admin/users/${uid}/delete`, { method: "POST" }).then(r => r.json());
-    if (data.ok) loadUsers();
-    else if (data.error) alert(data.error);
-  } catch(e) {} finally { btn.disabled = false; }
-}
-
-// ===== 全部内容管理 =====
+// 加载全部内容
 async function loadAll() {
   try {
-    const data = await fetch("/api/admin/all").then(r => r.json());
-    const total = data.apps.length + data.uploads.length;
-    document.getElementById("allStats").innerHTML = `
-      <div class="stat-card"><div class="sv">${total}</div><div class="sl">全部项目</div></div>
-      <div class="stat-card"><div class="sv">${data.apps.length}</div><div class="sl">社区作品</div></div>
-      <div class="stat-card"><div class="sv">${data.uploads.length}</div><div class="sl">文件仓库</div></div>`;
-
-    const list = document.getElementById("allList");
-    if (!total) { list.innerHTML = `<div class="empty">暂无内容</div>`; return; }
-    list.innerHTML = "";
-
-    data.apps.forEach(item => {
-      list.appendChild(createAllItem("app", item));
-    });
-    data.uploads.forEach(item => {
-      list.appendChild(createAllItem("upload", item));
-    });
+    const data = await fetch('/api/admin/all').then(r => r.json());
+    const tbody = document.getElementById('allBody');
+    if (data.items && data.items.length > 0) {
+      tbody.innerHTML = data.items.map(item => `
+        <tr>
+          <td>${esc(item.title)}</td>
+          <td>${esc(item.author)}</td>
+          <td><span class="badge badge-${item.status}">${item.status === 'pending' ? '待审核' : item.status === 'approved' ? '已通过' : '已拒绝'}</span></td>
+          <td>${new Date(item.time * 1000).toLocaleDateString('zh-CN')}</td>
+          <td><button class="btn-sm danger" onclick="remove('${item.id}', '${item.type}')">删除</button></td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:40px;">暂无内容</td></tr>';
+    }
   } catch(e) {}
 }
 
-function createAllItem(type, item) {
-  const div = document.createElement("div");
-  div.className = "pending-item";
-  const isUpload = type === "upload";
-  const isPending = item.status === "pending";
-  const statusBadge = isPending ? '<span class="badge badge-pending">待审核</span>' : '<span class="badge badge-admin" style="background:rgba(0,210,160,0.15);color:var(--green);">已发布</span>';
-  div.innerHTML = `
-    <div class="pi-icon">${isUpload ? "📁" : item.icon}</div>
-    <div class="pi-info">
-      <div class="pi-title">${esc(item.title)} ${statusBadge}</div>
-      <div class="pi-meta">${esc(item.author||"")} · ${new Date(item.time*1000).toLocaleDateString("zh-CN")} · ${isUpload ? (item.filename||"") : item.desc}</div>
-    </div>
-    <div class="pi-actions">
-      ${isPending ? `<button class="btn-sm btn-ok" onclick="approve('${type}','${item.id}',this)">✅ 通过</button>` : ""}
-      <button class="btn-sm btn-del" onclick="deleteItem('${type}','${item.id}',this)">🗑 删除</button>
-    </div>`;
-  return div;
-}
-
-async function deleteItem(type, id, btn) {
-  if (!confirm("确定删除？此操作不可恢复。")) return;
-  btn.disabled = true; btn.textContent = "…";
+// 加载用户
+async function loadUsers() {
   try {
-    const data = await fetch(`/api/admin/delete/${type}/${id}`, { method: "POST" }).then(r => r.json());
-    if (data.ok) {
-      btn.closest(".pending-item").style.opacity = "0.3";
-      setTimeout(() => { btn.closest(".pending-item").remove(); updateAllCount(); }, 300);
+    const data = await fetch('/api/admin/users').then(r => r.json());
+    const tbody = document.getElementById('usersBody');
+    if (data.users && data.users.length > 0) {
+      tbody.innerHTML = data.users.map(u => `
+        <tr>
+          <td>${esc(u.username)}</td>
+          <td style="color:var(--text-3);font-size:12px;">${u.id}</td>
+          <td><span class="badge ${u.is_admin ? 'badge-admin' : ''}">${u.is_admin ? '管理员' : '用户'}</span></td>
+          <td>
+            <button class="btn-sm orange" onclick="toggleAdmin('${u.id}', ${u.is_admin})">${u.is_admin ? '取消管理员' : '设为管理员'}</button>
+            <button class="btn-sm danger" onclick="deleteUser('${u.id}')">删除</button>
+          </td>
+        </tr>
+      `).join('');
     }
-  } catch(e) {} finally { btn.disabled = false; }
+  } catch(e) {}
 }
 
-function updateAllCount() {
-  const items = document.querySelectorAll("#allList .pending-item");
-  const sv = document.querySelector("#allStats .stat-card:first-child .sv");
-  if (sv) sv.textContent = items.length;
-  if (!items.length) document.getElementById("allList").innerHTML = `<div class="empty">暂无内容</div>`;
+async function approve(id, type) {
+  await fetch(`/api/admin/approve/${id}`, { method: 'POST' });
+  loadReview();
+  loadAll();
+  loadStats();
 }
 
-function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+async function reject(id, type) {
+  await fetch(`/api/admin/reject/${id}`, { method: 'POST' });
+  loadReview();
+  loadAll();
+}
+
+async function remove(id, type) {
+  if (!confirm('确定删除？')) return;
+  await fetch(`/api/admin/delete/${id}`, { method: 'DELETE' });
+  loadAll();
+  loadStats();
+}
+
+async function toggleAdmin(id, isAdmin) {
+  await fetch(`/api/admin/users/${id}/admin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_admin: !isAdmin })
+  });
+  loadUsers();
+}
+
+async function deleteUser(id) {
+  if (!confirm('确定删除该用户？')) return;
+  await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+  loadUsers();
+  loadStats();
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+loadStats();
+loadReview();
+loadAll();
+loadUsers();
 </script>
 </body>
 </html>
