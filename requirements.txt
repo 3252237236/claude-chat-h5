@@ -4,3 +4,6 @@ Pillow
 python-docx
 PyPDF2
 openpyxl
+reportlab
+pydub
+PyYAML
