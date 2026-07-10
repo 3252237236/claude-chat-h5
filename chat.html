@@ -876,8 +876,8 @@ let isSending = false;
 let currentPreset = "deepseek";
 let pendingImages = [];  // 待发送的图片 data URL
 
-// 获取最佳模型：有图片用多模态，纯文字用最强推理
-function getBestModel(hasImages) {
+// 获取当前选择的模型
+function getBestModel() {
   const providers = appData.availableProviders || [];
   const url = appData.settings.apiUrl || "";
 
@@ -889,7 +889,7 @@ function getBestModel(hasImages) {
   if (matched) return matched.model;
 
   // 兜底
-  return "mimo-v2.5";
+  return "mimo-v2-omni";
 }
 
 // ==================== DOM 引用 ====================
@@ -1252,11 +1252,7 @@ async function apiFetch(apiUrl, apiKey, body) {
 
 async function callApiSimple(topic) {
   const { apiUrl, apiKey } = appData.settings;
-  // 检测是否有图片消息
-  const hasImages = topic.messages.some(m =>
-    Array.isArray(m.content) && m.content.some(c => c.type === "image_url")
-  );
-  const model = getBestModel(hasImages);
+  const model = getBestModel();
   const isClaude = apiUrl.includes("anthropic.com");
 
   updateStatusBarDyn(`🧠 ${model} 思考中…`);
@@ -1312,11 +1308,7 @@ async function callClaudeSimple(messages, sysPrompt, apiUrl, apiKey, model) {
 // ==================== Agent 模式 API 调用 ====================
 async function callApiAgent(topic) {
   const { apiUrl, apiKey } = appData.settings;
-  // 检测是否有图片消息
-  const hasImages = topic.messages.some(m =>
-    Array.isArray(m.content) && m.content.some(c => c.type === "image_url")
-  );
-  const model = getBestModel(hasImages);
+  const model = getBestModel();
   const isClaude = apiUrl.includes("anthropic.com");
 
   updateStatusBarDyn(`🧠 ${model} (Agent) 思考中…`);
