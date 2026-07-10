@@ -945,6 +945,12 @@ function init() {
     .then(cfg => {
       appData.serverHasKey = cfg.hasKey;
       appData.availableProviders = cfg.providers || [];
+      // 清理无效的缓存模型
+      const savedModel = appData.settings.model;
+      if (savedModel && !appData.availableProviders.some(p => p.model === savedModel)) {
+        appData.settings.model = "";
+        saveAll();
+      }
       populateModelSelect();
       if (!cfg.hasKey) {
         inputHint.textContent = "⚠️ 服务端未配置 API Key";
