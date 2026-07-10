@@ -37,15 +37,60 @@ body {
   background-size: 48px 48px;
 }
 
+/* ===== 噪点纹理 ===== */
+.bg-noise {
+  position: fixed; inset: 0; z-index: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  pointer-events: none;
+}
+
+/* ===== 自定义滚动条 ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ===== 页面动画 ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .app {
   position: relative; z-index: 1;
   max-width: 900px; margin: 0 auto;
   padding: 36px 24px 60px;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 16px; margin-bottom: 36px; flex-wrap: wrap;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 .topbar h1 { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
 .topbar .links { display: flex; gap: 14px; align-items: center; }
@@ -53,7 +98,10 @@ body {
 .topbar .links a:hover { color: var(--text); }
 
 /* 标签切换 */
-.tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.tabs {
+  display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border);
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
 .tab {
   padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
   color: var(--text-dim); border: none; background: none; font-family: inherit;
@@ -66,11 +114,23 @@ body {
 .panel.active { display: block; }
 
 /* 统计卡片 */
-.stats { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.stats {
+  display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;
+  animation: fadeInUp 0.6s ease-out 0.3s both;
+}
 .stat-card {
   flex: 1; min-width: 140px;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 18px 20px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.stat-card:hover {
+  background: var(--surface2);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
 }
 .stat-card .sv { font-size: 28px; font-weight: 800; }
 .stat-card .sl { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
@@ -80,6 +140,7 @@ body {
   width: 100%; border-collapse: collapse;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); overflow: hidden;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 .table th {
   text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700;
@@ -89,8 +150,17 @@ body {
 .table td {
   padding: 12px 16px; font-size: 13px;
   border-top: 1px solid var(--border);
+  transition: background 0.2s ease;
 }
-.table tr:hover td { background: var(--surface2); }
+.table tr {
+  transition: all 0.2s ease;
+}
+.table tr:hover td {
+  background: var(--surface2);
+}
+.table tr:hover {
+  transform: scale(1.01);
+}
 
 /* 按钮 */
 .btn-sm {
@@ -138,6 +208,7 @@ body {
 <body>
 
 <div class="bg"></div>
+<div class="bg-noise"></div>
 
 <div class="app">
   <div class="topbar">

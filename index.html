@@ -56,10 +56,38 @@ html, body {
   top: 50%; left: 50%; animation-delay: -14s; opacity: 0.08;
 }
 @keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(60px, -40px) scale(1.1); }
-  50% { transform: translate(-30px, -80px) scale(0.9); }
-  75% { transform: translate(-50px, 30px) scale(1.05); }
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  25% { transform: translate(60px, -40px) scale(1.1) rotate(5deg); }
+  50% { transform: translate(-30px, -80px) scale(0.9) rotate(-3deg); }
+  75% { transform: translate(-50px, 30px) scale(1.05) rotate(2deg); }
+}
+
+/* ===== 页面进入动画 ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .bg-grid {
   position: fixed; inset: 0; z-index: 0; opacity: 0.03;
@@ -69,6 +97,32 @@ html, body {
   background-size: 60px 60px;
 }
 
+/* ===== 噪点纹理 ===== */
+.bg-noise {
+  position: fixed; inset: 0; z-index: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  pointer-events: none;
+}
+
+/* ===== 自定义滚动条 ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
 /* ===== 主容器 ===== */
 .app {
   position: relative; z-index: 1;
@@ -76,6 +130,7 @@ html, body {
   padding: 60px 24px 80px;
   min-height: 100vh;
   display: flex; flex-direction: column;
+  animation: fadeIn 0.6s ease-out;
 }
 
 /* ===== 用户栏 ===== */
@@ -104,6 +159,7 @@ html, body {
 .hero .logo {
   display: inline-flex; align-items: center; gap: 12px;
   margin-bottom: 24px;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 .hero .logo-icon {
   width: 52px; height: 52px;
@@ -112,16 +168,23 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   font-size: 24px;
   box-shadow: 0 0 40px var(--accent-glow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hero .logo-icon:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 60px var(--accent-glow);
 }
 .hero h1 {
   font-size: 48px; font-weight: 800; letter-spacing: -2px;
   background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 .hero .subtitle {
   font-size: 17px; color: var(--text-dim); max-width: 500px; margin: 0 auto;
   line-height: 1.7;
+  animation: fadeInUp 0.6s ease-out 0.3s both;
 }
 
 /* ===== 卡片 ===== */
@@ -129,6 +192,7 @@ html, body {
   font-size: 13px; font-weight: 700; letter-spacing: 3px;
   text-transform: uppercase; color: var(--text-dim);
   margin: 20px 0 24px; text-align: center;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 .cards {
   display: grid;
@@ -145,13 +209,41 @@ html, body {
   transition: all var(--transition);
   text-decoration: none; color: inherit;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fadeInUp 0.6s ease-out both;
 }
+.card:nth-child(1) { animation-delay: 0.5s; }
+.card:nth-child(2) { animation-delay: 0.6s; }
+.card:nth-child(3) { animation-delay: 0.7s; }
+.card:nth-child(4) { animation-delay: 0.8s; }
+.card:nth-child(5) { animation-delay: 0.9s; }
+.card:nth-child(6) { animation-delay: 1.0s; }
+
 .card::before {
   content: "";
   position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
   opacity: 0; transition: opacity var(--transition);
 }
+
+/* 鼠标跟随光晕效果 */
+.card::after {
+  content: "";
+  position: absolute;
+  top: var(--mouse-y, 50%);
+  left: var(--mouse-x, 50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--card-glow, var(--accent-glow)) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
 .card:hover {
   background: var(--surface-hover);
   border-color: rgba(255,255,255,0.12);
@@ -159,10 +251,16 @@ html, body {
   box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 80px var(--card-glow, var(--accent-glow));
 }
 .card:hover::before { opacity: 1; }
+.card:hover::after { opacity: 0.15; }
+
 .card .card-icon {
   width: 48px; height: 48px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; margin-bottom: 18px;
+  transition: transform 0.3s ease;
+}
+.card:hover .card-icon {
+  transform: scale(1.1);
 }
 .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
 .card p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
@@ -171,13 +269,18 @@ html, body {
   font-size: 11px; font-weight: 600; padding: 4px 10px;
   border-radius: 20px; background: rgba(255,255,255,0.05);
   color: var(--text-dim);
+  transition: all 0.3s ease;
 }
-.card:hover .card-badge { color: var(--text); }
+.card:hover .card-badge {
+  color: var(--text);
+  background: rgba(255,255,255,0.1);
+}
 
 /* ===== 底部 ===== */
 .footer {
   margin-top: auto; text-align: center; padding-top: 60px;
   font-size: 12px; color: var(--text-dim);
+  animation: fadeIn 0.6s ease-out 1.2s both;
 }
 
 /* ===== 响应式 ===== */
@@ -200,6 +303,7 @@ html, body {
   <div class="bg-orb"></div>
 </div>
 <div class="bg-grid"></div>
+<div class="bg-noise"></div>
 
 <div class="app">
   <div class="user-bar" id="userBar"></div>
@@ -325,6 +429,42 @@ async function doLogout() {
 })();
 
 function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+// ===== 鼠标跟随光晕效果 =====
+function initMouseGlow() {
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+  });
+}
+
+// 在卡片加载后初始化鼠标效果
+setTimeout(initMouseGlow, 100);
+
+// ===== 滚动触发动画 =====
+function initScrollAnimations() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // 观察社区作品区域
+  const communityTitle = document.getElementById('communityTitle');
+  const communityCards = document.getElementById('communityCards');
+  if (communityTitle) observer.observe(communityTitle);
+  if (communityCards) observer.observe(communityCards);
+}
+
+document.addEventListener('DOMContentLoaded', initScrollAnimations);
 
 checkAuth();
 </script>
