@@ -1478,7 +1478,7 @@ def api_convert_batch():
             return jsonify({"error": "转换失败"}), 500
 
         output_name = fname.rsplit(".", 1)[0] + "." + target_format
-        return send_file(BytesIO(result), as_attachment=True, download_name=output_name)
+        return send_file(BytesIO(result), as_attachment=True, download_name=output_name, mimetype='application/octet-stream')
 
     # 多个文件打包成 zip
     import zipfile
@@ -1506,7 +1506,7 @@ def api_convert_batch():
                 errors.append(fname)
 
     zip_buf.seek(0)
-    return send_file(zip_buf, as_attachment=True, download_name=f"converted_{len(files)}files.zip")
+    return send_file(zip_buf, as_attachment=True, download_name=f"converted_{len(files)}files.zip", mimetype='application/octet-stream')
 
 # ---------- 入口 ----------
 if __name__ == "__main__":
