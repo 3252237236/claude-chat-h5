@@ -202,7 +202,10 @@ html, body {
 .topic-item .btn-icon:hover { background: rgba(0,0,0,0.15); color: #fff; }
 .sidebar-footer {
   padding: var(--space-3); border-top: 1px solid rgba(0,0,0,0.06);
-  display: flex; gap: var(--space-2);
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.model-select-wrap {
+  display: flex; flex-direction: column; gap: 2px;
 }
 .sidebar-footer button {
   flex: 1; padding: var(--space-2) var(--space-3); border: none; border-radius: var(--radius-sm); cursor: pointer;
@@ -480,6 +483,12 @@ html, body {
     </div>
     <div class="topic-list" id="topicList"></div>
     <div class="sidebar-footer">
+      <div class="model-select-wrap">
+        <label style="font-size:11px;color:var(--text-secondary);margin-bottom:2px;">🧠 模型</label>
+        <select id="modelSelect" onchange="onModelChange()" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;">
+          <option value="">自动选择</option>
+        </select>
+      </div>
       <button class="btn-new" onclick="newTopic()">＋ 新建话题</button>
       <a href="/" style="text-decoration:none;flex:1;"><button class="btn-settings" style="width:100%;">🏠 首页</button></a>
     </div>
@@ -850,7 +859,7 @@ function createFreshData() {
     },
     topicOrder: [tid],
     currentTopicId: tid,
-    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions" },
+    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions", model: "mimo-v2-omni" },
   };
 }
 
@@ -867,6 +876,22 @@ let isSending = false;
 let currentPreset = "deepseek";
 let pendingImages = [];  // 待发送的图片 data URL
 
+// 获取最佳模型：有图片用多模态，纯文字用最强推理
+function getBestModel(hasImages) {
+  const providers = appData.availableProviders || [];
+  const url = appData.settings.apiUrl || "";
+
+  // 如果用户手动选了模型，优先用用户的
+  if (appData.settings.model) return appData.settings.model;
+
+  // 根据当前 apiUrl 找对应平台的 model
+  const matched = providers.find(p => p.url === url);
+  if (matched) return matched.model;
+
+  // 兜底
+  return "mimo-v2.5";
+}
+
 // ==================== DOM 引用 ====================
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -879,6 +904,29 @@ const btnSend = $("#btnSend");
 const agentBadge = $("#agentBadge");
 const inputHint = $("#inputHint");
 
+// ==================== 模型选择 ====================
+function populateModelSelect() {
+  const sel = document.getElementById("modelSelect");
+  if (!sel) return;
+  const providers = appData.availableProviders || [];
+  // 保留第一个"自动选择"选项
+  sel.innerHTML = '<option value="">🤖 自动选择</option>';
+  providers.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.model;
+    opt.textContent = `${p.name} (${p.model})`;
+    if (p.model === appData.settings.model) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function onModelChange() {
+  const sel = document.getElementById("modelSelect");
+  appData.settings.model = sel.value;
+  saveAll();
+  showToast(sel.value ? `✅ 模型: ${sel.value}` : "🤖 已切换为自动选择");
+}
+
 // ==================== 初始化 ====================
 function init() {
   renderTopicList();
@@ -890,6 +938,7 @@ function init() {
     .then(cfg => {
       appData.serverHasKey = cfg.hasKey;
       appData.availableProviders = cfg.providers || [];
+      populateModelSelect();
       if (!cfg.hasKey) {
         inputHint.textContent = "⚠️ 服务端未配置 API Key";
       } else if (appData.availableProviders.length > 0) {
@@ -1182,7 +1231,8 @@ function updateStatusBar() {
   const agentOn = topic.agentEnabled;
   agentBadge.textContent = agentOn ? "🤖 Agent ON" : "📝 纯聊天";
   agentBadge.className = `agent-badge ${agentOn ? "agent-on" : "agent-off"}`;
-  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent ON" : "📝 纯聊天"}`;
+  const model = appData.settings.model || "自动";
+  inputHint.textContent = `就绪 | ${agentOn ? "🤖 Agent" : "📝 纯聊天"} | ${model}`;
 }
 
 // ==================== API 调用 ====================
@@ -1202,8 +1252,14 @@ async function apiFetch(apiUrl, apiKey, body) {
 
 async function callApiSimple(topic) {
   const { apiUrl, apiKey } = appData.settings;
-  const model = "mimo-v2.5";
+  // 检测是否有图片消息
+  const hasImages = topic.messages.some(m =>
+    Array.isArray(m.content) && m.content.some(c => c.type === "image_url")
+  );
+  const model = getBestModel(hasImages);
   const isClaude = apiUrl.includes("anthropic.com");
+
+  updateStatusBarDyn(`🧠 ${model} 思考中…`);
 
   // 构建消息
   let messages = [];
@@ -1256,8 +1312,14 @@ async function callClaudeSimple(messages, sysPrompt, apiUrl, apiKey, model) {
 // ==================== Agent 模式 API 调用 ====================
 async function callApiAgent(topic) {
   const { apiUrl, apiKey } = appData.settings;
-  const model = "mimo-v2.5";
+  // 检测是否有图片消息
+  const hasImages = topic.messages.some(m =>
+    Array.isArray(m.content) && m.content.some(c => c.type === "image_url")
+  );
+  const model = getBestModel(hasImages);
   const isClaude = apiUrl.includes("anthropic.com");
+
+  updateStatusBarDyn(`🧠 ${model} (Agent) 思考中…`);
 
   try {
     let responseText;
