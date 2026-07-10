@@ -842,7 +842,7 @@ async function checkAuth() {
         <a href="/friends" class="nav-link">好友${badge}</a>
         ${isAdmin ? '<a href="/admin" class="nav-link" style="color:var(--orange);">管理</a>' : ''}
         <span style="color:var(--text-3);font-size:13px;">${esc(data.user.username)}</span>
-        <button class="nav-btn" onclick="doLogout()" style="background:rgba(0,0,0,0.05);font-size:13px;padding:6px 14px;">登出</button>
+        <button class="nav-btn" onclick="doLogout()" style="background:rgba(255,255,255,0.15);font-size:13px;padding:6px 14px;">登出</button>
       `;
     }
   } catch(e) {}
