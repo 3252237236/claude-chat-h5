@@ -508,14 +508,17 @@ async function doUpload() {
   try {
     const res = await fetch('/api/upload', {
       method: 'POST',
-      body: formData
+      body: formData,
+      credentials: 'same-origin'
     });
     const data = await res.json();
     if (data.ok) {
       alert('文件已上传，等待审核');
+    } else {
+      alert(data.error || '上传失败');
     }
   } catch(e) {
-    alert('上传失败，请重试');
+    alert('上传失败: ' + e.message);
     console.error(e);
   } finally {
     loading.classList.remove('show');
