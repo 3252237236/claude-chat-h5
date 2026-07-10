@@ -1303,7 +1303,10 @@ def api_convert():
         return jsonify({"error": f"转换失败: {str(e)}"}), 500
 
 def convert_image(file, src_ext, dst_ext):
-    from PIL import Image
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
     img = Image.open(file.stream)
     if dst_ext in ("jpg", "jpeg"):
         if img.mode in ("RGBA", "P"):
@@ -1321,11 +1324,17 @@ def convert_document(file, src_ext, dst_ext):
     if src_ext == "txt" or src_ext == "md":
         content = file.read().decode("utf-8", errors="replace")
     elif src_ext == "docx":
-        from docx import Document
+        try:
+            from docx import Document
+        except ImportError:
+            return None
         doc = Document(file.stream)
         content = "\n".join([p.text for p in doc.paragraphs])
     elif src_ext == "pdf":
-        from PyPDF2 import PdfReader
+        try:
+            from PyPDF2 import PdfReader
+        except ImportError:
+            return None
         reader = PdfReader(file.stream)
         content = "\n".join([p.extract_text() or "" for p in reader.pages])
     elif src_ext == "html":
@@ -1337,9 +1346,11 @@ def convert_document(file, src_ext, dst_ext):
         html = f"<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><pre>{content}</pre></body></html>"
         return html.encode("utf-8")
     elif dst_ext == "pdf":
-        from PyPDF2 import PdfWriter
-        from reportlab.lib.pagesizes import letter
-        from reportlab.pdfgen import canvas as rl_canvas
+        try:
+            from reportlab.lib.pagesizes import letter
+            from reportlab.pdfgen import canvas as rl_canvas
+        except ImportError:
+            return None
         buf = BytesIO()
         c = rl_canvas.Canvas(buf, pagesize=letter)
         y = 750
