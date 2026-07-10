@@ -387,10 +387,10 @@ body {
 
   <div class="convert-card">
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <input type="file" id="fileInput" style="display:none" onchange="onFileSelected(event)">
+      <input type="file" id="fileInput" multiple style="display:none" onchange="onFileSelected(event)">
       <div class="upload-icon">📁</div>
       <div class="upload-text">点击或拖拽文件到此处</div>
-      <div class="upload-hint">支持图片、文档、数据、音频等多种格式</div>
+      <div class="upload-hint">支持批量上传，最多 20 个文件，同类型统一转换格式</div>
     </div>
 
     <div class="format-section" id="formatSection" style="display:none;">
@@ -427,7 +427,7 @@ body {
 </div>
 
 <script>
-let selectedFile = null;
+let selectedFiles = [];
 let selectedFormat = null;
 let formatsData = null;
 
@@ -452,51 +452,84 @@ uploadZone.addEventListener('drop', e => {
   e.preventDefault();
   uploadZone.classList.remove('dragover');
   if (e.dataTransfer.files.length > 0) {
-    handleFile(e.dataTransfer.files[0]);
+    handleFiles(Array.from(e.dataTransfer.files));
   }
 });
 
 function onFileSelected(e) {
   if (e.target.files.length > 0) {
-    handleFile(e.target.files[0]);
+    handleFiles(Array.from(e.target.files));
   }
 }
 
-function handleFile(file) {
-  selectedFile = file;
+function handleFiles(files) {
+  selectedFiles = files.slice(0, 20);
   selectedFormat = null;
-  const ext = file.name.split('.').pop().toLowerCase();
 
-  // 显示文件信息
   uploadZone.classList.add('has-file');
-  uploadZone.innerHTML = `
-    <div class="file-info">
-      <div class="file-icon">${getFileIcon(ext)}</div>
-      <div class="file-detail">
-        <div class="file-name">${esc(file.name)}</div>
-        <div class="file-size">${formatSize(file.size)} · ${ext.toUpperCase()}</div>
-      </div>
-      <button class="remove-btn" onclick="removeFile(event)">✕</button>
-    </div>
-  `;
+  const totalSize = selectedFiles.reduce((s, f) => s + f.size, 0);
 
-  // 显示可转换格式
-  showTargetFormats(ext);
+  let html = '';
+  if (selectedFiles.length === 1) {
+    const ext = selectedFiles[0].name.split('.').pop().toLowerCase();
+    html = `
+      <div class="file-info">
+        <div class="file-icon">${getFileIcon(ext)}</div>
+        <div class="file-detail">
+          <div class="file-name">${esc(selectedFiles[0].name)}</div>
+          <div class="file-size">${formatSize(selectedFiles[0].size)} · ${ext.toUpperCase()}</div>
+        </div>
+        <button class="remove-btn" onclick="removeFiles(event)">✕</button>
+      </div>
+    `;
+  } else {
+    html = `
+      <div class="file-info">
+        <div class="file-icon">📦</div>
+        <div class="file-detail">
+          <div class="file-name">${selectedFiles.length} 个文件</div>
+          <div class="file-size">共 ${formatSize(totalSize)}</div>
+        </div>
+        <button class="remove-btn" onclick="removeFiles(event)">✕</button>
+      </div>
+    `;
+  }
+  uploadZone.innerHTML = html;
+
+  // 检查所有文件是否同类型
+  const exts = selectedFiles.map(f => f.name.split('.').pop().toLowerCase());
+  const cats = exts.map(ext => {
+    for (const [cat, fmts] of Object.entries(formatsData || {})) {
+      if (fmts.input.includes(ext)) return cat;
+    }
+    return null;
+  });
+
+  const uniqueCats = [...new Set(cats)];
+  if (uniqueCats.length > 1 || uniqueCats.includes(null)) {
+    showMessage('请选择同类型的文件进行批量转换', 'err');
+    document.getElementById('formatSection').style.display = 'none';
+    document.getElementById('convertBtn').disabled = true;
+    return;
+  }
+
+  showTargetFormats(exts[0]);
 }
 
-function removeFile(e) {
+function removeFiles(e) {
   e.stopPropagation();
-  selectedFile = null;
+  selectedFiles = [];
   selectedFormat = null;
   uploadZone.classList.remove('has-file');
   uploadZone.innerHTML = `
-    <input type="file" id="fileInput" style="display:none" onchange="onFileSelected(event)">
+    <input type="file" id="fileInput" multiple style="display:none" onchange="onFileSelected(event)">
     <div class="upload-icon">📁</div>
     <div class="upload-text">点击或拖拽文件到此处</div>
-    <div class="upload-hint">支持图片、文档、数据、音频等多种格式</div>
+    <div class="upload-hint">支持批量上传，最多 20 个文件，同类型统一转换格式</div>
   `;
   document.getElementById('formatSection').style.display = 'none';
   document.getElementById('convertBtn').disabled = true;
+  hideMessage();
 }
 
 function showTargetFormats(ext) {
@@ -533,7 +566,7 @@ function selectFormat(fmt, btn) {
 }
 
 async function doConvert() {
-  if (!selectedFile || !selectedFormat) return;
+  if (selectedFiles.length === 0 || !selectedFormat) return;
 
   const btn = document.getElementById('convertBtn');
   const progressBar = document.getElementById('progressBar');
@@ -543,11 +576,11 @@ async function doConvert() {
   hideMessage();
 
   const formData = new FormData();
-  formData.append('file', selectedFile);
+  selectedFiles.forEach(f => formData.append('files', f));
   formData.append('target', selectedFormat);
 
   try {
-    const res = await fetch('/api/convert', {
+    const res = await fetch('/api/convert/batch', {
       method: 'POST',
       body: formData
     });
@@ -561,11 +594,13 @@ async function doConvert() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = selectedFile.name.replace(/\.[^.]+$/, '') + '.' + selectedFormat;
+    a.download = selectedFiles.length === 1
+      ? selectedFiles[0].name.replace(/\.[^.]+$/, '') + '.' + selectedFormat
+      : `converted_${selectedFiles.length}files.zip`;
     a.click();
     URL.revokeObjectURL(url);
 
-    showMessage('转换成功！文件已下载', 'ok');
+    showMessage(`转换成功！${selectedFiles.length} 个文件已下载`, 'ok');
   } catch(e) {
     showMessage(e.message, 'err');
   } finally {

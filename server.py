@@ -1437,6 +1437,77 @@ def convert_audio(file, src_ext, dst_ext):
     except Exception:
         return None
 
+@app.route("/api/convert/batch", methods=["POST"])
+def api_convert_batch():
+    """批量文件格式转换"""
+    files = request.files.getlist("files")
+    target_format = request.form.get("target", "").lower().strip()
+
+    if not files or len(files) == 0:
+        return jsonify({"error": "请选择文件"}), 400
+    if not target_format:
+        return jsonify({"error": "请选择目标格式"}), 400
+    if len(files) > 20:
+        return jsonify({"error": "最多同时转换 20 个文件"}), 400
+
+    # 检查所有文件是否支持该格式
+    for f in files:
+        fname = secure_filename(f.filename)
+        ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
+        cat = detect_category(ext)
+        if not cat or target_format not in CONVERT_FORMATS[cat]["output"]:
+            return jsonify({"error": f"不支持 {fname} 转换为 {target_format}"}), 400
+
+    # 单个文件直接返回
+    if len(files) == 1:
+        f = files[0]
+        fname = secure_filename(f.filename)
+        ext = fname.rsplit(".", 1)[-1].lower()
+        cat = detect_category(ext)
+        result = None
+        if cat == "image":
+            result = convert_image(f, ext, target_format)
+        elif cat == "document":
+            result = convert_document(f, ext, target_format)
+        elif cat == "data":
+            result = convert_data(f, ext, target_format)
+        elif cat == "audio":
+            result = convert_audio(f, ext, target_format)
+
+        if result is None:
+            return jsonify({"error": "转换失败"}), 500
+
+        output_name = fname.rsplit(".", 1)[0] + "." + target_format
+        return send_file(BytesIO(result), as_attachment=True, download_name=output_name)
+
+    # 多个文件打包成 zip
+    import zipfile
+    zip_buf = BytesIO()
+    errors = []
+    with zipfile.ZipFile(zip_buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for f in files:
+            fname = secure_filename(f.filename)
+            ext = fname.rsplit(".", 1)[-1].lower()
+            cat = detect_category(ext)
+            result = None
+            if cat == "image":
+                result = convert_image(f, ext, target_format)
+            elif cat == "document":
+                result = convert_document(f, ext, target_format)
+            elif cat == "data":
+                result = convert_data(f, ext, target_format)
+            elif cat == "audio":
+                result = convert_audio(f, ext, target_format)
+
+            if result:
+                output_name = fname.rsplit(".", 1)[0] + "." + target_format
+                zf.writestr(output_name, result)
+            else:
+                errors.append(fname)
+
+    zip_buf.seek(0)
+    return send_file(zip_buf, as_attachment=True, download_name=f"converted_{len(files)}files.zip")
+
 # ---------- 入口 ----------
 if __name__ == "__main__":
     print(f"🤖 HZ Lab - Flask", flush=True)
