@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人主页 - HZ Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: rgba(0,0,0,0.12);
+  --border-hover: rgba(0,0,0,0.25);
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #6366f1;
+  --green: #16a34a;
+  --orange: #ea580c;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.light {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+.light-1 { background: var(--accent); top: -200px; left: 20%; }
+.light-2 { background: #ec4899; bottom: -200px; right: 10%; }
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: var(--text);
+}
+
+.header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* 个人卡片 */
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  text-align: center;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, var(--accent), #ec4899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  font-weight: 700;
+  color: white;
+  margin: 0 auto 20px;
+  position: relative;
+}
+
+.avatar-edit {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.avatar-edit:hover { transform: scale(1.1); }
+
+.username {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.bio {
+  font-size: 15px;
+  color: var(--text-2);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  min-height: 24px;
+}
+
+.bio-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.bio-input:focus { border-color: var(--accent); }
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 10px 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-2);
+}
+
+.btn-secondary:hover { background: rgba(0,0,0,0.05); }
+
+/* 内容区块 */
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-3);
+}
+
+.empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.register-time {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .app { padding: 20px 16px 60px; }
+  .profile-card { padding: 24px; }
+  .stats { gap: 24px; }
+  .card-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="light light-1"></div>
+  <div class="light light-2"></div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <a href="/" class="back-btn">←</a>
+    <h1>👤 个人主页</h1>
+  </div>
+
+  <div class="profile-card">
+    <div class="avatar" id="avatar">
+      <span id="avatarText">?</span>
+    </div>
+    <div class="username" id="username">加载中...</div>
+    <div class="bio" id="bioDisplay"></div>
+    <input type="text" class="bio-input" id="bioInput" placeholder="写一句个人简介..." style="display:none;">
+    <div class="register-time" id="regTime"></div>
+    <div class="stats" id="statsRow" style="display:none;">
+      <div class="stat">
+        <div class="stat-num" id="statApps">0</div>
+        <div class="stat-label">作品</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="statFiles">0</div>
+        <div class="stat-label">文件</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="statFriends">0</div>
+        <div class="stat-label">好友</div>
+      </div>
+    </div>
+    <div class="edit-actions" id="editActions" style="display:none;">
+      <button class="btn btn-secondary" onclick="cancelEdit()">取消</button>
+      <button class="btn btn-primary" onclick="saveProfile()">保存</button>
+    </div>
+    <div class="edit-actions" id="viewActions">
+      <button class="btn btn-primary" id="editBtn" onclick="startEdit()" style="display:none;">编辑资料</button>
+      <button class="btn btn-secondary" id="addFriendBtn" onclick="sendFriendReq()" style="display:none;">添加好友</button>
+    </div>
+  </div>
+
+  <div id="userContent"></div>
+</div>
+
+<script>
+let profileUser = null;
+let currentUser = null;
+let isOwnProfile = false;
+
+async function loadMe() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.ok) currentUser = await res.json();
+  } catch(e) {}
+}
+
+function getUrlUid() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('uid');
+}
+
+async function loadProfile() {
+  const uid = getUrlUid();
+  const url = uid ? `/api/profile/${uid}` : '/api/profile';
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) { alert('用户不存在'); return; }
+    profileUser = await res.json();
+    isOwnProfile = !uid || (currentUser && profileUser.id === currentUser.id);
+    renderProfile();
+  } catch(e) { console.error(e); }
+}
+
+function renderProfile() {
+  const u = profileUser;
+  document.getElementById('avatarText').textContent = u.username.charAt(0).toUpperCase();
+  document.getElementById('username').textContent = u.username;
+  document.getElementById('bioDisplay').textContent = u.bio || '这个人很懒，什么都没写...';
+  document.getElementById('bioInput').value = u.bio || '';
+
+  const date = new Date(u.created_at * 1000);
+  document.getElementById('regTime').textContent = `注册于 ${date.toLocaleDateString('zh-CN')}`;
+
+  if (isOwnProfile) {
+    document.getElementById('editBtn').style.display = '';
+  } else {
+    document.getElementById('addFriendBtn').style.display = '';
+  }
+
+  // 显示统计
+  if (u.apps_count !== undefined) {
+    document.getElementById('statsRow').style.display = '';
+    document.getElementById('statApps').textContent = u.apps_count || 0;
+    document.getElementById('statFiles').textContent = u.files_count || 0;
+    document.getElementById('statFriends').textContent = u.friends_count || 0;
+  }
+
+  loadUserContent();
+}
+
+function startEdit() {
+  document.getElementById('bioDisplay').style.display = 'none';
+  document.getElementById('bioInput').style.display = '';
+  document.getElementById('editActions').style.display = '';
+  document.getElementById('viewActions').style.display = 'none';
+  document.getElementById('bioInput').focus();
+}
+
+function cancelEdit() {
+  document.getElementById('bioDisplay').style.display = '';
+  document.getElementById('bioInput').style.display = 'none';
+  document.getElementById('editActions').style.display = 'none';
+  document.getElementById('viewActions').style.display = '';
+}
+
+async function saveProfile() {
+  const bio = document.getElementById('bioInput').value.trim();
+  await fetch('/api/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bio })
+  });
+  profileUser.bio = bio;
+  document.getElementById('bioDisplay').textContent = bio || '这个人很懒，什么都没写...';
+  cancelEdit();
+}
+
+async function sendFriendReq() {
+  const msg = prompt('附加消息（可选）：');
+  await fetch('/api/friends/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: profileUser.id, message: msg })
+  });
+  alert('好友请求已发送');
+}
+
+async function loadUserContent() {
+  const container = document.getElementById('userContent');
+  const uid = profileUser.id;
+
+  // 加载该用户的社区作品
+  try {
+    const appsRes = await fetch('/api/community-apps');
+    const apps = await appsRes.json();
+    const userApps = apps.filter(a => a.author === profileUser.username);
+
+    if (userApps.length > 0) {
+      container.innerHTML += `
+        <div class="section-title">🎯 作品</div>
+        <div class="card-grid">
+          ${userApps.map(a => `
+            <a class="card" href="${a.url || '#'}" target="_blank">
+              <div class="card-title">${esc(a.title)}</div>
+              <div class="card-desc">${esc(a.desc || '')}</div>
+            </a>
+          `).join('')}
+        </div>
+      `;
+    }
+  } catch(e) {}
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+(async function() {
+  await loadMe();
+  await loadProfile();
+})();
+</script>
+</body>
+</html>

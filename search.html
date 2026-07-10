@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>搜索 - HZ Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: rgba(0,0,0,0.12);
+  --border-hover: rgba(0,0,0,0.25);
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #6366f1;
+  --green: #16a34a;
+  --orange: #ea580c;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.light {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+.light-1 { background: var(--accent); top: -200px; left: 20%; }
+.light-2 { background: #ec4899; bottom: -200px; right: 10%; }
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: var(--text);
+}
+
+.search-box {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+.search-btn {
+  padding: 12px 24px;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.search-btn:hover { opacity: 0.9; }
+
+/* 结果区块 */
+.section {
+  margin-bottom: 32px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-count {
+  font-size: 13px;
+  color: var(--text-3);
+  background: rgba(0,0,0,0.05);
+  padding: 2px 10px;
+  border-radius: 100px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.item:hover {
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #ec4899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.file-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info { flex: 1; min-width: 0; }
+
+.name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.desc {
+  font-size: 13px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-3);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty p {
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .app { padding: 20px 16px 60px; }
+  .search-input { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="light light-1"></div>
+  <div class="light light-2"></div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <a href="/" class="back-btn">←</a>
+    <div class="search-box">
+      <input type="text" class="search-input" id="searchInput" placeholder="搜索用户、作品、文件..." autofocus>
+      <button class="search-btn" onclick="doSearch()">搜索</button>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="empty">
+      <div class="empty-icon">🔍</div>
+      <p>输入关键词开始搜索</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+const params = new URLSearchParams(window.location.search);
+const q = params.get('q');
+if (q) {
+  searchInput.value = q;
+  doSearch();
+}
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+async function doSearch() {
+  const query = searchInput.value.trim();
+  if (!query) return;
+
+  history.replaceState(null, '', `/search?q=${encodeURIComponent(query)}`);
+
+  try {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    renderResults(query, data);
+  } catch(e) { console.error(e); }
+}
+
+function renderResults(query, data) {
+  const container = document.getElementById('results');
+  const { users, apps, files } = data;
+  const total = users.length + apps.length + files.length;
+
+  if (total === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">😢</div><p>未找到"${esc(query)}"的相关结果</p></div>`;
+    return;
+  }
+
+  let html = '';
+
+  if (users.length > 0) {
+    html += `
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">👥 用户</div>
+          <span class="section-count">${users.length}</span>
+        </div>
+        <div class="list">
+          ${users.map(u => `
+            <a class="item" href="/profile?uid=${u.id}">
+              <div class="avatar">${u.username.charAt(0).toUpperCase()}</div>
+              <div class="info">
+                <div class="name">${esc(u.username)}</div>
+                <div class="desc">${esc(u.bio) || '暂无简介'}</div>
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (apps.length > 0) {
+    html += `
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">🎯 作品</div>
+          <span class="section-count">${apps.length}</span>
+        </div>
+        <div class="list">
+          ${apps.map(a => `
+            <a class="item" href="${a.url || '#'}" target="_blank">
+              <div class="file-icon">🎯</div>
+              <div class="info">
+                <div class="name">${esc(a.title)}</div>
+                <div class="desc">${esc(a.desc || '')}</div>
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (files.length > 0) {
+    html += `
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">📁 文件</div>
+          <span class="section-count">${files.length}</span>
+        </div>
+        <div class="list">
+          ${files.map(f => `
+            <a class="item" href="/uploads/${f.stored}" download="${esc(f.filename)}">
+              <div class="file-icon">📄</div>
+              <div class="info">
+                <div class="name">${esc(f.title)}</div>
+                <div class="desc">${esc(f.filename)} · ${formatSize(f.size)}</div>
+              </div>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

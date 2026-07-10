@@ -103,6 +103,28 @@ def init_db():
             )
         """)
 
+        # 通知表
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT,
+                link TEXT,
+                is_read INTEGER DEFAULT 0,
+                created_at INTEGER NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 迁移：给 users 表加 bio 和 avatar_url 列
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+        if "bio" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''")
+        if "avatar_url" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''")
+
         # 迁移：给旧表加 content 和 image_url 列
         cols = [r[1] for r in conn.execute("PRAGMA table_info(activities)").fetchall()]
         if "content" not in cols:
@@ -332,6 +354,18 @@ def friends_page():
 @app.route("/admin")
 def admin_page():
     return send_file("admin.html")
+
+@app.route("/profile")
+def profile_page():
+    return send_file("profile.html")
+
+@app.route("/search")
+def search_page():
+    return send_file("search.html")
+
+@app.route("/notifications")
+def notifications_page():
+    return send_file("notifications.html")
 
 # ---------- 用户认证 API ----------
 @app.route("/api/register", methods=["POST"])
@@ -1068,6 +1102,120 @@ def api_chat():
         return jsonify({"error": {"message": msg}}), e.code
     except Exception as e:
         return jsonify({"error": {"message": str(e)}}), 502
+
+# ---------- 通知 API ----------
+@app.route("/api/notifications")
+@login_required
+def api_notifications():
+    """获取通知列表"""
+    user = session.get("user")
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT id, type, title, content, link, is_read, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+            (user["id"],)
+        ).fetchall()
+    return jsonify([{
+        "id": r[0], "type": r[1], "title": r[2], "content": r[3],
+        "link": r[4], "is_read": bool(r[5]), "created_at": r[6]
+    } for r in rows])
+
+@app.route("/api/notifications/unread")
+@login_required
+def api_notifications_unread():
+    """获取未读通知数"""
+    user = session.get("user")
+    with sqlite3.connect(DB_PATH) as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0",
+            (user["id"],)
+        ).fetchone()[0]
+    return jsonify({"count": count})
+
+@app.route("/api/notifications/read/<int:nid>", methods=["POST"])
+@login_required
+def api_notification_read(nid):
+    """标记单条通知已读"""
+    user = session.get("user")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", (nid, user["id"]))
+    return jsonify({"ok": True})
+
+@app.route("/api/notifications/read-all", methods=["POST"])
+@login_required
+def api_notifications_read_all():
+    """全部标记已读"""
+    user = session.get("user")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0", (user["id"],))
+    return jsonify({"ok": True})
+
+def create_notification(user_id, ntype, title, content="", link=""):
+    """创建通知的辅助函数"""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO notifications (user_id, type, title, content, link, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, ntype, title, content, link, int(time.time()))
+        )
+
+# ---------- 用户资料 API ----------
+@app.route("/api/profile")
+@login_required
+def api_profile_me():
+    """获取当前用户资料"""
+    user = session.get("user")
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute("SELECT id, username, bio, avatar_url, created_at, is_admin FROM users WHERE id = ?", (user["id"],)).fetchone()
+    if not row:
+        return jsonify({"error": "用户不存在"}), 404
+    return jsonify({"id": row[0], "username": row[1], "bio": row[2] or "", "avatar_url": row[3] or "", "created_at": row[4], "is_admin": bool(row[5])})
+
+@app.route("/api/profile/<int:uid>")
+def api_profile_user(uid):
+    """获取指定用户资料"""
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute("SELECT id, username, bio, avatar_url, created_at FROM users WHERE id = ?", (uid,)).fetchone()
+        if not row:
+            return jsonify({"error": "用户不存在"}), 404
+        # 获取作品数
+        apps = conn.execute("SELECT COUNT(*) FROM community_apps WHERE json_extract(data, '$.author') = (SELECT username FROM users WHERE id = ?) AND status = 'approved'", (uid,)).fetchone()[0]
+        # 获取文件数
+        files = load_uploads()
+        file_count = len([f for f in files if f.get("uploader_id") == uid and f.get("status") == "approved"])
+        # 获取好友数
+        friends = conn.execute("SELECT COUNT(*) FROM friendships WHERE user_id = ? AND status = 'accepted'", (uid,)).fetchone()[0]
+    return jsonify({"id": row[0], "username": row[1], "bio": row[2] or "", "avatar_url": row[3] or "", "created_at": row[4], "apps_count": apps, "files_count": file_count, "friends_count": friends})
+
+@app.route("/api/profile", methods=["PUT"])
+@login_required
+def api_profile_update():
+    """更新个人资料"""
+    data = request.get_json(force=True)
+    bio = data.get("bio", "").strip()
+    avatar_url = data.get("avatar_url", "").strip()
+    user = session.get("user")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("UPDATE users SET bio = ?, avatar_url = ? WHERE id = ?", (bio, avatar_url, user["id"]))
+    return jsonify({"ok": True})
+
+# ---------- 全局搜索 API ----------
+@app.route("/api/search")
+def api_search():
+    """全局搜索：用户、社区作品、文件"""
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"users": [], "apps": [], "files": []})
+    like = f"%{query}%"
+    # 搜索用户
+    with sqlite3.connect(DB_PATH) as conn:
+        users = conn.execute("SELECT id, username, bio FROM users WHERE username LIKE ? LIMIT 10", (like,)).fetchall()
+    user_results = [{"id": u[0], "username": u[1], "bio": u[2] or ""} for u in users]
+    # 搜索社区作品
+    apps = load_community_apps()
+    app_results = [a for a in apps if a.get("status") == "approved" and (query.lower() in a.get("title", "").lower() or query.lower() in a.get("desc", "").lower())][:10]
+    # 搜索文件
+    files = load_uploads()
+    file_results = [f for f in files if f.get("status") == "approved" and (query.lower() in f.get("title", "").lower() or query.lower() in f.get("desc", "").lower())][:10]
+    return jsonify({"users": user_results, "apps": app_results, "files": file_results})
 
 # ---------- 入口 ----------
 if __name__ == "__main__":

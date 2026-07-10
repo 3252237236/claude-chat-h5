@@ -762,6 +762,7 @@ body {
       <span class="nav-title">HZ Lab</span>
     </a>
     <div class="nav-user" id="navUser">
+      <a href="/search" class="nav-link" title="搜索">🔍</a>
       <a href="/chat" class="nav-link">开始对话</a>
     </div>
   </nav>
@@ -839,11 +840,14 @@ async function checkAuth() {
       } catch(e) {}
 
       document.getElementById("navUser").innerHTML = `
+        <a href="/search" class="nav-link" title="搜索">🔍</a>
         <a href="/friends" class="nav-link">好友${badge}</a>
+        <a href="/notifications" class="nav-link" id="notifLink" title="通知">🔔</a>
         ${isAdmin ? '<a href="/admin" class="nav-link" style="color:var(--orange);">管理</a>' : ''}
-        <span style="color:var(--text-3);font-size:13px;">${esc(data.user.username)}</span>
+        <a href="/profile" class="nav-link" style="color:rgba(255,255,255,0.65);font-size:13px;">${esc(data.user.username)}</a>
         <button class="nav-btn" onclick="doLogout()" style="background:rgba(255,255,255,0.15);font-size:13px;padding:6px 14px;">登出</button>
       `;
+      loadNotifBadge();
     }
   } catch(e) {}
 }
@@ -851,6 +855,19 @@ async function checkAuth() {
 async function doLogout() {
   await fetch("/api/logout", { method: "POST" });
   location.href = "/login";
+}
+
+async function loadNotifBadge() {
+  try {
+    const res = await fetch('/api/notifications/unread');
+    if (res.ok) {
+      const data = await res.json();
+      const link = document.getElementById('notifLink');
+      if (data.count > 0) {
+        link.innerHTML = `🔔 <span style="background:var(--orange);color:white;font-size:10px;padding:1px 5px;border-radius:8px;position:relative;top:-6px;left:-4px;">${data.count}</span>`;
+      }
+    }
+  } catch(e) {}
 }
 
 // ===== 加载应用 =====

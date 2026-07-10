@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通知 - HZ Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: rgba(0,0,0,0.12);
+  --border-hover: rgba(0,0,0,0.25);
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #6366f1;
+  --green: #16a34a;
+  --orange: #ea580c;
+  --blue: #2563eb;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.light {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+.light-1 { background: var(--accent); top: -200px; left: 20%; }
+.light-2 { background: #ec4899; bottom: -200px; right: 10%; }
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: var(--text);
+}
+
+.header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.btn-sm:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--text);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.item:hover {
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+}
+
+.item.unread {
+  border-left: 3px solid var(--accent);
+  background: rgba(99,102,241,0.03);
+}
+
+.notif-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.notif-icon.friend { background: rgba(99,102,241,0.1); }
+.notif-icon.message { background: rgba(37,99,235,0.1); }
+.notif-icon.system { background: rgba(234,88,12,0.1); }
+.notif-icon.approve { background: rgba(22,163,74,0.1); }
+
+.info { flex: 1; min-width: 0; }
+
+.notif-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.notif-content {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 6px;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-3);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty p {
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .app { padding: 20px 16px 60px; }
+  .header h1 { font-size: 20px; }
+  .item { padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="light light-1"></div>
+  <div class="light light-2"></div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <a href="/" class="back-btn">←</a>
+      <h1>🔔 通知</h1>
+    </div>
+    <button class="btn-sm" onclick="markAllRead()">全部已读</button>
+  </div>
+
+  <div class="list" id="notifList">
+    <div class="empty">
+      <div class="empty-icon">🔔</div>
+      <p>暂无通知</p>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadNotifications() {
+  try {
+    const res = await fetch('/api/notifications');
+    const data = await res.json();
+    const list = document.getElementById('notifList');
+
+    if (data && data.length > 0) {
+      list.innerHTML = data.map(n => {
+        const icons = {
+          'friend': '👤',
+          'message': '💬',
+          'system': '⚙️',
+          'approve': '✅',
+          'reject': '❌'
+        };
+        const icon = icons[n.type] || '📌';
+        const iconClass = n.type === 'friend' ? 'friend' : n.type === 'message' ? 'message' : n.type === 'approve' || n.type === 'reject' ? 'approve' : 'system';
+
+        return `
+          <a class="item ${n.is_read ? '' : 'unread'}" href="${n.link || '#'}" onclick="markRead(${n.id}, event)">
+            <div class="notif-icon ${iconClass}">${icon}</div>
+            <div class="info">
+              <div class="notif-title">${esc(n.title)}</div>
+              <div class="notif-content">${esc(n.content || '')}</div>
+              <div class="notif-time">${formatTime(n.created_at)}</div>
+            </div>
+          </a>
+        `;
+      }).join('');
+    } else {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🔔</div><p>暂无通知</p></div>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function markRead(id, e) {
+  if (e) e.preventDefault();
+  await fetch(`/api/notifications/read/${id}`, { method: 'POST' });
+  const href = e?.target?.closest('a')?.href;
+  if (href && href !== '#') window.location.href = href;
+  else loadNotifications();
+}
+
+async function markAllRead() {
+  await fetch('/api/notifications/read-all', { method: 'POST' });
+  loadNotifications();
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000);
+  const now = new Date();
+  const diff = now - date;
+
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+
+  return date.toLocaleDateString('zh-CN');
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+loadNotifications();
+</script>
+</body>
+</html>
