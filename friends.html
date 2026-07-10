@@ -196,6 +196,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 14px;
   transition: all 0.2s;
+  cursor: pointer;
 }
 
 .item:hover {
@@ -355,6 +356,288 @@ body {
   font-size: 14px;
 }
 
+/* 私信详情面板 */
+.chat-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+}
+
+.chat-panel.active {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.chat-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+}
+
+.chat-user-info {
+  flex: 1;
+}
+
+.chat-username {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chat-status {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  max-width: 80%;
+}
+
+.message.sent {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.message-content {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.message.sent .message-content {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.message-text {
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.message-time {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.message.sent .message-time {
+  color: rgba(255,255,255,0.6);
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid var(--border);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.chat-input:focus {
+  border-color: var(--accent);
+}
+
+.chat-send {
+  padding: 12px 24px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.chat-send:hover {
+  opacity: 0.9;
+}
+
+/* 动态 */
+.activity-item {
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.activity-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.activity-user {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.activity-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.activity-action {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(99,102,241,0.1);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 8px;
+}
+
+/* 发布动态 */
+.post-box {
+  margin-bottom: 24px;
+}
+
+.post-input {
+  width: 100%;
+  padding: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  resize: none;
+  min-height: 80px;
+  transition: all 0.2s;
+}
+
+.post-input:focus {
+  border-color: var(--accent);
+}
+
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.post-btn {
+  padding: 8px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.post-btn:hover {
+  opacity: 0.9;
+}
+
+/* 未读红点 */
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--orange);
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: auto;
+}
+
+/* 最后消息预览 */
+.last-message {
+  font-size: 12px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
 /* 响应式 */
 @media (max-width: 640px) {
   .app {
@@ -372,6 +655,10 @@ body {
 
   .item {
     padding: 12px 16px;
+  }
+
+  .message {
+    max-width: 90%;
   }
 }
 </style>
@@ -396,7 +683,7 @@ body {
     <button class="tab active" onclick="switchTab('friends')">好友列表</button>
     <button class="tab" onclick="switchTab('requests')">请求 <span class="badge" id="reqBadge" style="display:none;">0</span></button>
     <button class="tab" onclick="switchTab('search')">搜索</button>
-    <button class="tab" onclick="switchTab('messages')">私信</button>
+    <button class="tab" onclick="switchTab('messages')">私信 <span class="badge" id="msgBadge" style="display:none;">0</span></button>
     <button class="tab" onclick="switchTab('feed')">动态</button>
   </div>
 
@@ -429,7 +716,7 @@ body {
     <div class="list" id="searchResults"></div>
   </div>
 
-  <!-- 私信 -->
+  <!-- 私信列表 -->
   <div class="content" id="tabMessages">
     <div class="list" id="messagesList">
       <div class="empty">
@@ -441,6 +728,12 @@ body {
 
   <!-- 动态 -->
   <div class="content" id="tabFeed">
+    <div class="post-box">
+      <textarea class="post-input" id="postInput" placeholder="分享你的动态..."></textarea>
+      <div class="post-actions">
+        <button class="post-btn" onclick="postActivity()">发布</button>
+      </div>
+    </div>
     <div class="list" id="feedList">
       <div class="empty">
         <div class="empty-icon">📢</div>
@@ -450,8 +743,36 @@ body {
   </div>
 </div>
 
+<!-- 私信详情面板 -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <button class="chat-close" onclick="closeChat()">←</button>
+    <div class="chat-user-info">
+      <div class="chat-username" id="chatUsername">用户名</div>
+      <div class="chat-status" id="chatStatus">在线</div>
+    </div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-area">
+    <input type="text" class="chat-input" id="chatInput" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="chat-send" onclick="sendMessage()">发送</button>
+  </div>
+</div>
+
 <script>
 let currentTab = 'friends';
+let currentChatUser = null;
+let currentUser = null;
+
+// 加载当前用户信息
+async function loadMe() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.ok) {
+      currentUser = await res.json();
+    }
+  } catch(e) {}
+}
 
 function switchTab(tab) {
   currentTab = tab;
@@ -459,6 +780,10 @@ function switchTab(tab) {
   event.target.classList.add('active');
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+
+  // 切换标签时刷新数据
+  if (tab === 'messages') loadMessages();
+  if (tab === 'feed') loadFeed();
 }
 
 // 加载好友列表
@@ -468,7 +793,7 @@ async function loadFriends() {
     const list = document.getElementById('friendsList');
     if (data && data.length > 0) {
       list.innerHTML = data.map(f => `
-        <div class="item">
+        <div class="item" onclick="openChat(${f.id}, '${esc(f.username)}', ${f.is_online})">
           <div class="avatar">${f.username.charAt(0).toUpperCase()}</div>
           <div class="info">
             <div class="name">
@@ -478,7 +803,8 @@ async function loadFriends() {
             <div class="status">${f.is_online ? '在线' : '离线'}</div>
           </div>
           <div class="actions">
-            <button class="btn-sm danger" onclick="removeFriend('${f.id}')">删除</button>
+            <button class="btn-sm primary" onclick="event.stopPropagation(); openChat(${f.id}, '${esc(f.username)}', ${f.is_online})">私信</button>
+            <button class="btn-sm danger" onclick="event.stopPropagation(); removeFriend('${f.id}')">删除</button>
           </div>
         </div>
       `).join('');
@@ -514,6 +840,180 @@ async function loadRequests() {
       badge.style.display = 'none';
       list.innerHTML = '<div class="empty"><div class="empty-icon">📬</div><p>暂无好友请求</p></div>';
     }
+  } catch(e) { console.error(e); }
+}
+
+// 加载私信列表
+async function loadMessages() {
+  try {
+    const friends = await fetch('/api/friends').then(r => r.json());
+    const list = document.getElementById('messagesList');
+    const badge = document.getElementById('msgBadge');
+
+    if (!friends || friends.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">💬</div><p>暂无好友，无法发送私信</p></div>';
+      return;
+    }
+
+    // 获取每个好友的最后一条消息
+    const conversations = [];
+    for (const f of friends) {
+      try {
+        const msgs = await fetch(`/api/messages/${f.id}`).then(r => r.json());
+        if (msgs && msgs.length > 0) {
+          const lastMsg = msgs[msgs.length - 1];
+          conversations.push({
+            friend: f,
+            lastMessage: lastMsg.content,
+            lastTime: lastMsg.created_at,
+            unread: msgs.filter(m => m.from_user_id === f.id && !m.is_read).length
+          });
+        }
+      } catch(e) {}
+    }
+
+    // 按最后消息时间排序
+    conversations.sort((a, b) => (b.lastTime || 0) - (a.lastTime || 0));
+
+    const totalUnread = conversations.reduce((sum, c) => sum + c.unread, 0);
+    if (totalUnread > 0) {
+      badge.style.display = '';
+      badge.textContent = totalUnread;
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (conversations.length > 0) {
+      list.innerHTML = conversations.map(c => `
+        <div class="item" onclick="openChat(${c.friend.id}, '${esc(c.friend.username)}', ${c.friend.is_online})">
+          <div class="avatar">${c.friend.username.charAt(0).toUpperCase()}</div>
+          <div class="info">
+            <div class="name">
+              ${esc(c.friend.username)}
+              ${c.friend.is_online ? '<span class="online"></span>' : ''}
+            </div>
+            <div class="last-message">${esc(c.lastMessage)}</div>
+          </div>
+          ${c.unread > 0 ? '<div class="unread-dot"></div>' : ''}
+        </div>
+      `).join('');
+    } else {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">💬</div><p>暂无私信记录</p></div>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// 加载动态
+async function loadFeed() {
+  try {
+    const data = await fetch('/api/activities').then(r => r.json());
+    const list = document.getElementById('feedList');
+
+    if (data && data.length > 0) {
+      list.innerHTML = data.map(a => `
+        <div class="activity-item">
+          <div class="activity-header">
+            <div class="activity-avatar">${(a.username || 'U').charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="activity-user">${esc(a.username || '用户')}</div>
+              <div class="activity-time">${formatTime(a.created_at)}</div>
+            </div>
+          </div>
+          <div class="activity-content">${esc(a.content)}</div>
+          ${a.action ? `<div class="activity-action">${getActionText(a.action)}</div>` : ''}
+        </div>
+      `).join('');
+    } else {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📢</div><p>暂无好友动态</p></div>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// 发布动态
+async function postActivity() {
+  const input = document.getElementById('postInput');
+  const content = input.value.trim();
+  if (!content) return;
+
+  try {
+    await fetch('/api/activities/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    input.value = '';
+    loadFeed();
+  } catch(e) { console.error(e); }
+}
+
+// 打开私信
+async function openChat(userId, username, isOnline) {
+  currentChatUser = { id: userId, username, isOnline };
+  document.getElementById('chatUsername').textContent = username;
+  document.getElementById('chatStatus').textContent = isOnline ? '在线' : '离线';
+  document.getElementById('chatPanel').classList.add('active');
+
+  // 标记消息为已读
+  await fetch(`/api/messages/read/${userId}`, { method: 'POST' });
+
+  // 加载聊天记录
+  await loadChatMessages(userId);
+
+  // 聚焦输入框
+  document.getElementById('chatInput').focus();
+}
+
+// 关闭私信
+function closeChat() {
+  document.getElementById('chatPanel').classList.remove('active');
+  currentChatUser = null;
+  loadMessages(); // 刷新私信列表
+  loadFriends(); // 刷新好友列表（可能有新在线状态）
+}
+
+// 加载聊天消息
+async function loadChatMessages(userId) {
+  try {
+    const messages = await fetch(`/api/messages/${userId}`).then(r => r.json());
+    const container = document.getElementById('chatMessages');
+
+    if (messages && messages.length > 0) {
+      container.innerHTML = messages.map(m => `
+        <div class="message ${m.from_user_id === currentUser?.id ? 'sent' : ''}">
+          <div class="message-avatar">${m.from_user_id === currentUser?.id ? (currentUser?.username || '我').charAt(0) : currentChatUser?.username?.charAt(0) || '?'}</div>
+          <div class="message-content">
+            <div class="message-text">${esc(m.content)}</div>
+            <div class="message-time">${formatTime(m.created_at)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // 滚动到底部
+      container.scrollTop = container.scrollHeight;
+    } else {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">💬</div><p>暂无消息，开始聊天吧</p></div>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// 发送消息
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const content = input.value.trim();
+  if (!content || !currentChatUser) return;
+
+  try {
+    await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to_user_id: currentChatUser.id,
+        content: content
+      })
+    });
+
+    input.value = '';
+    await loadChatMessages(currentChatUser.id);
   } catch(e) { console.error(e); }
 }
 
@@ -570,10 +1070,42 @@ async function removeFriend(id) {
   loadFriends();
 }
 
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// 工具函数
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
 
+function formatTime(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000);
+  const now = new Date();
+  const diff = now - date;
+
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+
+  return date.toLocaleDateString('zh-CN');
+}
+
+function getActionText(action) {
+  const actions = {
+    'upload_file': '上传了文件',
+    'create_app': '发布了应用',
+    'join': '加入了 HZ Lab'
+  };
+  return actions[action] || action;
+}
+
+// 初始化
+await loadMe();
 loadFriends();
 loadRequests();
+loadMessages();
 </script>
 </body>
 </html>
