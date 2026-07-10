@@ -1058,7 +1058,11 @@ function renderToolResult(result) {
 }
 
 function scrollToBottom() {
-  requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+  requestAnimationFrame(() => {
+    chatArea.scrollTop = chatArea.scrollHeight;
+    // 兜底：首次可能不准，延迟再滚一次
+    setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 100);
+  });
 }
 
 // ==================== Markdown 渲染 ====================
@@ -1153,6 +1157,8 @@ function sendMessage() {
   inputBox.value = "";
   inputBox.style.height = "auto";
   setSending(true);
+  // 手动失焦收起键盘，避免遮挡聊天区
+  inputBox.blur();
 
   if (topic.agentEnabled) {
     callApiAgent(topic);
