@@ -1058,11 +1058,14 @@ function renderToolResult(result) {
 }
 
 function scrollToBottom() {
-  requestAnimationFrame(() => {
-    chatArea.scrollTop = chatArea.scrollHeight;
-    // 兜底：首次可能不准，延迟再滚一次
-    setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 100);
-  });
+  // 使用 scrollIntoView 让最后一条消息可见（移动端兼容更好）
+  const msgs = chatArea.querySelectorAll('.msg');
+  if (msgs.length > 0) {
+    msgs[msgs.length - 1].scrollIntoView({ behavior: 'instant', block: 'end' });
+  }
+  // 兜底：延迟再滚一次
+  setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 150);
+  setTimeout(() => { chatArea.scrollTop = chatArea.scrollHeight; }, 500);
 }
 
 // ==================== Markdown 渲染 ====================
