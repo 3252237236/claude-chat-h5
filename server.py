@@ -42,6 +42,7 @@ QINIU_DOMAIN = os.environ.get("QINIU_DOMAIN", "https://thyvcp25w.hn-bkt.clouddn.
 def qiniu_upload(key, data, content_type="application/octet-stream"):
     """上传文件到七牛云，返回访问URL"""
     if not QINIU_ACCESS_KEY or not QINIU_SECRET_KEY:
+        print("七牛云未配置，跳过上传")
         return None
     try:
         from qiniu import Auth, put_data
@@ -50,9 +51,13 @@ def qiniu_upload(key, data, content_type="application/octet-stream"):
         ret, info = put_data(token, key, data, mime_type=content_type)
         if info.status_code == 200:
             return f"{QINIU_DOMAIN}/{key}"
+        print(f"七牛上传失败: status={info.status_code}, body={info.text_body}")
+        return None
+    except ImportError:
+        print("七牛云 SDK 未安装，回退到本地存储")
         return None
     except Exception as e:
-        print(f"七牛上传失败: {e}")
+        print(f"七牛上传异常: {e}")
         return None
 
 def qiniu_delete(key):
@@ -65,6 +70,8 @@ def qiniu_delete(key):
         bucket = BucketManager(q)
         ret, info = bucket.delete(QINIU_BUCKET, key)
         return info.status_code == 200
+    except ImportError:
+        return False
     except Exception as e:
         print(f"七牛删除失败: {e}")
         return False
