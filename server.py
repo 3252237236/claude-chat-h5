@@ -33,6 +33,42 @@ COMMUNITY_APPS_FILE = os.path.join(DATA_DIR, "community_apps.json")
 DB_PATH = os.path.join(DATA_DIR, "users.db")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# ---------- 七牛云 Kodo 配置（密钥从环境变量读取） ----------
+QINIU_ACCESS_KEY = os.environ.get("QINIU_ACCESS_KEY", "")
+QINIU_SECRET_KEY = os.environ.get("QINIU_SECRET_KEY", "")
+QINIU_BUCKET = os.environ.get("QINIU_BUCKET", "huzhinb")
+QINIU_DOMAIN = os.environ.get("QINIU_DOMAIN", "https://thyvcp25w.hn-bkt.clouddn.com")
+
+def qiniu_upload(key, data, content_type="application/octet-stream"):
+    """上传文件到七牛云，返回访问URL"""
+    if not QINIU_ACCESS_KEY or not QINIU_SECRET_KEY:
+        return None
+    try:
+        from qiniu import Auth, put_data
+        q = Auth(QINIU_ACCESS_KEY, QINIU_SECRET_KEY)
+        token = q.upload_token(QINIU_BUCKET, key)
+        ret, info = put_data(token, key, data, mime_type=content_type)
+        if info.status_code == 200:
+            return f"{QINIU_DOMAIN}/{key}"
+        return None
+    except Exception as e:
+        print(f"七牛上传失败: {e}")
+        return None
+
+def qiniu_delete(key):
+    """从七牛云删除文件"""
+    if not QINIU_ACCESS_KEY or not QINIU_SECRET_KEY:
+        return False
+    try:
+        from qiniu import Auth, BucketManager
+        q = Auth(QINIU_ACCESS_KEY, QINIU_SECRET_KEY)
+        bucket = BucketManager(q)
+        ret, info = bucket.delete(QINIU_BUCKET, key)
+        return info.status_code == 200
+    except Exception as e:
+        print(f"七牛删除失败: {e}")
+        return False
+
 # ---------- 用户数据库 ----------
 # 在线状态存储（内存）
 online_users = {}  # {user_id: last_heartbeat_time}
@@ -465,11 +501,18 @@ def api_submit_app():
                 if os.path.exists(zip_path):
                     os.remove(zip_path)
         else:
-            # 单文件
+            # 单文件 → 上传到七牛云
             unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
-            filepath = os.path.join(UPLOAD_DIR, unique_name)
-            file.save(filepath)
-            url = f"/uploads/{unique_name}"
+            file_data = file.read()
+            file_url = qiniu_upload(f"apps/{unique_name}", file_data)
+            if file_url:
+                url = file_url
+            else:
+                # 七牛失败，回退到本地
+                filepath = os.path.join(UPLOAD_DIR, unique_name)
+                with open(filepath, "wb") as f:
+                    f.write(file_data)
+                url = f"/uploads/{unique_name}"
 
     if not url:
         return jsonify({"error": "请填写链接或上传文件"}), 400
@@ -521,8 +564,17 @@ def api_upload():
     filename = secure_filename(file.filename)
     # 加随机前缀防重名
     unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
-    filepath = os.path.join(UPLOAD_DIR, unique_name)
-    file.save(filepath)
+    file_data = file.read()
+    file_size = len(file_data)
+
+    # 上传到七牛云
+    file_url = qiniu_upload(f"uploads/{unique_name}", file_data)
+    if not file_url:
+        # 七牛失败，回退到本地存储
+        filepath = os.path.join(UPLOAD_DIR, unique_name)
+        with open(filepath, "wb") as f:
+            f.write(file_data)
+        file_url = f"/uploads/{unique_name}"
 
     item = {
         "id": uuid.uuid4().hex[:8],
@@ -530,7 +582,8 @@ def api_upload():
         "desc": desc,
         "filename": filename,
         "stored": unique_name,
-        "size": os.path.getsize(filepath),
+        "url": file_url,
+        "size": file_size,
         "time": int(time.time()),
         "status": "pending",
     }
@@ -621,10 +674,15 @@ def api_admin_reject(item_type, item_id):
         items = load_uploads()
         for item in items:
             if item["id"] == item_id:
-                # 删除文件
-                fpath = os.path.join(UPLOAD_DIR, item.get("stored", ""))
-                if os.path.exists(fpath):
-                    os.remove(fpath)
+                # 删除文件（七牛云或本地）
+                stored = item.get("stored", "")
+                item_url = item.get("url", "")
+                if item_url and QINIU_DOMAIN in item_url:
+                    qiniu_delete(f"uploads/{stored}")
+                else:
+                    fpath = os.path.join(UPLOAD_DIR, stored)
+                    if os.path.exists(fpath):
+                        os.remove(fpath)
         items = [i for i in items if i["id"] != item_id]
         save_uploads(items)
     return jsonify({"ok": True})
@@ -649,9 +707,15 @@ def api_admin_delete(item_type, item_id):
         items = load_uploads()
         for item in items:
             if item["id"] == item_id:
-                fpath = os.path.join(UPLOAD_DIR, item.get("stored", ""))
-                if os.path.exists(fpath):
-                    os.remove(fpath)
+                # 删除文件（七牛云或本地）
+                stored = item.get("stored", "")
+                item_url = item.get("url", "")
+                if item_url and QINIU_DOMAIN in item_url:
+                    qiniu_delete(f"uploads/{stored}")
+                else:
+                    fpath = os.path.join(UPLOAD_DIR, stored)
+                    if os.path.exists(fpath):
+                        os.remove(fpath)
         items = [i for i in items if i["id"] != item_id]
         save_uploads(items)
     return jsonify({"ok": True})
