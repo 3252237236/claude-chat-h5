@@ -1,13 +1,6 @@
 {
   "providers": [
     {
-      "name": "MiMo V2 Omni",
-      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
-      "model": "mimo-v2-omni",
-      "key": "tp-c8oum2ueve8d8di1h75mbrubsylcph68jbix1cg10m9hwtoh",
-      "env": "MIMO_KEY"
-    },
-    {
       "name": "MiMo V2.5 Pro",
       "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
       "model": "mimo-v2.5-pro",
