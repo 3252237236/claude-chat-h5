@@ -8,12 +8,12 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0f;
-  --surface: rgba(0,0,0,0.03);
-  --surface2: rgba(0,0,0,0.06);
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
   --border: rgba(0,0,0,0.12);
-  --text: #e8e8f0;
-  --text-dim: #8888a0;
+  --text: #0f172a;
+  --text-dim: #94a3b8;
   --accent: #6c5ce7;
   --accent-glow: rgba(108,92,231,0.3);
   --green: #00d2a0;
@@ -32,7 +32,7 @@ body {
 .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
 .bg-orb {
   position: absolute; border-radius: 50%;
-  filter: blur(120px); opacity: 0.10;
+  filter: blur(120px); opacity: 0.2;
   animation: orbFloat 20s ease-in-out infinite;
 }
 .bg-orb:nth-child(1) {
@@ -50,8 +50,8 @@ body {
 .bg-grid {
   position: fixed; inset: 0; z-index: 0; opacity: 0.03;
   background-image:
-    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
