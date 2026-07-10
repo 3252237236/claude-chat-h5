@@ -1102,10 +1102,12 @@ function getActionText(action) {
 }
 
 // 初始化
-await loadMe();
-loadFriends();
-loadRequests();
-loadMessages();
+(async function() {
+  await loadMe();
+  loadFriends();
+  loadRequests();
+  loadMessages();
+})();
 </script>
 </body>
 </html>
