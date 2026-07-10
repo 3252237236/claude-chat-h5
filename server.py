@@ -367,6 +367,10 @@ def search_page():
 def notifications_page():
     return send_file("notifications.html")
 
+@app.route("/convert")
+def convert_page():
+    return send_file("convert.html")
+
 # ---------- 用户认证 API ----------
 @app.route("/api/register", methods=["POST"])
 def api_register():
@@ -1216,6 +1220,197 @@ def api_search():
     files = load_uploads()
     file_results = [f for f in files if f.get("status") == "approved" and (query.lower() in f.get("title", "").lower() or query.lower() in f.get("desc", "").lower())][:10]
     return jsonify({"users": user_results, "apps": app_results, "files": file_results})
+
+# ---------- 文件格式转换 API ----------
+import subprocess
+from io import BytesIO
+
+CONVERT_FORMATS = {
+    "image": {
+        "input": ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "ico"],
+        "output": ["jpg", "png", "gif", "webp", "bmp", "ico"]
+    },
+    "document": {
+        "input": ["pdf", "docx", "txt", "md", "html"],
+        "output": ["pdf", "txt", "html"]
+    },
+    "data": {
+        "input": ["json", "csv", "xml", "yaml", "yml"],
+        "output": ["json", "csv", "xml", "yaml"]
+    },
+    "audio": {
+        "input": ["mp3", "wav", "ogg", "flac", "aac", "m4a"],
+        "output": ["mp3", "wav", "ogg", "flac"]
+    }
+}
+
+def detect_category(ext):
+    for cat, fmts in CONVERT_FORMATS.items():
+        if ext in fmts["input"]:
+            return cat
+    return None
+
+@app.route("/api/convert/formats")
+def api_convert_formats():
+    """返回支持的格式列表"""
+    return jsonify(CONVERT_FORMATS)
+
+@app.route("/api/convert", methods=["POST"])
+def api_convert():
+    """文件格式转换"""
+    file = request.files.get("file")
+    target_format = request.form.get("target", "").lower().strip()
+
+    if not file or file.filename == "":
+        return jsonify({"error": "请选择文件"}), 400
+    if not target_format:
+        return jsonify({"error": "请选择目标格式"}), 400
+
+    filename = secure_filename(file.filename)
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if not ext:
+        return jsonify({"error": "无法识别文件格式"}), 400
+
+    category = detect_category(ext)
+    if not category:
+        return jsonify({"error": f"不支持 {ext} 格式"}), 400
+    if target_format not in CONVERT_FORMATS[category]["output"]:
+        return jsonify({"error": f"无法将 {ext} 转换为 {target_format}"}), 400
+
+    try:
+        if category == "image":
+            result = convert_image(file, ext, target_format)
+        elif category == "document":
+            result = convert_document(file, ext, target_format)
+        elif category == "data":
+            result = convert_data(file, ext, target_format)
+        elif category == "audio":
+            result = convert_audio(file, ext, target_format)
+        else:
+            return jsonify({"error": "不支持的转换类型"}), 400
+
+        if result is None:
+            return jsonify({"error": "转换失败"}), 500
+
+        output_name = filename.rsplit(".", 1)[0] + "." + target_format
+        return send_file(
+            BytesIO(result),
+            as_attachment=True,
+            download_name=output_name,
+            mimetype=f"application/octet-stream"
+        )
+    except Exception as e:
+        return jsonify({"error": f"转换失败: {str(e)}"}), 500
+
+def convert_image(file, src_ext, dst_ext):
+    from PIL import Image
+    img = Image.open(file.stream)
+    if dst_ext in ("jpg", "jpeg"):
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        dst_ext = "jpeg"
+    if dst_ext == "bmp":
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+    buf = BytesIO()
+    img.save(buf, format=dst_ext.upper())
+    return buf.getvalue()
+
+def convert_document(file, src_ext, dst_ext):
+    content = ""
+    if src_ext == "txt" or src_ext == "md":
+        content = file.read().decode("utf-8", errors="replace")
+    elif src_ext == "docx":
+        from docx import Document
+        doc = Document(file.stream)
+        content = "\n".join([p.text for p in doc.paragraphs])
+    elif src_ext == "pdf":
+        from PyPDF2 import PdfReader
+        reader = PdfReader(file.stream)
+        content = "\n".join([p.extract_text() or "" for p in reader.pages])
+    elif src_ext == "html":
+        content = file.read().decode("utf-8", errors="replace")
+
+    if dst_ext == "txt":
+        return content.encode("utf-8")
+    elif dst_ext == "html":
+        html = f"<!DOCTYPE html><html><head><meta charset='utf-8'></head><body><pre>{content}</pre></body></html>"
+        return html.encode("utf-8")
+    elif dst_ext == "pdf":
+        from PyPDF2 import PdfWriter
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas as rl_canvas
+        buf = BytesIO()
+        c = rl_canvas.Canvas(buf, pagesize=letter)
+        y = 750
+        for line in content.split("\n"):
+            if y < 50:
+                c.showPage()
+                y = 750
+            c.drawString(50, y, line[:100])
+            y -= 14
+        c.save()
+        return buf.getvalue()
+    return None
+
+def convert_data(file, src_ext, dst_ext):
+    import csv, xml.etree.ElementTree as ET
+    data = None
+
+    if src_ext == "json":
+        data = json.loads(file.read().decode("utf-8"))
+    elif src_ext == "csv":
+        reader = csv.DictReader(io.StringIO(file.read().decode("utf-8")))
+        data = list(reader)
+    elif src_ext == "xml":
+        tree = ET.parse(file.stream)
+        root = tree.getroot()
+        data = [{child.tag: child.text for child in item} for item in root]
+    elif src_ext in ("yaml", "yml"):
+        try:
+            import yaml
+            data = yaml.safe_load(file.read().decode("utf-8"))
+        except ImportError:
+            return None
+
+    if data is None:
+        return None
+
+    if dst_ext == "json":
+        return json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+    elif dst_ext == "csv":
+        if isinstance(data, list) and len(data) > 0:
+            buf = io.StringIO()
+            writer = csv.DictWriter(buf, fieldnames=data[0].keys())
+            writer.writeheader()
+            writer.writerows(data)
+            return buf.getvalue().encode("utf-8")
+    elif dst_ext == "xml":
+        root = ET.Element("data")
+        if isinstance(data, list):
+            for item in data:
+                elem = ET.SubElement(root, "item")
+                for k, v in item.items():
+                    child = ET.SubElement(elem, k)
+                    child.text = str(v)
+        return ET.tostring(root, encoding="unicode").encode("utf-8")
+    elif dst_ext == "yaml":
+        try:
+            import yaml
+            return yaml.dump(data, allow_unicode=True).encode("utf-8")
+        except ImportError:
+            return None
+    return None
+
+def convert_audio(file, src_ext, dst_ext):
+    try:
+        from pydub import AudioSegment
+        audio = AudioSegment.from_file(file.stream, format=src_ext)
+        buf = BytesIO()
+        audio.export(buf, format=dst_ext)
+        return buf.getvalue()
+    except Exception:
+        return None
 
 # ---------- 入口 ----------
 if __name__ == "__main__":

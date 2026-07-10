@@ -1,2 +1,6 @@
 flask
 gunicorn
+Pillow
+python-docx
+PyPDF2
+openpyxl

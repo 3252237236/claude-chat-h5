@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>格式转换 - HZ Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: rgba(0,0,0,0.12);
+  --border-hover: rgba(0,0,0,0.25);
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #6366f1;
+  --green: #16a34a;
+  --orange: #ea580c;
+  --blue: #2563eb;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.light {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+.light-1 { background: var(--accent); top: -200px; left: 20%; }
+.light-2 { background: var(--green); bottom: -200px; right: 10%; }
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: var(--text);
+}
+
+.header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* 转换卡片 */
+.convert-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 32px;
+}
+
+/* 上传区域 */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.04);
+}
+
+.upload-zone.has-file {
+  border-color: var(--green);
+  background: rgba(22,163,74,0.04);
+  padding: 24px;
+}
+
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.upload-text {
+  font-size: 16px;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+
+.upload-hint {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.file-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(22,163,74,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.file-detail {
+  flex: 1;
+  text-align: left;
+}
+
+.file-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.remove-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.remove-btn:hover {
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.3);
+  color: #ef4444;
+}
+
+/* 格式选择 */
+.format-section {
+  margin-bottom: 24px;
+}
+
+.format-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.format-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.format-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.format-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.format-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.format-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 转换按钮 */
+.convert-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.convert-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.convert-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 进度 */
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(0,0,0,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 16px;
+  display: none;
+}
+
+.progress-bar.show {
+  display: block;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: progress 1.5s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* 支持格式 */
+.formats-info {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.formats-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.format-group {
+  padding: 16px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.format-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.format-group-list {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.8;
+  text-transform: uppercase;
+}
+
+/* 消息 */
+.msg {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-top: 16px;
+  display: none;
+}
+
+.msg.show { display: block; }
+.msg-ok { background: rgba(22,163,74,0.1); color: var(--green); border: 1px solid rgba(22,163,74,0.2); }
+.msg-err { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+
+@media (max-width: 640px) {
+  .app { padding: 20px 16px 60px; }
+  .convert-card { padding: 24px; }
+  .upload-zone { padding: 32px 16px; }
+  .formats-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="light light-1"></div>
+  <div class="light light-2"></div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <a href="/" class="back-btn">←</a>
+    <h1>🔄 格式转换</h1>
+  </div>
+
+  <div class="convert-card">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" style="display:none" onchange="onFileSelected(event)">
+      <div class="upload-icon">📁</div>
+      <div class="upload-text">点击或拖拽文件到此处</div>
+      <div class="upload-hint">支持图片、文档、数据、音频等多种格式</div>
+    </div>
+
+    <div class="format-section" id="formatSection" style="display:none;">
+      <div class="format-label">🎯 选择目标格式</div>
+      <div class="format-grid" id="formatGrid"></div>
+    </div>
+
+    <button class="convert-btn" id="convertBtn" onclick="doConvert()" disabled>开始转换</button>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill"></div></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="formats-info">
+    <div class="formats-title">📋 支持的格式</div>
+    <div class="formats-grid">
+      <div class="format-group">
+        <div class="format-group-title">🖼️ 图片</div>
+        <div class="format-group-list">JPG PNG GIF WEBP BMP TIFF ICO</div>
+      </div>
+      <div class="format-group">
+        <div class="format-group-title">📄 文档</div>
+        <div class="format-group-list">PDF DOCX TXT MD HTML</div>
+      </div>
+      <div class="format-group">
+        <div class="format-group-title">📊 数据</div>
+        <div class="format-group-list">JSON CSV XML YAML</div>
+      </div>
+      <div class="format-group">
+        <div class="format-group-title">🎵 音频</div>
+        <div class="format-group-list">MP3 WAV OGG FLAC AAC M4A</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedFile = null;
+let selectedFormat = null;
+let formatsData = null;
+
+// 加载支持的格式
+async function loadFormats() {
+  try {
+    const res = await fetch('/api/convert/formats');
+    formatsData = await res.json();
+  } catch(e) { console.error(e); }
+}
+
+// 拖拽支持
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('dragover');
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('dragover');
+});
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) {
+    handleFile(e.dataTransfer.files[0]);
+  }
+});
+
+function onFileSelected(e) {
+  if (e.target.files.length > 0) {
+    handleFile(e.target.files[0]);
+  }
+}
+
+function handleFile(file) {
+  selectedFile = file;
+  selectedFormat = null;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  // 显示文件信息
+  uploadZone.classList.add('has-file');
+  uploadZone.innerHTML = `
+    <div class="file-info">
+      <div class="file-icon">${getFileIcon(ext)}</div>
+      <div class="file-detail">
+        <div class="file-name">${esc(file.name)}</div>
+        <div class="file-size">${formatSize(file.size)} · ${ext.toUpperCase()}</div>
+      </div>
+      <button class="remove-btn" onclick="removeFile(event)">✕</button>
+    </div>
+  `;
+
+  // 显示可转换格式
+  showTargetFormats(ext);
+}
+
+function removeFile(e) {
+  e.stopPropagation();
+  selectedFile = null;
+  selectedFormat = null;
+  uploadZone.classList.remove('has-file');
+  uploadZone.innerHTML = `
+    <input type="file" id="fileInput" style="display:none" onchange="onFileSelected(event)">
+    <div class="upload-icon">📁</div>
+    <div class="upload-text">点击或拖拽文件到此处</div>
+    <div class="upload-hint">支持图片、文档、数据、音频等多种格式</div>
+  `;
+  document.getElementById('formatSection').style.display = 'none';
+  document.getElementById('convertBtn').disabled = true;
+}
+
+function showTargetFormats(ext) {
+  if (!formatsData) return;
+
+  let category = null;
+  for (const [cat, fmts] of Object.entries(formatsData)) {
+    if (fmts.input.includes(ext)) {
+      category = cat;
+      break;
+    }
+  }
+
+  if (!category) {
+    showMessage('不支持此文件格式', 'err');
+    return;
+  }
+
+  const outputs = formatsData[category].output.filter(f => f !== ext);
+  const grid = document.getElementById('formatGrid');
+  grid.innerHTML = outputs.map(f => `
+    <button class="format-btn" onclick="selectFormat('${f}', this)">${f}</button>
+  `).join('');
+
+  document.getElementById('formatSection').style.display = 'block';
+  document.getElementById('convertBtn').disabled = true;
+}
+
+function selectFormat(fmt, btn) {
+  selectedFormat = fmt;
+  document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('convertBtn').disabled = false;
+}
+
+async function doConvert() {
+  if (!selectedFile || !selectedFormat) return;
+
+  const btn = document.getElementById('convertBtn');
+  const progressBar = document.getElementById('progressBar');
+  btn.disabled = true;
+  btn.textContent = '转换中...';
+  progressBar.classList.add('show');
+  hideMessage();
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  formData.append('target', selectedFormat);
+
+  try {
+    const res = await fetch('/api/convert', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || '转换失败');
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = selectedFile.name.replace(/\.[^.]+$/, '') + '.' + selectedFormat;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showMessage('转换成功！文件已下载', 'ok');
+  } catch(e) {
+    showMessage(e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '开始转换';
+    progressBar.classList.remove('show');
+  }
+}
+
+function getFileIcon(ext) {
+  const icons = {
+    jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️', bmp: '🖼️', tiff: '🖼️', ico: '🖼️',
+    pdf: '📄', docx: '📝', doc: '📝', txt: '📃', md: '📃', html: '🌐',
+    json: '📊', csv: '📊', xml: '📊', yaml: '📊',
+    mp3: '🎵', wav: '🎵', ogg: '🎵', flac: '🎵', aac: '🎵', m4a: '🎵'
+  };
+  return icons[ext] || '📄';
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function showMessage(text, type) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = `msg show msg-${type}`;
+}
+
+function hideMessage() {
+  document.getElementById('msg').className = 'msg';
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+loadFormats();
+</script>
+</body>
+</html>
