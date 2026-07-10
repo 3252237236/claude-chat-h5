@@ -9,21 +9,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #050505;
-  --surface: #0a0a0a;
-  --border: rgba(255,255,255,0.06);
-  --border-hover: rgba(255,255,255,0.12);
-  --text: #ffffff;
-  --text-2: #a0a0a0;
-  --text-3: #666666;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.15);
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
   --accent: #6366f1;
-  --green: #22c55e;
-  --orange: #f97316;
+  --green: #16a34a;
+  --orange: #ea580c;
 }
 
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  scrollbar-color: rgba(0,0,0,0.15) transparent;
 }
 
 body {
@@ -36,7 +36,7 @@ body {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
 
 /* 背景 */
 .bg-anim {
@@ -55,15 +55,15 @@ body {
   opacity: 0.06;
   pointer-events: none;
 }
-.light-1 { background: var(--accent); top: -100px; right: 20%; }
-.light-2 { background: var(--green); bottom: -100px; left: 15%; }
+.light-1 { background: #818cf8; top: -100px; right: 20%; }
+.light-2 { background: #4ade80; bottom: -100px; left: 15%; }
 
 .grid-overlay {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
@@ -103,7 +103,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.05);
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--text-2);
@@ -113,7 +113,7 @@ body {
 }
 
 .back-btn:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.08);
   color: var(--text);
   border-color: var(--border-hover);
 }
@@ -159,7 +159,7 @@ body {
 }
 
 .file-card {
-  background: rgba(255,255,255,0.02);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
@@ -173,7 +173,7 @@ body {
 }
 
 .file-card:hover {
-  background: rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.04);
   border-color: var(--border-hover);
   transform: translateY(-2px);
 }
@@ -188,7 +188,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -203,7 +203,7 @@ body {
   color: var(--text-3);
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
 }
 
@@ -229,7 +229,7 @@ body {
 .file-btn {
   flex: 1;
   padding: 8px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text-2);
@@ -243,7 +243,7 @@ body {
 }
 
 .file-btn:hover {
-  background: rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.06);
   border-color: var(--border-hover);
   color: var(--text);
 }
@@ -351,7 +351,7 @@ body {
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid rgba(255,255,255,0.1);
+  border: 3px solid rgba(0,0,0,0.15);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -420,9 +420,9 @@ body {
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
     <h3>上传文件</h3>
-    <input type="text" id="fileTitle" placeholder="文件标题" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;">
-    <input type="text" id="fileDesc" placeholder="文件描述（可选）" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;">
-    <input type="file" id="fileInput" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);">
+    <input type="text" id="fileTitle" placeholder="文件标题" style="width:100%;padding:12px;background:rgba(0,0,0,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;">
+    <input type="text" id="fileDesc" placeholder="文件描述（可选）" style="width:100%;padding:12px;background:rgba(0,0,0,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);margin-bottom:8px;">
+    <input type="file" id="fileInput" style="width:100%;padding:12px;background:rgba(0,0,0,0.03);border:1px solid var(--border);border-radius:10px;color:var(--text);">
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeUpload()">取消</button>
       <button class="modal-btn primary" onclick="doUpload()">上传</button>

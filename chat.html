@@ -107,11 +107,11 @@ html, body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.15);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.25);
 }
 
 /* ========== 页面动画 ========== */
@@ -148,11 +148,11 @@ html, body {
   width: 280px; min-width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text);
   display: flex; flex-direction: column; transition: transform var(--transition-base); z-index: 100;
   animation: fadeInLeft 0.4s ease-out;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid rgba(0,0,0,0.06);
 }
 .sidebar-header {
   padding: var(--space-5) var(--space-4);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 .sidebar-header h1 {
   font-size: 16px; font-weight: 600; color: #fff; letter-spacing: -0.3px;
@@ -199,9 +199,9 @@ html, body {
   width: 24px; height: 24px; border: none; background: transparent; color: #8888a0;
   border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
 }
-.topic-item .btn-icon:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.topic-item .btn-icon:hover { background: rgba(0,0,0,0.15); color: #fff; }
 .sidebar-footer {
-  padding: var(--space-3); border-top: 1px solid rgba(255,255,255,0.06);
+  padding: var(--space-3); border-top: 1px solid rgba(0,0,0,0.06);
   display: flex; gap: var(--space-2);
 }
 .sidebar-footer button {
@@ -210,8 +210,8 @@ html, body {
 }
 .btn-new { background: var(--primary); color: #fff; }
 .btn-new:hover { background: var(--primary-hover); }
-.btn-settings { background: rgba(255,255,255,0.08); color: var(--sidebar-text); }
-.btn-settings:hover { background: rgba(255,255,255,0.15); }
+.btn-settings { background: rgba(0,0,0,0.08); color: var(--sidebar-text); }
+.btn-settings:hover { background: rgba(0,0,0,0.15); }
 
 /* ========== 主区域 ========== */
 .main {
@@ -357,7 +357,7 @@ html, body {
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.2);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.3s ease, height 0.3s ease;

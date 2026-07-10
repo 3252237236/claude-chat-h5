@@ -9,17 +9,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #050505;
-  --surface: #0a0a0a;
-  --border: rgba(255,255,255,0.08);
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: rgba(0,0,0,0.08);
   --border-hover: rgba(255,255,255,0.15);
-  --text: #ffffff;
-  --text-2: #a0a0a0;
-  --text-3: #666666;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
   --accent: #6366f1;
   --accent-2: #818cf8;
   --accent-glow: rgba(99,102,241,0.2);
-  --green: #22c55e;
+  --green: #16a34a;
   --red: #ef4444;
 }
 
@@ -84,8 +84,8 @@ html, body {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 70%);
@@ -132,7 +132,7 @@ html, body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
 }
 
 @keyframes cardIn {
@@ -196,7 +196,7 @@ html, body {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
   border-radius: 12px;
   margin-bottom: 32px;
   border: 1px solid var(--border);
@@ -224,7 +224,7 @@ html, body {
 
 .tab:hover:not(.active) {
   color: var(--text-2);
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
 }
 
 /* 表单 */
@@ -241,7 +241,7 @@ html, body {
 .field input {
   width: 100%;
   padding: 14px 16px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
@@ -282,7 +282,7 @@ html, body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+  background: linear-gradient(135deg, transparent, rgba(0,0,0,0.15));
   opacity: 0;
   transition: opacity 0.2s;
 }

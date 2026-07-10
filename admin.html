@@ -9,23 +9,23 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #050505;
-  --surface: #0a0a0a;
-  --border: rgba(255,255,255,0.06);
-  --border-hover: rgba(255,255,255,0.12);
-  --text: #ffffff;
-  --text-2: #a0a0a0;
-  --text-3: #666666;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.15);
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
   --accent: #6366f1;
-  --green: #22c55e;
-  --orange: #f97316;
+  --green: #16a34a;
+  --orange: #ea580c;
   --red: #ef4444;
-  --blue: #3b82f6;
+  --blue: #2563eb;
 }
 
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  scrollbar-color: rgba(0,0,0,0.15) transparent;
 }
 
 body {
@@ -38,7 +38,7 @@ body {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
 
 /* 背景 */
 .bg-anim {
@@ -58,14 +58,14 @@ body {
   pointer-events: none;
 }
 .light-1 { background: var(--orange); top: -100px; left: 30%; }
-.light-2 { background: var(--blue); bottom: -100px; right: 20%; }
+.light-2 { background: #60a5fa; bottom: -100px; right: 20%; }
 
 .grid-overlay {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 70%);
@@ -122,7 +122,7 @@ body {
 
 .header-links a:hover {
   color: var(--text);
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.05);
 }
 
 /* 标签切换 */
@@ -130,7 +130,7 @@ body {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
   border-radius: 12px;
   margin-bottom: 32px;
   border: 1px solid var(--border);
@@ -157,7 +157,7 @@ body {
 
 .tab:hover:not(.active) {
   color: var(--text-2);
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
 }
 
 /* 统计卡片 */
@@ -169,7 +169,7 @@ body {
 }
 
 .stat-card {
-  background: rgba(255,255,255,0.02);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
@@ -177,7 +177,7 @@ body {
 }
 
 .stat-card:hover {
-  background: rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.04);
   border-color: var(--border-hover);
 }
 
@@ -204,7 +204,7 @@ body {
 
 /* 表格 */
 .table-wrap {
-  background: rgba(255,255,255,0.02);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
@@ -223,7 +223,7 @@ body {
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text-3);
-  background: rgba(255,255,255,0.02);
+  background: rgba(0,0,0,0.03);
   border-bottom: 1px solid var(--border);
 }
 
@@ -238,7 +238,7 @@ body {
 }
 
 .table tr:hover td {
-  background: rgba(255,255,255,0.02);
+  background: rgba(0,0,0,0.03);
 }
 
 /* 按钮 */
@@ -256,7 +256,7 @@ body {
 }
 
 .btn-sm:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.05);
   border-color: var(--border-hover);
   color: var(--text);
 }
