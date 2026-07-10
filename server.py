@@ -502,6 +502,7 @@ def api_upload():
     save_uploads(uploads)
 
     # 记录用户动态
+    user = session.get("user")
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             "INSERT INTO activities (user_id, action, target_id, target_title, created_at) VALUES (?, ?, ?, ?, ?)",
