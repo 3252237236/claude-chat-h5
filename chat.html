@@ -859,7 +859,7 @@ function createFreshData() {
     },
     topicOrder: [tid],
     currentTopicId: tid,
-    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions", model: "mimo-v2-omni" },
+    settings: { apiUrl: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions", model: "" },
   };
 }
 
@@ -880,16 +880,23 @@ let pendingImages = [];  // 待发送的图片 data URL
 function getBestModel() {
   const providers = appData.availableProviders || [];
   const url = appData.settings.apiUrl || "";
+  const savedModel = appData.settings.model;
 
-  // 如果用户手动选了模型，优先用用户的
-  if (appData.settings.model) return appData.settings.model;
+  // 如果用户手动选了模型，检查是否在可用列表中
+  if (savedModel) {
+    const exists = providers.some(p => p.model === savedModel);
+    if (exists) return savedModel;
+    // 模型不在列表中，清除并用默认
+    appData.settings.model = "";
+    saveAll();
+  }
 
   // 根据当前 apiUrl 找对应平台的 model
   const matched = providers.find(p => p.url === url);
   if (matched) return matched.model;
 
-  // 兜底
-  return "mimo-v2-omni";
+  // 兜底：用第一个可用的
+  return providers[0]?.model || "mimo-v2-omni";
 }
 
 // ==================== DOM 引用 ====================
