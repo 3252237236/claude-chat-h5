@@ -1,39 +1,32 @@
 {
   "providers": [
     {
+      "name": "MiMo V2 Omni",
+      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
+      "model": "mimo-v2-omni",
+      "key": "tp-c8oum2ueve8d8di1h75mbrubsylcph68jbix1cg10m9hwtoh",
+      "env": "MIMO_KEY"
+    },
+    {
+      "name": "MiMo V2.5 Pro",
+      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
+      "model": "mimo-v2.5-pro",
+      "key": "tp-c8oum2ueve8d8di1h75mbrubsylcph68jbix1cg10m9hwtoh",
+      "env": "MIMO_KEY"
+    },
+    {
+      "name": "MiMo V2.5",
+      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
+      "model": "mimo-v2.5",
+      "key": "tp-c8oum2ueve8d8di1h75mbrubsylcph68jbix1cg10m9hwtoh",
+      "env": "MIMO_KEY"
+    },
+    {
       "name": "DeepSeek",
       "url": "https://api.deepseek.com/v1/chat/completions",
       "model": "deepseek-chat",
       "key": "",
       "env": "DEEPSEEK_KEY"
-    },
-    {
-      "name": "MiMo V2.5 (性价比)",
-      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
-      "model": "mimo-v2.5",
-      "key": "",
-      "env": "MIMO_KEY"
-    },
-    {
-      "name": "MiMo V2.5 Pro (最强)",
-      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
-      "model": "mimo-v2.5-pro",
-      "key": "",
-      "env": "MIMO_KEY"
-    },
-    {
-      "name": "MiMo V2 Omni (多模态)",
-      "url": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
-      "model": "mimo-v2-omni",
-      "key": "",
-      "env": "MIMO_KEY"
-    },
-    {
-      "name": "MiMo (Claude 格式)",
-      "url": "https://token-plan-cn.xiaomimimo.com/anthropic/v1/messages",
-      "model": "claude-sonnet-4-20250514",
-      "key": "",
-      "env": "MIMO_KEY"
     },
     {
       "name": "OpenAI",
