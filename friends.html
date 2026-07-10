@@ -7,33 +7,72 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --bg: #0a0a0f;
-  --surface: rgba(255,255,255,0.03);
-  --surface-hover: rgba(255,255,255,0.06);
-  --border: rgba(255,255,255,0.06);
-  --text: #e8e8f0;
-  --text-dim: #8888a0;
-  --accent: #6c5ce7;
-  --accent-glow: rgba(108,92,231,0.3);
-  --green: #00d2a0;
-  --green-glow: rgba(0,210,160,0.3);
-  --blue: #4dabf7;
-  --blue-glow: rgba(77,171,247,0.3);
-  --orange: #ff922b;
-  --orange-glow: rgba(255,146,43,0.3);
-  --pink: #f06595;
-  --pink-glow: rgba(240,101,149,0.3);
-  --radius: 20px;
-  --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 颜色系统 */
+  --bg: #09090b;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(255,255,255,0.15);
+  --text: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #7c3aed;
+  --accent-glow: rgba(124,58,237,0.25);
+  --green: #10b981;
+  --green-glow: rgba(16,185,129,0.25);
+  --blue: #3b82f6;
+  --blue-glow: rgba(59,130,246,0.25);
+  --orange: #f59e0b;
+  --orange-glow: rgba(245,158,11,0.25);
+  --pink: #ec4899;
+  --pink-glow: rgba(236,72,153,0.25);
+
+  /* 间距系统 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* 圆角系统 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* 阴影系统 */
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 40px var(--accent-glow);
+
+  /* 过渡系统 */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 字体系统 */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 html, body {
   min-height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ===== 背景光晕 ===== */
@@ -116,7 +155,7 @@ html, body {
 .app {
   position: relative; z-index: 1;
   max-width: 960px; margin: 0 auto;
-  padding: 60px 24px 80px;
+  padding: var(--space-16) var(--space-6) var(--space-16);
   min-height: 100vh;
   display: flex; flex-direction: column;
   animation: fadeIn 0.6s ease-out;
@@ -125,84 +164,90 @@ html, body {
 /* ===== 头部 ===== */
 .header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 20px 0 40px;
+  padding: var(--space-5) 0 var(--space-10);
   animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 .header h1 {
   font-size: 32px; font-weight: 800;
-  background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -1px;
 }
 .header .back-btn {
-  font-size: 14px; color: var(--text-dim); text-decoration: none;
-  padding: 8px 16px; border-radius: 12px;
+  font-size: 14px; color: var(--text-secondary); text-decoration: none;
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-full);
   background: var(--surface); border: 1px solid var(--border);
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
+  font-weight: 500;
 }
 .header .back-btn:hover {
   background: var(--surface-hover); color: var(--text);
-  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
 }
 
 /* ===== Tab 切换 ===== */
 .tabs {
-  display: flex; gap: 8px; margin-bottom: 30px;
-  background: var(--surface); padding: 8px; border-radius: 16px;
+  display: flex; gap: var(--space-2); margin-bottom: var(--space-8);
+  background: var(--surface); padding: var(--space-1); border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 .tab {
-  flex: 1; padding: 12px 16px; border: none; background: transparent;
-  color: var(--text-dim); font-size: 14px; font-weight: 600;
-  border-radius: 12px; cursor: pointer; transition: all 0.2s;
+  flex: 1; padding: var(--space-3) var(--space-4); border: none; background: transparent;
+  color: var(--text-secondary); font-size: 14px; font-weight: 500;
+  border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition-fast);
   font-family: inherit;
 }
-.tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.tab:hover { color: var(--text); background: var(--surface-hover); }
 .tab.active {
   background: var(--accent); color: white;
-  box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow: var(--shadow-glow);
+  font-weight: 600;
 }
 .tab .badge {
-  display: inline-block; margin-left: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-left: var(--space-2);
   background: var(--orange); color: white;
-  font-size: 11px; padding: 2px 6px; border-radius: 10px;
-  min-width: 18px; text-align: center;
+  font-size: 11px; padding: 2px 8px; border-radius: var(--radius-full);
+  min-width: 20px; text-align: center;
+  font-weight: 600;
 }
 
 /* ===== 内容区域 ===== */
 .content {
   flex: 1;
+  animation: fadeInUp 0.6s ease-out 0.3s both;
 }
 
 /* ===== 好友列表 ===== */
 .friends-list {
-  display: grid; gap: 12px;
-  animation: fadeInUp 0.6s ease-out 0.3s both;
+  display: grid; gap: var(--space-3);
 }
 .friend-card {
-  display: flex; align-items: center; gap: 16px;
-  padding: 20px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  transition: all var(--transition);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-5); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .friend-card:hover {
   background: var(--surface-hover);
-  border-color: rgba(255,255,255,0.12);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 30px var(--accent-glow);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 .friend-avatar {
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 48px; height: 48px; border-radius: var(--radius-full);
   background: linear-gradient(135deg, var(--accent), var(--blue));
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 700; color: white;
-  transition: transform 0.3s ease;
+  font-size: 18px; font-weight: 600; color: white;
+  transition: all var(--transition-base);
 }
 .friend-card:hover .friend-avatar {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 .friend-info { flex: 1; }
 .friend-name {

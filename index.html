@@ -8,32 +8,79 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0f;
-  --surface: rgba(255,255,255,0.03);
-  --surface-hover: rgba(255,255,255,0.06);
-  --border: rgba(255,255,255,0.06);
-  --text: #e8e8f0;
-  --text-dim: #8888a0;
-  --accent: #6c5ce7;
-  --accent-glow: rgba(108,92,231,0.3);
-  --green: #00d2a0;
-  --green-glow: rgba(0,210,160,0.3);
-  --blue: #4dabf7;
-  --blue-glow: rgba(77,171,247,0.3);
-  --orange: #ff922b;
-  --orange-glow: rgba(255,146,43,0.3);
-  --pink: #f06595;
-  --pink-glow: rgba(240,101,149,0.3);
-  --radius: 20px;
-  --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 颜色系统 */
+  --bg: #09090b;
+  --bg-subtle: #0f0f12;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.07);
+  --surface-active: rgba(255,255,255,0.10);
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(255,255,255,0.15);
+  --text: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #7c3aed;
+  --accent-hover: #8b5cf6;
+  --accent-glow: rgba(124,58,237,0.25);
+  --green: #10b981;
+  --green-glow: rgba(16,185,129,0.25);
+  --blue: #3b82f6;
+  --blue-glow: rgba(59,130,246,0.25);
+  --orange: #f59e0b;
+  --orange-glow: rgba(245,158,11,0.25);
+  --pink: #ec4899;
+  --pink-glow: rgba(236,72,153,0.25);
+  --red: #ef4444;
+
+  /* 间距系统 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* 圆角系统 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* 阴影系统 */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 40px var(--accent-glow);
+
+  /* 过渡系统 */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 字体系统 */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 html, body {
   min-height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 /* ===== 背景光晕 ===== */
@@ -135,82 +182,95 @@ html, body {
 
 /* ===== 用户栏 ===== */
 .user-bar {
-  display: flex; justify-content: flex-end; align-items: center; gap: 12px;
-  padding: 12px 0 0;
+  display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3);
+  padding: var(--space-4) 0 0;
+  animation: fadeIn 0.6s ease-out;
 }
 .user-bar .ub-user {
-  font-size: 13px; color: var(--text-dim);
-  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: var(--space-3);
+  font-weight: 500;
 }
 .user-bar .ub-dot {
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 8px; height: 8px; border-radius: var(--radius-full);
   background: var(--green);
-  box-shadow: 0 0 6px var(--green-glow);
+  box-shadow: 0 0 8px var(--green-glow);
 }
 .ub-btn-logout {
-  font-size: 11px; background: rgba(255,255,255,0.06); color: var(--text-dim);
-  border: none; padding: 4px 10px; border-radius: 12px;
-  cursor: pointer; font-family: inherit; transition: all 0.2s;
+  font-size: 12px; background: var(--surface); color: var(--text-secondary);
+  border: 1px solid var(--border); padding: 6px 14px; border-radius: var(--radius-full);
+  cursor: pointer; font-family: inherit; font-weight: 500;
+  transition: all var(--transition-fast);
 }
-.ub-btn-logout:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+.ub-btn-logout:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
 
 /* ===== 头部 ===== */
-.hero { text-align: center; padding: 60px 0 60px; }
+.hero {
+  text-align: center;
+  padding: var(--space-16) 0 var(--space-16);
+}
 .hero .logo {
-  display: inline-flex; align-items: center; gap: 12px;
-  margin-bottom: 24px;
+  display: inline-flex; align-items: center; gap: var(--space-4);
+  margin-bottom: var(--space-8);
   animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 .hero .logo-icon {
-  width: 52px; height: 52px;
+  width: 56px; height: 56px;
   background: linear-gradient(135deg, var(--accent), var(--blue));
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 0 40px var(--accent-glow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-size: 28px;
+  box-shadow: var(--shadow-glow);
+  transition: all var(--transition-base);
 }
 .hero .logo-icon:hover {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.05) rotate(3deg);
   box-shadow: 0 0 60px var(--accent-glow);
 }
 .hero h1 {
-  font-size: 48px; font-weight: 800; letter-spacing: -2px;
-  background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
+  font-size: 56px; font-weight: 800; letter-spacing: -2.5px;
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: fadeInUp 0.6s ease-out 0.2s both;
+  line-height: 1.1;
 }
 .hero .subtitle {
-  font-size: 17px; color: var(--text-dim); max-width: 500px; margin: 0 auto;
+  font-size: 18px; color: var(--text-secondary); max-width: 480px; margin: 0 auto;
   line-height: 1.7;
   animation: fadeInUp 0.6s ease-out 0.3s both;
+  font-weight: 400;
+  margin-top: var(--space-4);
 }
 
 /* ===== 卡片 ===== */
 .section-title {
-  font-size: 13px; font-weight: 700; letter-spacing: 3px;
-  text-transform: uppercase; color: var(--text-dim);
-  margin: 20px 0 24px; text-align: center;
+  font-size: 11px; font-weight: 600; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--text-muted);
+  margin: var(--space-8) 0 var(--space-6); text-align: center;
   animation: fadeInUp 0.6s ease-out 0.4s both;
 }
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  gap: var(--space-5);
 }
 .card {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px 28px 28px;
+  border-radius: var(--radius-xl);
+  padding: var(--space-8) var(--space-7) var(--space-7);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-base);
   text-decoration: none; color: inherit;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   animation: fadeInUp 0.6s ease-out both;
 }
 .card:nth-child(1) { animation-delay: 0.5s; }
@@ -222,9 +282,9 @@ html, body {
 
 .card::before {
   content: "";
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
-  opacity: 0; transition: opacity var(--transition);
+  opacity: 0; transition: opacity var(--transition-base);
 }
 
 /* 鼠标跟随光晕效果 */
@@ -233,65 +293,76 @@ html, body {
   position: absolute;
   top: var(--mouse-y, 50%);
   left: var(--mouse-x, 50%);
-  width: 300px;
-  height: 300px;
+  width: 400px;
+  height: 400px;
   background: radial-gradient(circle, var(--card-glow, var(--accent-glow)) 0%, transparent 70%);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-base);
   pointer-events: none;
   z-index: -1;
 }
 
 .card:hover {
   background: var(--surface-hover);
-  border-color: rgba(255,255,255,0.12);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 80px var(--card-glow, var(--accent-glow));
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), 0 0 60px var(--card-glow, var(--accent-glow));
 }
 .card:hover::before { opacity: 1; }
-.card:hover::after { opacity: 0.15; }
+.card:hover::after { opacity: 0.2; }
 
 .card .card-icon {
-  width: 48px; height: 48px; border-radius: 14px;
+  width: 48px; height: 48px; border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: 18px;
-  transition: transform 0.3s ease;
+  font-size: 24px; margin-bottom: var(--space-5);
+  transition: all var(--transition-base);
 }
 .card:hover .card-icon {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
-.card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
-.card p { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+.card h3 {
+  font-size: 18px; font-weight: 600; margin-bottom: var(--space-2);
+  letter-spacing: -0.3px;
+}
+.card p {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+  font-weight: 400;
+}
 .card .card-badge {
-  display: inline-block; margin-top: 16px;
-  font-size: 11px; font-weight: 600; padding: 4px 10px;
-  border-radius: 20px; background: rgba(255,255,255,0.05);
-  color: var(--text-dim);
-  transition: all 0.3s ease;
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  margin-top: var(--space-4);
+  font-size: 12px; font-weight: 500; padding: 5px 12px;
+  border-radius: var(--radius-full); background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  transition: all var(--transition-base);
 }
 .card:hover .card-badge {
-  color: var(--text);
-  background: rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
 }
 
 /* ===== 底部 ===== */
 .footer {
-  margin-top: auto; text-align: center; padding-top: 60px;
-  font-size: 12px; color: var(--text-dim);
+  margin-top: auto; text-align: center; padding-top: var(--space-16);
+  font-size: 13px; color: var(--text-muted);
   animation: fadeIn 0.6s ease-out 1.2s both;
+  font-weight: 400;
 }
 
 /* ===== 响应式 ===== */
-@media (max-width: 600px) {
-  .app { padding: 40px 16px 60px; }
-  .hero { padding: 40px 0 40px; }
-  .hero h1 { font-size: 34px; }
-  .hero .subtitle { font-size: 15px; }
+@media (max-width: 640px) {
+  .app { padding: var(--space-10) var(--space-4) var(--space-16); }
+  .hero { padding: var(--space-10) 0; }
+  .hero h1 { font-size: 36px; letter-spacing: -1.5px; }
+  .hero .subtitle { font-size: 16px; }
   .cards { grid-template-columns: 1fr; }
   .bg-orb:nth-child(1) { width: 300px; height: 300px; }
   .bg-orb:nth-child(2) { width: 200px; height: 200px; }
+  .card { padding: var(--space-6); }
 }
 </style>
 </head>
