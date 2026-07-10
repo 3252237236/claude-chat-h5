@@ -1347,19 +1347,35 @@ def convert_document(file, src_ext, dst_ext):
         return html.encode("utf-8")
     elif dst_ext == "pdf":
         try:
-            from reportlab.lib.pagesizes import letter
+            from reportlab.lib.pagesizes import A4
             from reportlab.pdfgen import canvas as rl_canvas
+            from reportlab.pdfbase import pdfmetrics
+            from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+            pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
         except ImportError:
             return None
         buf = BytesIO()
-        c = rl_canvas.Canvas(buf, pagesize=letter)
-        y = 750
+        c = rl_canvas.Canvas(buf, pagesize=A4)
+        c.setFont('STSong-Light', 12)
+        width, height = A4
+        y = height - 50
+        max_chars = 80
         for line in content.split("\n"):
+            # 自动换行
+            while len(line) > max_chars:
+                if y < 50:
+                    c.showPage()
+                    c.setFont('STSong-Light', 12)
+                    y = height - 50
+                c.drawString(50, y, line[:max_chars])
+                line = line[max_chars:]
+                y -= 16
             if y < 50:
                 c.showPage()
-                y = 750
-            c.drawString(50, y, line[:100])
-            y -= 14
+                c.setFont('STSong-Light', 12)
+                y = height - 50
+            c.drawString(50, y, line[:max_chars])
+            y -= 16
         c.save()
         return buf.getvalue()
     return None
