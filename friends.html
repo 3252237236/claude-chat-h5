@@ -775,7 +775,8 @@ async function loadMe() {
   try {
     const res = await fetch('/api/me');
     if (res.ok) {
-      currentUser = await res.json();
+      const data = await res.json();
+      currentUser = data.user || data;
     }
   } catch(e) {}
 }
