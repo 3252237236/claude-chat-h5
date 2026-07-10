@@ -1391,19 +1391,33 @@ def convert_data(file, src_ext, dst_ext):
         return json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
     elif dst_ext == "csv":
         if isinstance(data, list) and len(data) > 0:
+            # 确保所有元素都是字典
+            if isinstance(data[0], dict):
+                buf = io.StringIO()
+                writer = csv.DictWriter(buf, fieldnames=data[0].keys())
+                writer.writeheader()
+                writer.writerows(data)
+                return buf.getvalue().encode("utf-8")
+        elif isinstance(data, dict):
+            # 单个字典转 CSV
             buf = io.StringIO()
-            writer = csv.DictWriter(buf, fieldnames=data[0].keys())
+            writer = csv.DictWriter(buf, fieldnames=data.keys())
             writer.writeheader()
-            writer.writerows(data)
+            writer.writerow(data)
             return buf.getvalue().encode("utf-8")
     elif dst_ext == "xml":
         root = ET.Element("data")
         if isinstance(data, list):
             for item in data:
                 elem = ET.SubElement(root, "item")
-                for k, v in item.items():
-                    child = ET.SubElement(elem, k)
-                    child.text = str(v)
+                if isinstance(item, dict):
+                    for k, v in item.items():
+                        child = ET.SubElement(elem, k)
+                        child.text = str(v) if v is not None else ""
+        elif isinstance(data, dict):
+            for k, v in data.items():
+                child = ET.SubElement(root, k)
+                child.text = str(v) if v is not None else ""
         return ET.tostring(root, encoding="unicode").encode("utf-8")
     elif dst_ext == "yaml":
         try:
