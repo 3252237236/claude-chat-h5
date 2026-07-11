@@ -44,7 +44,7 @@
     "title": "Vibe Coding",
     "desc": "手机远程控制 Claude Code，随时随地 AI 编程",
     "icon": "⚡",
-    "url": "/vibe/",
+    "url": "http://192.168.1.44:3000",
     "color": "#f59e0b",
     "badge": "🔥 新功能"
   }
