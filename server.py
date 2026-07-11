@@ -340,7 +340,7 @@ def extract_zip_project(zip_path, extract_to):
         return candidates[0][1]
 
 # ---------- 门禁 ----------
-AUTH_WHITELIST = {"/login", "/api/login", "/api/register", "/api/logout", "/api/me", "/api/health", "/vibe"}
+AUTH_WHITELIST = {"/login", "/api/login", "/api/register", "/api/logout", "/api/me", "/api/health", "/vibe", "/apps.json"}
 
 @app.before_request
 def require_login():
