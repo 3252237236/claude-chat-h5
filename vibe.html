@@ -12,8 +12,6 @@
       color: #e6edf3;
       min-height: 100vh;
     }
-
-    /* 弹窗遮罩 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -24,8 +22,6 @@
       z-index: 100;
       padding: 20px;
     }
-
-    /* 弹窗 */
     .modal {
       background: #161b22;
       border: 1px solid #30363d;
@@ -37,12 +33,7 @@
     }
     .modal .icon { font-size: 48px; margin-bottom: 16px; }
     .modal h2 { font-size: 20px; margin-bottom: 12px; }
-    .modal p {
-      color: #8b949e;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
+    .modal p { color: #8b949e; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
     .modal .warning {
       background: rgba(248,81,73,0.1);
       border: 1px solid rgba(248,81,73,0.3);
@@ -52,8 +43,6 @@
       font-size: 13px;
       color: #f85149;
     }
-
-    /* 按钮 */
     .btn-group { display: flex; flex-direction: column; gap: 10px; }
     .btn {
       padding: 14px;
@@ -64,52 +53,18 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .btn-primary {
-      background: #f59e0b;
-      color: #000;
-    }
+    .btn-primary { background: #f59e0b; color: #000; }
     .btn-primary:hover { opacity: 0.9; }
-    .btn-primary:disabled {
-      background: #30363d;
-      color: #8b949e;
-      cursor: not-allowed;
-    }
-    .btn-secondary {
-      background: #21262d;
-      color: #e6edf3;
-      border: 1px solid #30363d;
-    }
+    .btn-primary:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
+    .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
     .btn-secondary:hover { background: #30363d; }
-
-    /* 状态 */
-    .status {
-      margin-top: 16px;
-      font-size: 13px;
-      min-height: 20px;
-    }
+    .status { margin-top: 16px; font-size: 13px; min-height: 20px; }
     .status.checking { color: #d29922; }
     .status.success { color: #3fb950; }
     .status.error { color: #f85149; }
-
-    /* 返回链接 */
-    .back-link {
-      display: inline-block;
-      margin-top: 16px;
-      color: #58a6ff;
-      text-decoration: none;
-      font-size: 14px;
-    }
+    .back-link { display: inline-block; margin-top: 16px; color: #58a6ff; text-decoration: none; font-size: 14px; }
     .back-link:hover { text-decoration: underline; }
-
-    /* 隐藏 */
-    .hidden { display: none !important; }
-
-    /* IP 输入 */
-    .ip-input-group {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
+    .ip-input-group { display: flex; gap: 8px; margin-bottom: 16px; }
     .ip-input {
       flex: 1;
       padding: 12px;
@@ -136,85 +91,67 @@
   </style>
 </head>
 <body>
-  <!-- 弹窗 -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="icon">⚡</div>
       <h2>Vibe Coding</h2>
       <p>手机远程控制 Claude Code，随时随地 AI 编程</p>
-
-      <div class="warning">
-        ⚠️ 使用前请务必先下载并部署仓库内的 Vibe Coding 服务到你的电脑上！
-      </div>
-
+      <div class="warning">⚠️ 使用前请务必先下载并部署仓库内的 Vibe Coding 服务到你的电脑上！</div>
       <div class="ip-input-group">
         <input type="text" class="ip-input" id="ipInput" placeholder="输入服务地址，如 192.168.1.44:3000" value="192.168.1.44:3000">
         <button class="detect-btn" onclick="detectService()">检测</button>
       </div>
-
       <div class="btn-group">
-        <button class="btn btn-primary" id="enterBtn" disabled onclick="enterService()">进入服务</button>
+        <button class="btn btn-primary" id="enterBtn" onclick="enterService()">直接进入</button>
         <button class="btn btn-secondary" onclick="window.location.href='/files'">📁 去文件仓库下载</button>
       </div>
-
       <div class="status" id="status"></div>
       <a href="/" class="back-link">← 返回首页</a>
     </div>
   </div>
 
   <script>
-    // 自动检测
-    window.onload = function() {
-      detectService();
-    };
+    window.onload = function() { detectService(); };
 
     function detectService() {
       const ip = document.getElementById('ipInput').value.trim();
       if (!ip) return;
 
       const statusEl = document.getElementById('status');
-      const enterBtn = document.getElementById('enterBtn');
-
       statusEl.className = 'status checking';
-      statusEl.textContent = '正在检测服务...';
-      enterBtn.disabled = true;
+      statusEl.textContent = '正在检测...';
 
-      // 用图片加载检测（不受混合内容限制）
+      // 用 Image 检测，不受混合内容限制
       const img = new Image();
-      const timeout = setTimeout(() => {
+      const timer = setTimeout(() => {
         img.src = '';
         statusEl.className = 'status error';
-        statusEl.textContent = '❌ 未检测到服务，请确认服务已启动';
-        enterBtn.disabled = true;
+        statusEl.textContent = '⚠️ 无法检测，请确认服务已启动后直接进入';
       }, 3000);
 
-      img.onload = () => {
-        clearTimeout(timeout);
+      img.onload = function() {
+        clearTimeout(timer);
         statusEl.className = 'status success';
         statusEl.textContent = '✅ 服务已检测到！';
-        enterBtn.disabled = false;
       };
 
-      img.onerror = () => {
-        // 图片加载失败不一定代表服务不存在，可能是路径不对
-        // 直接启用按钮让用户尝试
-        clearTimeout(timeout);
+      img.onerror = function() {
+        clearTimeout(timer);
+        // onerror 也可能是服务存在但返回非图片，直接让用户进入
         statusEl.className = 'status success';
-        statusEl.textContent = '✅ 点击进入服务';
-        enterBtn.disabled = false;
+        statusEl.textContent = '✅ 可以尝试进入';
       };
 
-      img.src = `http://${ip}/favicon.ico?t=${Date.now()}`;
+      img.src = 'http://' + ip + '/favicon.ico?' + Date.now();
     }
 
     function enterService() {
       const ip = document.getElementById('ipInput').value.trim();
       if (ip) {
-        window.location.href = `http://${ip}`;
+        window.location.href = 'http://' + ip;
       }
     }
 
-    // 回车检测
     document.getElementById('ipInput').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') detectService();
     });
