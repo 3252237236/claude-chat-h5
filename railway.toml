@@ -2,4 +2,3 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "bash start.sh"

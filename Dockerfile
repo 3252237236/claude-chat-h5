@@ -25,6 +25,10 @@ RUN cd vibe-coding && npm install --production
 # Make start.sh executable
 RUN chmod +x start.sh
 
-EXPOSE $PORT
+# Nginx needs these directories
+RUN mkdir -p /var/log/nginx /var/lib/nginx /run
 
-CMD ["bash", "start.sh"]
+EXPOSE 8080
+
+# Use shell form to ensure start.sh is executed
+CMD bash start.sh
