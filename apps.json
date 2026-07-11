@@ -39,5 +39,13 @@
     "color": "#ff922b",
     "badge": "➕ 发布",
     "dashed": true
+  },
+  {
+    "title": "Vibe Coding",
+    "desc": "手机远程控制 Claude Code，随时随地 AI 编程",
+    "icon": "⚡",
+    "url": "/vibe/",
+    "color": "#f59e0b",
+    "badge": "🔥 新功能"
   }
 ]

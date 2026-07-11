@@ -1,0 +1,6 @@
+{
+  "port": 3000,
+  "password": "your-password-here",
+  "workDir": "/app",
+  "allowUnsafe": true
+}
