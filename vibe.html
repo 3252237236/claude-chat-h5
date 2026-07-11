@@ -163,8 +163,6 @@
   </div>
 
   <script>
-    let serviceUrl = '';
-
     // 自动检测
     window.onload = function() {
       detectService();
@@ -181,67 +179,38 @@
       statusEl.textContent = '正在检测服务...';
       enterBtn.disabled = true;
 
-      // 尝试连接健康检查接口
-      const testUrl = `http://${ip}/health`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 3000);
-
-      fetch(testUrl, {
-        signal: controller.signal,
-        mode: 'no-cors'
-      })
-      .then(() => {
-        // no-cors 模式下无法读取响应，但如果不报错说明服务存在
-        // 再用 WebSocket 验证
-        return verifyWithWebSocket(ip);
-      })
-      .catch(() => {
-        // fetch 失败，尝试 WebSocket
-        return verifyWithWebSocket(ip);
-      });
-    }
-
-    function verifyWithWebSocket(ip) {
-      const statusEl = document.getElementById('status');
-      const enterBtn = document.getElementById('enterBtn');
-
-      // 本地服务始终用 ws: (不走 HTTPS)
-      const wsUrl = `ws://${ip}/ws`;
-
-      try {
-        const ws = new WebSocket(wsUrl);
-        const timeout = setTimeout(() => {
-          ws.close();
-          statusEl.className = 'status error';
-          statusEl.textContent = '❌ 未检测到服务，请先部署';
-          enterBtn.disabled = true;
-        }, 3000);
-
-        ws.onopen = () => {
-          clearTimeout(timeout);
-          ws.close();
-          serviceUrl = `http://${ip}`;
-          statusEl.className = 'status success';
-          statusEl.textContent = '✅ 服务已检测到！';
-          enterBtn.disabled = false;
-        };
-
-        ws.onerror = () => {
-          clearTimeout(timeout);
-          statusEl.className = 'status error';
-          statusEl.textContent = '❌ 未检测到服务，请先部署';
-          enterBtn.disabled = true;
-        };
-      } catch(e) {
+      // 用图片加载检测（不受混合内容限制）
+      const img = new Image();
+      const timeout = setTimeout(() => {
+        img.src = '';
         statusEl.className = 'status error';
-        statusEl.textContent = '❌ 连接失败，请检查地址';
+        statusEl.textContent = '❌ 未检测到服务，请确认服务已启动';
         enterBtn.disabled = true;
-      }
+      }, 3000);
+
+      img.onload = () => {
+        clearTimeout(timeout);
+        statusEl.className = 'status success';
+        statusEl.textContent = '✅ 服务已检测到！';
+        enterBtn.disabled = false;
+      };
+
+      img.onerror = () => {
+        // 图片加载失败不一定代表服务不存在，可能是路径不对
+        // 直接启用按钮让用户尝试
+        clearTimeout(timeout);
+        statusEl.className = 'status success';
+        statusEl.textContent = '✅ 点击进入服务';
+        enterBtn.disabled = false;
+      };
+
+      img.src = `http://${ip}/favicon.ico?t=${Date.now()}`;
     }
 
     function enterService() {
-      if (serviceUrl) {
-        window.location.href = serviceUrl;
+      const ip = document.getElementById('ipInput').value.trim();
+      if (ip) {
+        window.location.href = `http://${ip}`;
       }
     }
 
