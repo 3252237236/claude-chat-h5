@@ -205,8 +205,8 @@
       const statusEl = document.getElementById('status');
       const enterBtn = document.getElementById('enterBtn');
 
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${ip}/ws`;
+      // 本地服务始终用 ws: (不走 HTTPS)
+      const wsUrl = `ws://${ip}/ws`;
 
       try {
         const ws = new WebSocket(wsUrl);
