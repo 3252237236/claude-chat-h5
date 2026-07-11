@@ -378,10 +378,6 @@ def login_page():
 def chat():
     return send_file("chat.html")
 
-@app.route("/vibe")
-def vibe():
-    return send_file("vibe.html")
-
 @app.route("/upload")
 def upload_page():
     return send_file("upload.html")
