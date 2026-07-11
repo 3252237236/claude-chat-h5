@@ -1,10 +1,13 @@
 FROM python:3.11-slim
 
-# Install Node.js, Nginx, gettext
+# Install Node.js, Nginx, build tools (for node-pty native compilation)
 RUN apt-get update && apt-get install -y \
     curl \
     nginx \
     gettext-base \
+    make \
+    g++ \
+    python3 \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
