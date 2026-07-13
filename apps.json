@@ -32,6 +32,14 @@
     "badge": "📂 共享"
   },
   {
+    "title": "Riddle 手写日记",
+    "desc": "在纸上手写文字，AI 以手写动画回应的魔法日记本",
+    "icon": "✍️",
+    "url": "/riddle",
+    "color": "#c9a96e",
+    "badge": "✨ 新功能"
+  },
+  {
     "title": "提交作品",
     "desc": "发布你的工具、游戏、网站，让所有人看到你的作品",
     "icon": "🚀",
@@ -44,7 +52,7 @@
     "title": "Vibe Coding",
     "desc": "手机远程控制 Claude Code，随时随地 AI 编程",
     "icon": "⚡",
-    "url": "/vibe",
+    "url": "http://192.168.1.44:3000",
     "color": "#f59e0b",
     "badge": "🔥 新功能"
   }

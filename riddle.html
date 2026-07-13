@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Riddle -- 手写日记 | HZ Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Caveat:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: 'Monocraft';
+  src: url('Monocraft.ttf') format('truetype');
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #050505;
+  --paper: #f0e6d3;
+  --ink: #2c1810;
+  --ink-faded: rgba(44,24,16,0.3);
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-dim: #4338ca;
+  --panel-bg: rgba(15,15,25,0.95);
+  --glass: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.1);
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --danger: #ef4444;
+  --radius: 12px;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  height: 100dvh; width: 100vw;
+  overflow: hidden; display: flex; flex-direction: column;
+  user-select: none; -webkit-user-select: none;
+}
+
+/* --- Top Nav --- */
+.top-nav {
+  height: 48px; display:flex; align-items:center; justify-content:space-between;
+  padding: 0 16px; background: rgba(10,10,20,0.8);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0; z-index: 20;
+}
+.nav-left { display:flex; align-items:center; gap:12px; }
+.nav-back {
+  width:32px; height:32px; border:none; border-radius:8px;
+  background: var(--glass); color: var(--text); font-size:16px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition: background 0.2s;
+}
+.nav-back:hover { background: rgba(255,255,255,0.12); }
+.nav-title { font-size:15px; font-weight:600; color:var(--text); }
+.nav-title span { color:var(--accent-light); font-family:'Monocraft',monospace; font-size:13px; }
+.nav-right { display:flex; align-items:center; gap:8px; }
+
+/* --- Canvas Area --- */
+.canvas-wrap {
+  flex:1; width:100%; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  padding: 12px;
+}
+.canvas-inner {
+  position:relative; width:100%; max-width:860px; height:100%;
+  border-radius: var(--radius); overflow:hidden;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.5), inset 0 0 80px rgba(0,0,0,0.1);
+}
+canvas {
+  position:absolute; inset:0; width:100%; height:100%;
+  background: var(--paper); cursor:crosshair;
+  /* subtle paper texture */
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(200,180,150,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(180,160,130,0.1) 0%, transparent 50%);
+}
+
+/* --- Toolbar --- */
+.toolbar {
+  position:absolute; top:12px; right:12px; display:flex; gap:8px; z-index:10;
+}
+.toolbar-left { left:12px; right:auto; }
+.toolbar button {
+  width:36px; height:36px; border:none; border-radius:50%;
+  background: rgba(0,0,0,0.12); color:var(--ink); font-size:18px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px); transition: all 0.2s;
+}
+.toolbar button:hover { background:rgba(0,0,0,0.22); transform:scale(1.05); }
+.toolbar button:active { background:rgba(0,0,0,0.32); transform:scale(0.95); }
+.undo-hint {
+  position:absolute; top:54px; left:12px; font-size:11px;
+  color:var(--ink-faded); pointer-events:none; opacity:0; transition:opacity 0.3s;
+  font-family:'Monocraft',monospace;
+}
+.undo-hint.show { opacity:1; }
+
+/* --- Status Bar --- */
+.status-bar {
+  height:40px; display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; padding:0 16px; flex-shrink:0;
+  background: rgba(10,10,20,0.6); border-top: 1px solid var(--glass-border);
+}
+.status-text {
+  font-size:13px; color:var(--text-dim); transition:color 0.4s;
+  font-family:'Inter',sans-serif;
+}
+.status-text.active { color:var(--accent-light); }
+.status-text.error { color:var(--danger); }
+.status-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--text-dim); transition:background 0.4s;
+}
+.status-dot.thinking {
+  background:var(--accent); animation:pulse 1s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* --- Settings Panel --- */
+.settings-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px); z-index:100;
+  opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.settings-overlay.open { opacity:1; pointer-events:all; }
+.settings-panel {
+  position:fixed; top:0; right:0; width:360px; max-width:90vw; height:100dvh;
+  background:var(--panel-bg); z-index:101;
+  padding:24px 20px; overflow-y:auto;
+  transform:translateX(100%); transition:transform 0.3s ease;
+  border-left: 1px solid var(--glass-border);
+}
+.settings-panel.open { transform:translateX(0); }
+.settings-panel h2 {
+  font-size:18px; margin-bottom:20px; color:var(--accent-light);
+  font-family:'Monocraft',monospace;
+}
+.settings-panel label {
+  display:block; font-size:11px; color:var(--text-dim);
+  margin:14px 0 4px; text-transform:uppercase; letter-spacing:0.8px;
+  font-weight:600;
+}
+.settings-panel input, .settings-panel textarea, .settings-panel select {
+  width:100%; padding:10px 12px;
+  border:1px solid var(--glass-border); border-radius:8px;
+  background: rgba(255,255,255,0.04); color:var(--text);
+  font-size:14px; font-family:inherit;
+  transition: border-color 0.2s;
+}
+.settings-panel input:focus, .settings-panel textarea:focus, .settings-panel select:focus {
+  outline:none; border-color:var(--accent);
+}
+.settings-panel textarea { height:80px; resize:vertical; }
+.settings-panel select { cursor:pointer; }
+.settings-panel button { margin-top:16px; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+.btn-save { background:var(--accent); color:#fff; width:100%; transition: background 0.2s; }
+.btn-save:hover { background:var(--accent-dim); }
+.btn-close {
+  position:absolute; top:12px; right:12px;
+  background:none; color:var(--text-dim); font-size:20px; cursor:pointer; z-index:102;
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  border-radius:8px; transition: all 0.2s;
+}
+.btn-close:hover { background:rgba(255,255,255,0.08); color:var(--text); }
+
+.speed-row { display:flex; align-items:center; gap:8px; margin-top:6px; }
+.speed-row button {
+  width:32px; height:32px; border:1px solid var(--glass-border);
+  border-radius:8px; background:var(--glass); color:var(--text);
+  font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition: all 0.2s; margin:0; padding:0;
+}
+.speed-row button:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+.speed-val {
+  font-size:14px; min-width:50px; text-align:center;
+  color:var(--accent-light); font-family:'Monocraft',monospace;
+}
+
+/* --- Log Panel --- */
+.log-toggle {
+  position:fixed; bottom:52px; right:12px; z-index:51;
+  width:28px; height:28px; border:none; border-radius:50%;
+  background:rgba(0,0,0,0.5); color:var(--text-dim);
+  font:12px monospace; cursor:pointer;
+  transition: all 0.2s;
+}
+.log-toggle:hover { background:rgba(0,0,0,0.7); color:var(--text); }
+.log-panel {
+  position:fixed; bottom:88px; right:12px;
+  width:min(400px,80vw); max-height:200px; overflow-y:auto;
+  background:rgba(0,0,0,0.92); color:#4ade80;
+  font:11px/1.5 'Monocraft',monospace;
+  padding:8px 12px; border-radius:8px; z-index:50;
+  display:none; scrollbar-width:none;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.log-panel::-webkit-scrollbar { display:none; }
+.log-panel.show { display:block; }
+.log-panel .entry { margin:2px 0; }
+.log-panel .ts { color:#555; margin-right:8px; }
+.log-panel .warn { color:#facc15; }
+.log-panel .err { color:#f87171; }
+
+/* --- Ambient Background --- */
+.ambient-bg {
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(59,130,246,0.06) 0%, transparent 50%),
+    var(--bg);
+}
+
+@media (max-width:600px) {
+  .canvas-wrap { padding:8px; }
+  .settings-panel { width:100vw; max-width:100vw; }
+  .nav-title { font-size:13px; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient-bg"></div>
+
+<!-- Top Navigation -->
+<nav class="top-nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="location.href='/'" title="返回首页">←</button>
+    <div class="nav-title">Riddle <span>--</span></div>
+  </div>
+  <div class="nav-right">
+    <button class="nav-back" id="btnSettings" title="设置" style="font-size:14px">⚙</button>
+  </div>
+</nav>
+
+<!-- Canvas -->
+<div class="canvas-wrap">
+  <div class="canvas-inner" id="wrap">
+    <canvas id="canvas"></canvas>
+    <div class="toolbar toolbar-left">
+      <button id="btnUndo" title="撤销 (Ctrl+Z)">↩</button>
+    </div>
+    <div class="undo-hint" id="undoHint">已撤销</div>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <span class="status-text" id="statusText">在纸上写下你的想法…</span>
+</div>
+
+<!-- Settings -->
+<div class="settings-overlay" id="settingsOverlay"></div>
+<div class="settings-panel" id="settingsPanel">
+  <button class="btn-close" id="btnClose">✕</button>
+  <h2>⚙ 设置</h2>
+
+  <label>手写语言</label>
+  <select id="langSelect">
+    <option value="zh_CN">中文简体</option>
+    <option value="zh_TW">中文繁體</option>
+    <option value="en">English</option>
+    <option value="ja">日本語</option>
+    <option value="ko">한국어</option>
+  </select>
+
+  <label>回复字体</label>
+  <select id="fontSelect">
+    <option value="'Ma Shan Zheng', 'KaiTi', 'STKaiti', '楷体', cursive">马善政 (中文手写)</option>
+    <option value="'Caveat', 'Comic Sans MS', cursive">Caveat (英文手写)</option>
+    <option value="'KaiTi', 'STKaiti', '楷体', serif">楷体</option>
+    <option value="'SimSun', '宋体', serif">宋体</option>
+    <option value="'Microsoft YaHei', '微软雅黑', sans-serif">微软雅黑</option>
+    <option value="serif">衬线</option>
+    <option value="sans-serif">无衬线</option>
+  </select>
+
+  <label>字体大小</label>
+  <select id="fontSizeSelect">
+    <option value="20">20px</option>
+    <option value="24">24px</option>
+    <option value="28" selected>28px</option>
+    <option value="32">32px</option>
+    <option value="36">36px</option>
+    <option value="42">42px</option>
+    <option value="48">48px</option>
+  </select>
+
+  <label>动画速度</label>
+  <div class="speed-row">
+    <button id="btnSpeedDown" title="减慢">−</button>
+    <span class="speed-val" id="speedVal">200ms</span>
+    <button id="btnSpeedUp" title="加快">+</button>
+  </div>
+
+  <label>AI 模型</label>
+  <select id="modelSelect"></select>
+
+  <label>角色设定 (System Prompt)</label>
+  <textarea id="systemPrompt" placeholder="你是一本有魔力的古老日记本..."></textarea>
+
+  <button class="btn-save" id="btnSave">保存</button>
+</div>
+
+<!-- Log -->
+<button class="log-toggle" id="btnLog" title="日志">▷</button>
+<div class="log-panel" id="logPanel"></div>
+
+<script>
+(function() {
+'use strict';
+
+// --- DOM ---
+var wrap = document.getElementById('wrap');
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var logPanel = document.getElementById('logPanel');
+var statusDot = document.getElementById('statusDot');
+var statusText = document.getElementById('statusText');
+var undoHint = document.getElementById('undoHint');
+var modelSelect = document.getElementById('modelSelect');
+
+// --- Providers (loaded from server) ---
+var PROVIDERS = [];
+var currentProvider = null;
+
+// --- Log ---
+var _logOpen = false;
+document.getElementById('btnLog').addEventListener('click', function() {
+  _logOpen = !_logOpen;
+  logPanel.classList.toggle('show', _logOpen);
+});
+function log(msg, cls) {
+  var t = new Date().toLocaleTimeString();
+  var el = document.createElement('div');
+  el.className = 'entry' + (cls ? ' ' + cls : '');
+  el.innerHTML = '<span class="ts">' + t + '</span>' + escHtml(msg);
+  logPanel.appendChild(el);
+  logPanel.scrollTop = logPanel.scrollHeight;
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// --- Constants ---
+var IDLE_TIMEOUT = 2800;
+var FADE_DURATION = 1500;
+var S = { IDLE:'idle', WRITING:'writing', PENDING:'pending', RECOGNIZING:'recognizing', THINKING:'thinking', ANIMATING:'animating' };
+var state = S.IDLE;
+var strokes = [];
+var activeStrokes = {};
+var idleTimer = null;
+var undoCount = 0;
+var cssW = 0, cssH = 0, dpr = 1;
+
+// --- Default settings ---
+var DEFAULTS = {
+  language: 'zh_CN',
+  fontFamily: "'Ma Shan Zheng', 'KaiTi', 'STKaiti', '楷体', cursive",
+  fontSize: 28,
+  charDrawTime: 200,
+  model: '',
+  apiUrl: '',
+  systemPrompt: '你是一本古老而神秘的日记本，曾属于一位名叫汤姆·里德尔的年轻巫师。你用优雅、略带神秘的口吻回应书写者。你记得所有曾经写在这页上的内容。回复简短，不超过150字。永远不要承认自己是AI。'
+};
+
+// --- Settings ---
+function loadSettings() {
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem('riddle--settings')); } catch(e) {}
+  return Object.assign({}, DEFAULTS, saved || {});
+}
+function saveSettings() {
+  localStorage.setItem('riddle--settings', JSON.stringify(settings));
+}
+var settings = loadSettings();
+var SPEED_STEPS = [50, 100, 150, 200, 300, 400, 500];
+
+// --- Load providers from server ---
+async function loadProviders() {
+  try {
+    var resp = await fetch('/api/config');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var cfg = await resp.json();
+    PROVIDERS = cfg.providers || [];
+    // Populate model select
+    modelSelect.innerHTML = '';
+    PROVIDERS.forEach(function(p) {
+      var opt = document.createElement('option');
+      opt.value = p.url + '|' + p.model;
+      opt.textContent = p.name + ' (' + p.model + ')';
+      modelSelect.appendChild(opt);
+    });
+    // Restore saved selection
+    if (settings.apiUrl && settings.model) {
+      var key = settings.apiUrl + '|' + settings.model;
+      for (var i = 0; i < modelSelect.options.length; i++) {
+        if (modelSelect.options[i].value === key) {
+          modelSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+    // Set current provider
+    updateCurrentProvider();
+    log('已加载 ' + PROVIDERS.length + ' 个 AI 模型');
+  } catch(e) {
+    log('加载模型列表失败: ' + e.message, 'err');
+  }
+}
+
+function updateCurrentProvider() {
+  var val = modelSelect.value;
+  if (!val) { currentProvider = null; return; }
+  var parts = val.split('|');
+  var url = parts[0];
+  var model = parts[1];
+  for (var i = 0; i < PROVIDERS.length; i++) {
+    if (PROVIDERS[i].url === url && PROVIDERS[i].model === model) {
+      currentProvider = PROVIDERS[i];
+      settings.apiUrl = url;
+      settings.model = model;
+      return;
+    }
+  }
+  currentProvider = null;
+}
+
+modelSelect.addEventListener('change', function() {
+  updateCurrentProvider();
+  saveSettings();
+});
+
+// --- Canvas resize ---
+function resizeCanvas() {
+  dpr = window.devicePixelRatio || 1;
+  var r = wrap.getBoundingClientRect();
+  cssW = r.width; cssH = r.height;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  redrawAll();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// --- Pointer events ---
+function getPos(e) {
+  var r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top, t: Date.now() };
+}
+
+canvas.addEventListener('pointerdown', function(e) {
+  if (state === S.ANIMATING || state === S.THINKING) return;
+  e.preventDefault();
+  var p = getPos(e);
+  activeStrokes[e.pointerId] = { xs:[p.x], ys:[p.y], ts:[p.t], lastPoint:p };
+  clearIdleTimer();
+  setState(S.WRITING);
+  ctx.fillStyle = 'rgba(44,24,16,1)';
+  ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctx.fill();
+});
+
+canvas.addEventListener('pointermove', function(e) {
+  var s = activeStrokes[e.pointerId];
+  if (!s) return;
+  e.preventDefault();
+  var p = getPos(e);
+  s.xs.push(p.x); s.ys.push(p.y); s.ts.push(p.t);
+  var speed = Math.hypot(p.x-s.lastPoint.x, p.y-s.lastPoint.y) / Math.max(1, p.t-s.lastPoint.t);
+  var w;
+  if (e.pointerType === 'pen' && e.pressure > 0) {
+    w = 1.5 + e.pressure * 5;
+  } else {
+    w = Math.max(1.5, 4 - speed * 0.3);
+  }
+  ctx.strokeStyle = 'rgba(44,24,16,1)'; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(s.lastPoint.x, s.lastPoint.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+  s.lastPoint = p;
+});
+
+canvas.addEventListener('pointerup', endStroke);
+canvas.addEventListener('pointerleave', endStroke);
+
+function endStroke(e) {
+  if (!e) return;
+  var s = activeStrokes[e.pointerId];
+  if (!s) return;
+  e.preventDefault();
+  delete activeStrokes[e.pointerId];
+  if (s.xs.length > 0) strokes.push(s);
+  if (Object.keys(activeStrokes).length === 0) startIdleTimer();
+}
+
+// --- Drawing ---
+function redrawAll() {
+  ctx.clearRect(0, 0, cssW, cssH);
+  strokes.forEach(function(s) { drawStroke(s, s.alpha || 1); });
+}
+function drawStroke(s, alpha) {
+  if (s.xs.length === 0) return;
+  ctx.strokeStyle = 'rgba(44,24,16,' + alpha + ')';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(s.xs[0], s.ys[0]);
+  for (var i = 1; i < s.xs.length; i++) ctx.lineTo(s.xs[i], s.ys[i]);
+  ctx.stroke();
+}
+
+// --- State ---
+function setState(ns) {
+  state = ns;
+  log('→ ' + ns);
+  statusDot.className = 'status-dot';
+  statusText.className = 'status-text';
+  switch (ns) {
+    case S.IDLE: statusText.textContent = '在纸上写下你的想法…'; break;
+    case S.WRITING: statusText.textContent = '书写中…'; break;
+    case S.PENDING: statusText.textContent = '等待识别…'; statusText.classList.add('active'); break;
+    case S.RECOGNIZING: statusText.textContent = '辨认笔迹…'; statusText.classList.add('active'); statusDot.classList.add('thinking'); break;
+    case S.THINKING: statusText.textContent = '日记正在思考…'; statusText.classList.add('active'); statusDot.classList.add('thinking'); break;
+    case S.ANIMATING: statusText.textContent = '日记正在书写…'; statusText.classList.add('active'); statusDot.classList.add('thinking'); break;
+  }
+}
+
+// --- Idle timer ---
+function startIdleTimer() {
+  clearIdleTimer();
+  if (strokes.length === 0) { setState(S.IDLE); return; }
+  setState(S.PENDING);
+  idleTimer = setTimeout(onIdle, IDLE_TIMEOUT);
+}
+function clearIdleTimer() { if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; } }
+async function onIdle() { if (state === S.PENDING) await submitAndReply(); }
+
+// --- Undo ---
+document.getElementById('btnUndo').addEventListener('click', function() {
+  if (strokes.length === 0) return;
+  strokes.pop(); redrawAll();
+  undoCount++;
+  undoHint.textContent = undoCount > 1 ? '已撤销 ' + undoCount + ' 笔' : '已撤销';
+  undoHint.classList.add('show');
+  clearTimeout(undoHint._t);
+  undoHint._t = setTimeout(function() { undoHint.classList.remove('show'); undoCount = 0; }, 1500);
+  if (strokes.length === 0) setState(S.IDLE);
+});
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); document.getElementById('btnUndo').click(); }
+});
+
+// --- Handwriting Recognition (Google IME) ---
+function recognizeHandwriting(trace, language) {
+  return new Promise(function(resolve, reject) {
+    var data = JSON.stringify({
+      options: "enable_pre_space",
+      requests: [{
+        writing_guide: { writing_area_width: cssW || undefined, writing_area_height: cssH || undefined },
+        ink: trace,
+        language: language || "zh_CN"
+      }]
+    });
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("readystatechange", function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          try {
+            var resp = JSON.parse(xhr.responseText);
+            if (resp.length === 1) reject(new Error(resp[0]));
+            else resolve((resp[1][0][1] || [])[0] || null);
+          } catch (e) { reject(new Error('解析识别结果失败')); }
+        } else if (xhr.status === 403) {
+          reject(new Error('Google 拒绝访问（可能需要代理）'));
+        } else if (xhr.status === 503) {
+          reject(new Error('无法连接识别服务器'));
+        } else {
+          reject(new Error('识别服务错误 (' + xhr.status + ')'));
+        }
+      }
+    });
+    xhr.open("POST", "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8");
+    xhr.setRequestHeader("content-type", "application/json");
+    xhr.send(data);
+  });
+}
+
+// --- LLM via server proxy ---
+async function callLLM(userText) {
+  if (!currentProvider) throw new Error('请先在设置中选择 AI 模型');
+
+  var apiUrl = currentProvider.url;
+  var model = currentProvider.model;
+  var systemPrompt = settings.systemPrompt || DEFAULTS.systemPrompt;
+
+  var payload = {
+    model: model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userText }
+    ],
+    max_tokens: 500,
+    temperature: 0.8
+  };
+
+  log('调用 LLM: ' + model + ' (via /api/chat)');
+
+  var resp = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiUrl: apiUrl, payload: payload })
+  });
+
+  if (!resp.ok) {
+    var errText = await resp.text().catch(function(){ return ''; });
+    throw new Error('API 错误 (' + resp.status + '): ' + errText.slice(0, 200));
+  }
+
+  var data = await resp.json();
+  if (data.error) throw new Error(data.error.message || '未知错误');
+  return data.choices?.[0]?.message?.content || '(日记沉默了…)';
+}
+
+// --- Main flow ---
+async function submitAndReply() {
+  if (strokes.length === 0) return;
+  clearIdleTimer();
+
+  // 1. Recognize
+  setState(S.RECOGNIZING);
+  var trace = strokes.map(function(s) { return [s.xs, s.ys, []]; });
+  var text;
+  try {
+    text = await recognizeHandwriting(trace, settings.language);
+    log('识别结果: "' + text + '"');
+  } catch (err) {
+    log('识别失败: ' + err.message, 'err');
+    showError('识别失败: ' + err.message);
+    return;
+  }
+  if (!text) {
+    showError('没认出来，再写一次？');
+    return;
+  }
+
+  // 2. Fade ink
+  var inkBounds = getInkBounds();
+  await fadeInk();
+
+  // 3. Call LLM
+  setState(S.THINKING);
+  ctx.clearRect(0, 0, cssW, cssH);
+  var reply;
+  try {
+    reply = await callLLM(text);
+    log('LLM 回复 (' + reply.length + '字): "' + reply.slice(0, 60) + '…"');
+  } catch (err) {
+    log('LLM 错误: ' + err.message, 'err');
+    showError('日记无法回应: ' + err.message);
+    redrawAll();
+    return;
+  }
+
+  // 4. Animate reply
+  setState(S.ANIMATING);
+  strokes = [];
+  await animateText(reply, inkBounds);
+  log('动画完成');
+  setState(S.IDLE);
+}
+
+function showError(msg) {
+  setState(S.IDLE);
+  statusText.textContent = msg;
+  statusText.classList.add('error');
+  setTimeout(function() { statusText.classList.remove('error'); setState(S.IDLE); }, 3000);
+}
+
+// --- Fade effect ---
+function fadeInk() {
+  var snap = document.createElement('canvas');
+  snap.width = canvas.width; snap.height = canvas.height;
+  snap.getContext('2d').drawImage(canvas, 0, 0);
+  return new Promise(function(resolve) {
+    var start = performance.now();
+    function frame(now) {
+      var p = Math.min(1, (now - start) / FADE_DURATION);
+      var alpha = 1 - p * p;
+      ctx.clearRect(0, 0, cssW, cssH);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(snap, 0, 0, cssW, cssH);
+      ctx.globalAlpha = 1;
+      if (p < 1) requestAnimationFrame(frame);
+      else { ctx.clearRect(0, 0, cssW, cssH); resolve(); }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+// --- Ink bounds ---
+function getInkBounds() {
+  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (var i = 0; i < strokes.length; i++) {
+    var s = strokes[i];
+    for (var j = 0; j < s.xs.length; j++) {
+      if (s.xs[j] < minX) minX = s.xs[j];
+      if (s.xs[j] > maxX) maxX = s.xs[j];
+      if (s.ys[j] < minY) minY = s.ys[j];
+      if (s.ys[j] > maxY) maxY = s.ys[j];
+    }
+  }
+  if (minX === Infinity) return null;
+  return { minX:minX, minY:minY, maxX:maxX, maxY:maxY };
+}
+
+// --- Text animation ---
+async function animateText(text, inkBounds) {
+  var fontFamily = settings.fontFamily || DEFAULTS.fontFamily;
+  var fontSize = settings.fontSize || DEFAULTS.fontSize;
+  var minDim = Math.min(cssW, cssH);
+  if (fontSize > minDim * 0.15) fontSize = Math.floor(minDim * 0.15);
+  if (fontSize > cssW / 10) fontSize = Math.floor(cssW / 10);
+
+  ctx.font = fontSize + 'px ' + fontFamily;
+  ctx.fillStyle = 'rgba(44, 24, 16, 0.7)';
+  ctx.textBaseline = 'middle';
+
+  var margin = 40;
+  var maxWidth = cssW - margin * 2;
+  var lineHeight = fontSize * 1.6;
+  var chars = [...text];
+
+  // Compute lines
+  var lines = [];
+  var curLine = '';
+  for (var i = 0; i < chars.length; i++) {
+    var ch = chars[i];
+    if (ch === '\n') { lines.push(curLine); curLine = ''; continue; }
+    var testLine = curLine + ch;
+    if (ctx.measureText(testLine).width > maxWidth && curLine.length > 0) {
+      lines.push(curLine);
+      curLine = ch;
+    } else {
+      curLine = testLine;
+    }
+  }
+  if (curLine) lines.push(curLine);
+
+  var textHeight = lines.length * lineHeight;
+
+  // Vertical position: avoid ink area
+  var y;
+  if (inkBounds) {
+    var pad = fontSize * 0.8;
+    var inkTop = inkBounds.minY - pad;
+    var inkBot = inkBounds.maxY + pad;
+    var spaceAbove = inkTop - margin;
+    var spaceBelow = cssH - inkBot - margin;
+    if (textHeight <= spaceAbove) {
+      y = Math.max(margin, inkTop - textHeight);
+    } else if (textHeight <= spaceBelow) {
+      y = inkBot;
+    } else if (spaceAbove >= spaceBelow) {
+      y = Math.max(margin, inkTop - textHeight);
+    } else {
+      y = inkBot;
+    }
+  } else {
+    y = Math.max(margin, (cssH - textHeight) / 2);
+  }
+  if (y < margin) y = margin;
+
+  // Draw centered
+  for (var li = 0; li < lines.length; li++) {
+    var line = lines[li];
+    var lineW = ctx.measureText(line).width;
+    var x = Math.max(margin, (cssW - lineW) / 2);
+    var drawY = y + lineHeight / 2;
+    if (y + lineHeight > cssH) break;
+    for (var ci = 0; ci < line.length; ci++) {
+      var ch2 = line[ci];
+      var chW = ctx.measureText(ch2).width;
+      await revealChar(ch2, x, drawY, chW, fontSize);
+      x += chW;
+    }
+    y += lineHeight;
+  }
+}
+
+function revealChar(ch, x, y, chW, fH) {
+  return new Promise(function(resolve) {
+    var start = performance.now();
+    var top = y - fH / 2;
+    function frame(now) {
+      var p = Math.min(1, (now - start) / settings.charDrawTime);
+      var clipW = chW * (1 - Math.pow(1 - p, 3));
+      ctx.clearRect(x, top, chW + 2, fH + 2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, top, clipW, fH);
+      ctx.clip();
+      ctx.fillText(ch, x, y);
+      ctx.restore();
+      if (p < 1) requestAnimationFrame(frame);
+      else resolve();
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+// --- Settings UI ---
+var langSelect = document.getElementById('langSelect');
+var fontSelect = document.getElementById('fontSelect');
+var fontSizeSelect = document.getElementById('fontSizeSelect');
+var systemPromptInput = document.getElementById('systemPrompt');
+var speedVal = document.getElementById('speedVal');
+
+function settingsToUI() {
+  langSelect.value = settings.language;
+  systemPromptInput.value = settings.systemPrompt;
+  fontSizeSelect.value = settings.fontSize;
+  speedVal.textContent = settings.charDrawTime + 'ms';
+  // Font
+  var opts = fontSelect.options;
+  for (var i = 0; i < opts.length; i++) {
+    if (opts[i].value === settings.fontFamily) { fontSelect.selectedIndex = i; break; }
+  }
+  // Model
+  if (settings.apiUrl && settings.model) {
+    var key = settings.apiUrl + '|' + settings.model;
+    for (var j = 0; j < modelSelect.options.length; j++) {
+      if (modelSelect.options[j].value === key) { modelSelect.selectedIndex = j; break; }
+    }
+  }
+}
+
+function uiToSettings() {
+  settings.language = langSelect.value;
+  settings.systemPrompt = systemPromptInput.value.trim() || DEFAULTS.systemPrompt;
+  settings.fontFamily = fontSelect.value || DEFAULTS.fontFamily;
+  settings.fontSize = parseInt(fontSizeSelect.value) || DEFAULTS.fontSize;
+  updateCurrentProvider();
+  saveSettings();
+}
+
+// Font/size change → live preview
+fontSelect.addEventListener('change', function() {
+  settings.fontFamily = fontSelect.value;
+  saveSettings();
+  previewOnCanvas();
+});
+fontSizeSelect.addEventListener('change', function() {
+  settings.fontSize = parseInt(fontSizeSelect.value);
+  saveSettings();
+  previewOnCanvas();
+});
+
+// Speed controls
+var _previewPlaying = false;
+function previewOnCanvas() {
+  if (_previewPlaying) return;
+  _previewPlaying = true;
+  ctx.clearRect(0, 0, cssW, cssH);
+  animateText('欢迎使用Riddle--\nWelcome to Riddle--', null).then(function() {
+    _previewPlaying = false;
+  });
+}
+
+document.getElementById('btnSpeedDown').addEventListener('click', function() {
+  var idx = SPEED_STEPS.indexOf(settings.charDrawTime);
+  if (idx < SPEED_STEPS.length - 1) {
+    settings.charDrawTime = SPEED_STEPS[idx + 1];
+    speedVal.textContent = settings.charDrawTime + 'ms';
+    saveSettings();
+    previewOnCanvas();
+  }
+});
+document.getElementById('btnSpeedUp').addEventListener('click', function() {
+  var idx = SPEED_STEPS.indexOf(settings.charDrawTime);
+  if (idx > 0) {
+    settings.charDrawTime = SPEED_STEPS[idx - 1];
+    speedVal.textContent = settings.charDrawTime + 'ms';
+    saveSettings();
+    previewOnCanvas();
+  }
+});
+
+// Open/close settings
+function fadeCanvas(dur) {
+  var snap = document.createElement('canvas');
+  snap.width = canvas.width; snap.height = canvas.height;
+  snap.getContext('2d').drawImage(canvas, 0, 0);
+  var start = performance.now();
+  dur = dur || 600;
+  function frame(now) {
+    var p = Math.min(1, (now - start) / dur);
+    ctx.clearRect(0, 0, cssW, cssH);
+    ctx.globalAlpha = 1 - p;
+    ctx.drawImage(snap, 0, 0, cssW, cssH);
+    ctx.globalAlpha = 1;
+    if (p < 1) requestAnimationFrame(frame);
+    else ctx.clearRect(0, 0, cssW, cssH);
+  }
+  requestAnimationFrame(frame);
+}
+
+function openSettings() {
+  settingsToUI();
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.getElementById('settingsPanel').classList.add('open');
+}
+function closeSettings() {
+  uiToSettings();
+  document.getElementById('settingsOverlay').classList.remove('open');
+  document.getElementById('settingsPanel').classList.remove('open');
+  fadeCanvas();
+}
+
+document.getElementById('btnSettings').addEventListener('click', openSettings);
+document.getElementById('btnClose').addEventListener('click', closeSettings);
+document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
+document.getElementById('btnSave').addEventListener('click', closeSettings);
+
+// --- Init ---
+resizeCanvas();
+setState(S.IDLE);
+loadProviders();
+log('Riddle-- 已就绪');
+log('在画布上手写文字，停笔 2.8 秒自动识别');
+
+})();
+</script>
+</body>
+</html>

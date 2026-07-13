@@ -398,6 +398,10 @@ def files_page():
 def friends_page():
     return send_file("friends.html")
 
+@app.route("/riddle")
+def riddle_page():
+    return send_file("riddle.html")
+
 @app.route("/admin")
 def admin_page():
     return send_file("admin.html")
