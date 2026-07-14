@@ -923,9 +923,31 @@ document.getElementById('btnSave').addEventListener('click', closeSettings);
 // --- Init ---
 resizeCanvas();
 setState(S.IDLE);
-loadProviders();
-log('Riddle-- 已就绪');
-log('在画布上手写文字，停笔 2.8 秒自动识别');
+
+// 检查登录状态
+async function checkLogin() {
+  try {
+    var resp = await fetch('/api/me');
+    if (!resp.ok) {
+      showError('请先登录后再使用 Riddle');
+      setTimeout(function() { location.href = '/login'; }, 2000);
+      return false;
+    }
+    return true;
+  } catch(e) {
+    showError('网络错误，请检查连接');
+    return false;
+  }
+}
+
+// 初始化
+checkLogin().then(function(loggedIn) {
+  if (loggedIn) {
+    loadProviders();
+    log('Riddle-- 已就绪');
+    log('在画布上手写文字，停笔 2.8 秒自动识别');
+  }
+});
 
 })();
 </script>
