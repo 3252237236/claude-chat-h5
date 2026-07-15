@@ -455,6 +455,13 @@ function getPos(e) {
 canvas.addEventListener('pointerdown', function(e) {
   if (state === S.ANIMATING || state === S.THINKING) return;
   e.preventDefault();
+
+  // 如果是 IDLE 状态开始新书写，清除画布上的旧内容
+  if (state === S.IDLE) {
+    ctx.clearRect(0, 0, cssW, cssH);
+    strokes = [];
+  }
+
   var p = getPos(e);
   activeStrokes[e.pointerId] = { xs:[p.x], ys:[p.y], ts:[p.t], lastPoint:p };
   clearIdleTimer();
