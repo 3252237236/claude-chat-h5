@@ -51,6 +51,16 @@
       outline: none;
     }
     .ip-input:focus { border-color: #f59e0b; }
+    .detect-btn {
+      padding: 12px 16px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #e6edf3;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
     .btn {
       display: block;
       width: 100%;
@@ -64,7 +74,12 @@
       text-decoration: none;
     }
     .btn-primary { background: #f59e0b; color: #000; }
+    .btn-primary:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
     .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+    .status { margin-top: 12px; font-size: 13px; min-height: 20px; }
+    .status.checking { color: #d29922; }
+    .status.ok { color: #3fb950; }
+    .status.fail { color: #8b949e; }
     .back { display: inline-block; margin-top: 16px; color: #58a6ff; text-decoration: none; font-size: 14px; }
   </style>
 </head>
@@ -79,20 +94,121 @@
       2. 手机和电脑需在同一局域网
     </div>
     <div class="ip-group">
-      <input type="text" class="ip-input" id="ip" value="192.168.1.44:3000" placeholder="IP:端口">
+      <input type="text" class="ip-input" id="ip" placeholder="IP:端口">
+      <button class="detect-btn" onclick="detect()">🔍 检测</button>
     </div>
-    <button class="btn btn-primary" onclick="go()">🚀 进入服务</button>
+    <button class="btn btn-primary" id="enterBtn" disabled onclick="go()">🚀 进入服务</button>
     <a href="/files" class="btn btn-secondary">📁 去文件仓库下载</a>
+    <div class="status" id="st"></div>
     <a href="/" class="back">← 返回首页</a>
   </div>
 
   <script>
+    var found = false;
+
+    window.onload = function() { detect(); };
+
+    function setStatus(cls, msg) {
+      var st = document.getElementById('st');
+      st.className = 'status ' + cls;
+      st.textContent = msg;
+    }
+
+    // 通过 WebRTC 获取本机局域网 IP
+    function getLocalIPs() {
+      return new Promise(function(resolve) {
+        var ips = [];
+        try {
+          var pc = new RTCPeerConnection({iceServers: []});
+          pc.createDataChannel('');
+          pc.createOffer().then(function(offer) {
+            pc.setLocalDescription(offer);
+          });
+          pc.onicecandidate = function(e) {
+            if (!e || !e.candidate || !e.candidate.candidate) {
+              pc.close();
+              resolve(ips);
+              return;
+            }
+            var parts = e.candidate.candidate.split(' ');
+            var ip = parts[4];
+            if (ip && ip.indexOf('.') > -1 && ips.indexOf(ip) === -1) {
+              ips.push(ip);
+            }
+          };
+          setTimeout(function() { pc.close(); resolve(ips); }, 2000);
+        } catch(e) {
+          resolve(ips);
+        }
+      });
+    }
+
+    // 用 img 探测某个地址是否有服务（不受混合内容限制）
+    function probeIP(ip, port) {
+      return new Promise(function(resolve) {
+        var timer = setTimeout(function() { resolve(false); }, 1500);
+        var img = new Image();
+        img.onload = img.onerror = function() {
+          clearTimeout(timer);
+          resolve(true);
+        };
+        img.src = 'http://' + ip + ':' + port + '/favicon.ico?t=' + Date.now();
+      });
+    }
+
+    async function detect() {
+      var ipInput = document.getElementById('ip');
+      var btn = document.getElementById('enterBtn');
+      found = false;
+      btn.disabled = true;
+      setStatus('checking', '🔍 正在扫描局域网...');
+
+      var localIPs = await getLocalIPs();
+      var port = '3000';
+
+      // 对每个局域网 IP，尝试探测同一网段的 .1 ~ .254
+      var candidates = [];
+      for (var i = 0; i < localIPs.length; i++) {
+        var base = localIPs[i].replace(/\.\d+$/, '');
+        for (var n = 1; n <= 254; n++) {
+          candidates.push(base + '.' + n);
+        }
+      }
+
+      // 去重
+      candidates = candidates.filter(function(v, i, a) { return a.indexOf(v) === i; });
+
+      // 并发探测（限制并发数避免太慢）
+      var batchSize = 30;
+      for (var b = 0; b < candidates.length && !found; b += batchSize) {
+        var batch = candidates.slice(b, b + batchSize);
+        var results = await Promise.all(batch.map(function(ip) {
+          return probeIP(ip, port).then(function(ok) { return ok ? ip : null; });
+        }));
+        for (var r = 0; r < results.length; r++) {
+          if (results[r] && !found) {
+            found = true;
+            var hit = results[r] + ':' + port;
+            ipInput.value = hit;
+            setStatus('ok', '✅ 已找到服务: ' + hit);
+            btn.disabled = false;
+            return;
+          }
+        }
+      }
+
+      if (!found) {
+        setStatus('fail', '❌ 未找到服务，请确认电脑已开启服务');
+      }
+    }
+
     function go() {
       var ip = document.getElementById('ip').value.trim();
       if (ip) window.location.href = 'http://' + ip;
     }
+
     document.getElementById('ip').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') go();
+      if (e.key === 'Enter') { if (found) go(); else detect(); }
     });
   </script>
 </body>
