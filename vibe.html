@@ -28,15 +28,17 @@
     .icon { font-size: 48px; margin-bottom: 16px; }
     h2 { font-size: 20px; margin-bottom: 12px; }
     p { color: #8b949e; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
-    .warning {
-      background: rgba(248,81,73,0.1);
-      border: 1px solid rgba(248,81,73,0.3);
+    .tip {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 20px;
       font-size: 13px;
-      color: #f85149;
+      color: #f59e0b;
+      text-align: left;
     }
+    .tip strong { display: block; margin-bottom: 4px; }
     .ip-group { display: flex; gap: 8px; margin-bottom: 16px; }
     .ip-input {
       flex: 1;
@@ -49,15 +51,6 @@
       outline: none;
     }
     .ip-input:focus { border-color: #f59e0b; }
-    .detect-btn {
-      padding: 12px 16px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      color: #e6edf3;
-      font-size: 14px;
-      cursor: pointer;
-    }
     .btn {
       display: block;
       width: 100%;
@@ -71,12 +64,7 @@
       text-decoration: none;
     }
     .btn-primary { background: #f59e0b; color: #000; }
-    .btn-primary:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
     .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
-    .status { margin-top: 12px; font-size: 13px; min-height: 20px; }
-    .status.checking { color: #d29922; }
-    .status.ok { color: #3fb950; }
-    .status.fail { color: #f85149; }
     .back { display: inline-block; margin-top: 16px; color: #58a6ff; text-decoration: none; font-size: 14px; }
   </style>
 </head>
@@ -85,67 +73,26 @@
     <div class="icon">⚡</div>
     <h2>Vibe Coding</h2>
     <p>手机远程控制 Claude Code</p>
-    <div class="warning">⚠️ 使用前请先在电脑上部署 Vibe Coding 服务</div>
-    <div class="ip-group">
-      <input type="text" class="ip-input" id="ip" value="192.168.1.44:3000">
-      <button class="detect-btn" onclick="detect()">检测</button>
+    <div class="tip">
+      <strong>⚠️ 使用须知</strong>
+      1. 电脑上需运行 Vibe Coding 服务<br>
+      2. 手机和电脑需在同一局域网
     </div>
-    <button class="btn btn-primary" id="enterBtn" disabled onclick="go()">进入服务</button>
+    <div class="ip-group">
+      <input type="text" class="ip-input" id="ip" value="192.168.1.44:3000" placeholder="IP:端口">
+    </div>
+    <button class="btn btn-primary" onclick="go()">🚀 进入服务</button>
     <a href="/files" class="btn btn-secondary">📁 去文件仓库下载</a>
-    <div class="status" id="st"></div>
     <a href="/" class="back">← 返回首页</a>
   </div>
 
   <script>
-    window.onload = function() { detect(); };
-
-    function detect() {
-      var ip = document.getElementById('ip').value.trim();
-      var st = document.getElementById('st');
-      var btn = document.getElementById('enterBtn');
-
-      st.className = 'status checking';
-      st.textContent = '正在检测...';
-      btn.disabled = true;
-
-      // WebSocket 检测（不受混合内容限制）
-      try {
-        var ws = new WebSocket('ws://' + ip + '/ws');
-        var timer = setTimeout(function() {
-          try { ws.close(); } catch(e) {}
-          st.className = 'status fail';
-          st.textContent = '❌ 未检测到服务';
-          btn.disabled = true;
-        }, 3000);
-
-        ws.onopen = function() {
-          clearTimeout(timer);
-          ws.close();
-          st.className = 'status ok';
-          st.textContent = '✅ 服务已就绪';
-          btn.disabled = false;
-        };
-
-        ws.onerror = function() {
-          clearTimeout(timer);
-          st.className = 'status fail';
-          st.textContent = '❌ 未检测到服务';
-          btn.disabled = true;
-        };
-      } catch(e) {
-        st.className = 'status fail';
-        st.textContent = '❌ 连接失败';
-        btn.disabled = true;
-      }
-    }
-
     function go() {
       var ip = document.getElementById('ip').value.trim();
       if (ip) window.location.href = 'http://' + ip;
     }
-
     document.getElementById('ip').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') detect();
+      if (e.key === 'Enter') go();
     });
   </script>
 </body>
